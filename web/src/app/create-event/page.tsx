@@ -101,7 +101,7 @@ export default function CreateEventPage() {
 
            {/* Main Action Action */}
            <div className="pt-6">
-                <button className="w-full py-4 bg-primary text-white font-bold text-lg rounded-xl hover:bg-primary/90 transition-colors shadow-[0_0_20px_rgba(0,128,128,0.3)] hover:shadow-[0_0_30px_rgba(0,128,128,0.5)] active:scale-[0.99] transform duration-200">
+                <button className="w-full py-3 md:py-4 bg-primary text-white font-bold text-base md:text-lg rounded-xl hover:bg-primary/90 transition-colors shadow-[0_0_20px_rgba(0,128,128,0.3)] hover:shadow-[0_0_30px_rgba(0,128,128,0.5)] active:scale-[0.99] transform duration-200">
                     Create Event
                 </button>
            </div>

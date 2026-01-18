@@ -7,7 +7,7 @@ export function EventTitleInput() {
       <input 
         type="text" 
         placeholder="Event Name" 
-        className="w-full bg-transparent border-none text-5xl md:text-7xl font-morganite font-bold placeholder-white/10 focus:ring-0 p-0 text-white outline-none"
+        className="w-full bg-transparent border-none text-4xl md:text-7xl font-morganite font-bold placeholder-white/10 focus:ring-0 p-0 text-white outline-none"
       />
       <div className="absolute bottom-0 left-0 w-full h-[2px] bg-white-50/10 group-focus-within:bg-gradient-to-r group-focus-within:from-primary group-focus-within:to-secondary transition-colors" />
     </div>
