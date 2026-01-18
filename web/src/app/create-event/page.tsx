@@ -58,16 +58,16 @@ export default function CreateEventPage() {
 
       <Navbar />
 
-      <main className="flex-1 w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 relative z-10 px-6 md:px-12 pb-10 items-start">
+      <main className="flex-1 w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-12 relative z-10 px-4 md:px-12 pb-10 items-start">
         
         {/* Left Column: Visuals & Preview */}
-        <div className="lg:col-span-5 flex flex-col gap-6 sticky top-24 pt-10">
+        <div className="lg:col-span-5 flex flex-col gap-5 lg:sticky lg:top-24 pt-4 lg:pt-10">
           <CoverImageUpload />
           <ThemePreview />
         </div>
 
         {/* Right Column: Event Details Form */}
-        <div className="lg:col-span-7 flex flex-col gap-8 pt-10">
+        <div className="lg:col-span-7 flex flex-col gap-5 pt-4 lg:pt-10">
            
            <EventTitleInput />
 

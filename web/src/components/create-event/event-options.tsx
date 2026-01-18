@@ -13,13 +13,15 @@ interface EventOptionsProps {
 export function EventOptions({ ticketPrice, capacity, requireApproval, setRequireApproval }: EventOptionsProps) {
   return (
     <div className="pt-4 space-y-3">
-      <h3 className="text-2xl font-morganite font-bold text-white tracking-wide border-b border-white/10 pb-2 mb-4">Event Options</h3>
+      <h3 className="text-2xl font-morganite font-bold text-white tracking-wide">Event Options</h3>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {/* Ticket Price */}
-        <div className="flex items-center justify-between p-4 rounded-2xl bg-black/40 backdrop-blur-md border border-white/5 hover:border-white/20 transition-all cursor-pointer">
+        <div className="flex items-center justify-between p-3 md:p-4 rounded-2xl bg-black/40 backdrop-blur-md border border-white/5 md:hover:border-white/20 transition-all cursor-pointer group">
           <div className="flex items-center gap-3">
-            <Ticket className="w-4 h-4 text-primary" />
+            <div className="p-2 rounded-lg bg-white-50/5 group-hover:bg-primary/10 transition-colors">
+               <Ticket className="w-4 h-4 text-primary" />
+            </div>
             <span className="font-medium text-white text-sm">Ticket Price</span>
           </div>
           <span className="text-sm font-bold text-white/60">{ticketPrice}</span>
@@ -27,7 +29,7 @@ export function EventOptions({ ticketPrice, capacity, requireApproval, setRequir
 
         {/* Require Approval Switch */}
         <div 
-          className={`flex items-center justify-between p-4 rounded-2xl bg-black/40 backdrop-blur-md border transition-all cursor-pointer group/lock ${requireApproval ? 'border-secondary/50 shadow-[0_0_15px_rgba(238,116,2,0.1)]' : 'border-white/5 hover:border-white/20'}`} 
+          className={`flex items-center justify-between p-3 md:p-4 rounded-2xl bg-black/40 backdrop-blur-md border transition-all cursor-pointer group/lock ${requireApproval ? 'border-secondary/50 shadow-[0_0_15px_rgba(238,116,2,0.1)]' : 'border-white/5 md:hover:border-white/20'}`} 
           onClick={() => setRequireApproval(!requireApproval)}
         >
           <div className="flex items-center gap-3">
@@ -44,9 +46,11 @@ export function EventOptions({ ticketPrice, capacity, requireApproval, setRequir
         </div>
 
         {/* Capacity */}
-        <div className="flex items-center justify-between p-4 rounded-2xl bg-black/40 backdrop-blur-md border border-white/5 hover:border-white/20 transition-all cursor-pointer md:col-span-2">
+        <div className="flex items-center justify-between p-3 md:p-4 rounded-2xl bg-black/40 backdrop-blur-md border border-white/5 md:hover:border-white/20 transition-all cursor-pointer md:col-span-2 group">
           <div className="flex items-center gap-3">
-            <Users className="w-4 h-4 text-blue-400" />
+            <div className="p-2 rounded-lg bg-white-50/5 group-hover:bg-blue-400/10 transition-colors">
+                <Users className="w-4 h-4 text-blue-400" />
+            </div>
             <span className="font-medium text-white text-sm">Capacity</span>
           </div>
           <span className="text-sm font-bold text-white/60">{capacity}</span>
