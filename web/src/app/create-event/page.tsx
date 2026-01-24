@@ -1,9 +1,12 @@
 "use client";
 
-import React, { useState, useRef } from 'react';
+import React, { useRef } from 'react';
 import { MapPin } from 'lucide-react';
+import { Question } from '@/types/event';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { useScrollLock } from '@/hooks/use-scroll-lock';
+import { useEventForm } from '@/hooks/event/use-event-form';
 import { ParallaxBackground } from '@/components/create-event/parallax-background';
 import { Navbar } from '@/components/navbar';
 import { CoverImageUpload } from '@/components/create-event/cover-image-upload';
@@ -15,37 +18,26 @@ import { EventOptions } from '@/components/create-event/event-options';
 import { RegistrationQuestions } from '@/components/create-event/registration-questions';
 
 export default function CreateEventPage() {
-  const [ticketPrice, setTicketPrice] = useState("Free");
-  const [capacity, setCapacity] = useState("Unlimited");
-  const [requireApproval, setRequireApproval] = useState(false);
-  const [questions, setQuestions] = useState([
-    { id: 1, text: "", required: true },
-  ]);
+  const {
+    formData,
+    updateField,
+    addQuestion,
+    removeQuestion,
+    updateQuestion,
+    handleSubmit,
+    isSubmitting,
+  } = useEventForm();
 
   const containerRef = useRef<HTMLDivElement>(null);
   const parallaxRef = useRef<HTMLDivElement>(null);
 
-  // Lock body scroll to prevent double scrollbars
   useScrollLock();
 
   const handleScroll = () => {
     if (containerRef.current && parallaxRef.current) {
       const scrollTop = containerRef.current.scrollTop;
-      // Move background slower than foreground (0.2 speed)
       parallaxRef.current.style.transform = `translateY(${scrollTop * 0.2}px)`;
     }
-  };
-
-  const addQuestion = () => {
-    setQuestions([...questions, { id: Date.now(), text: "", required: false }]);
-  };
-
-  const removeQuestion = (id: number) => {
-    setQuestions(questions.filter(q => q.id !== id));
-  };
-
-  const updateQuestion = (id: number, field: string, value: string | boolean) => {
-    setQuestions(questions.map(q => q.id === id ? { ...q, [field]: value } : q));
   };
 
   return (
@@ -62,48 +54,76 @@ export default function CreateEventPage() {
         
         {/* Left Column: Visuals & Preview */}
         <div className="lg:col-span-5 flex flex-col gap-5 lg:sticky lg:top-24 pt-4 lg:pt-10">
-          <CoverImageUpload />
-          <ThemePreview />
+          <CoverImageUpload 
+            value={formData.coverImage} 
+            onChange={(value) => updateField('coverImage', value)} 
+          />
+          <ThemePreview 
+            value={formData.theme} 
+            onChange={(value) => updateField('theme', value)} 
+          />
         </div>
 
         {/* Right Column: Event Details Form */}
         <div className="lg:col-span-7 flex flex-col gap-5 pt-4 lg:pt-10">
            
-           <EventTitleInput />
+           <EventTitleInput 
+             value={formData.title} 
+             onChange={(value) => updateField('title', value)} 
+           />
 
-           <DateTimeInputs />
+           <DateTimeInputs 
+              startDate={formData.startDate}
+              startTime={formData.startTime}
+              endDate={formData.endDate}
+              endTime={formData.endTime}
+              onStartDateChange={(value) => updateField('startDate', value)}
+              onStartTimeChange={(value) => updateField('startTime', value)}
+              onEndDateChange={(value) => updateField('endDate', value)}
+              onEndTimeChange={(value) => updateField('endTime', value)}
+           />
 
-           {/* Location */}
            <Input 
               label="Location" 
               icon={MapPin} 
               type="text" 
-              placeholder="Add Event Location..." 
+              placeholder="Add Event Location..."
+              value={formData.location}
+              onChange={(e) => updateField('location', e.target.value)}
            />
 
-           <DescriptionInput />
+           <DescriptionInput 
+             value={formData.description} 
+             onChange={(value) => updateField('description', value)} 
+           />
 
            <EventOptions 
-              ticketPrice={ticketPrice} 
-              setTicketPrice={setTicketPrice}
-              capacity={capacity}
-              setCapacity={setCapacity}
-              requireApproval={requireApproval}
-              setRequireApproval={setRequireApproval}
+              ticketPrice={formData.ticketPrice} 
+              setTicketPrice={(value) => updateField('ticketPrice', value)}
+              capacity={formData.capacity}
+              setCapacity={(value) => updateField('capacity', value)}
+              requireApproval={formData.requireApproval}
+              setRequireApproval={(value) => updateField('requireApproval', value)}
            />
 
            <RegistrationQuestions 
-              questions={questions}
+              questions={formData.questions}
               addQuestion={addQuestion}
               removeQuestion={removeQuestion}
-              updateQuestion={updateQuestion}
+              updateQuestion={(id: number, field: keyof Question, value: string | boolean) => 
+                updateQuestion(id, field, value)
+              }
            />
 
-           {/* Main Action Action */}
            <div className="pt-6">
-                <button className="w-full py-3 md:py-4 bg-primary text-white font-bold text-base md:text-lg rounded-xl hover:bg-primary/90 transition-colors shadow-[0_0_20px_rgba(0,128,128,0.3)] hover:shadow-[0_0_30px_rgba(0,128,128,0.5)] active:scale-[0.99] transform duration-200">
-                    Create Event
-                </button>
+              <Button 
+                onClick={handleSubmit}
+                disabled={isSubmitting}
+                fullWidth
+                size="lg"
+              >
+                {isSubmitting ? 'Creating Event...' : 'Create Event'}
+              </Button>
            </div>
            
         </div>
