@@ -1,0 +1,23 @@
+import React from 'react';
+import { MapPin } from 'lucide-react';
+
+interface EventLocationProps {
+  location: string;
+}
+
+export function EventLocation({ location }: EventLocationProps) {
+  return (
+    <div className="flex items-start gap-3 mb-6 pb-6 border-b border-white/10">
+      <div className="flex-shrink-0">
+        <div className="w-12 h-12 rounded-lg bg-primary/10 border border-primary/10 flex items-center justify-center">
+          <MapPin className="text-primary" size={18} />
+        </div>
+      </div>
+      <div className="flex-1 min-w-0 pt-2">
+        <p className="text-white/90 text-sm break-words">
+          {location || "Register to See Address"}
+        </p>
+      </div>
+    </div>
+  );
+}

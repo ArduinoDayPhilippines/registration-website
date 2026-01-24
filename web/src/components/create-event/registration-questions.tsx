@@ -1,18 +1,13 @@
 import React from 'react';
 import { Plus, HelpCircle, Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-
-interface Question {
-  id: number;
-  text: string;
-  required: boolean;
-}
+import { Question } from '@/types/event';
 
 interface RegistrationQuestionsProps {
   questions: Question[];
   addQuestion: () => void;
   removeQuestion: (id: number) => void;
-  updateQuestion: (id: number, field: string, value: string | boolean) => void;
+  updateQuestion: (id: number, field: keyof Question, value: string | boolean) => void;
 }
 
 export function RegistrationQuestions({ questions, addQuestion, removeQuestion, updateQuestion }: RegistrationQuestionsProps) {
