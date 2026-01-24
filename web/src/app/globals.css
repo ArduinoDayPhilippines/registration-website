@@ -31,8 +31,24 @@
 }
 @layer base {
 	body {
-		@apply bg-black text-base text-white-100 font-montserrat scroll-smooth;
+		@apply bg-slate-50 text-base text-slate-900 font-montserrat scroll-smooth;
 	}
+		input,
+		select,
+		textarea {
+			@apply text-slate-900 placeholder-slate-400;
+		}
+		select,
+		input[type="text"],
+		input[type="search"],
+		input[type="email"],
+		input[type="number"],
+		input[type="url"],
+		input[type="tel"],
+		input[type="password"],
+		textarea {
+			@apply bg-white-100 border-slate-300;
+		}
 	/* Section Headings */
 	h2 {
 		@apply font-morganite text-3xl font-bold leading-none sm:text-5xl;
