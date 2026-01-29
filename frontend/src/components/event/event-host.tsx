@@ -1,0 +1,31 @@
+import React from 'react';
+
+interface EventHostProps {
+  eventTitle: string;
+  className?: string;
+}
+
+export function EventHost({ eventTitle, className = '' }: EventHostProps) {
+  const initial = eventTitle.charAt(0).toUpperCase();
+
+  return (
+    <div className={className}>
+      <h3 className="font-montserrat text-sm font-bold mb-4 text-white">
+        Hosted By
+      </h3>
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-base font-bold">
+          {initial}
+        </div>
+        <div>
+          <p className="text-white font-semibold text-sm">
+            Event Organizer
+          </p>
+          <button className="text-white/60 text-xs hover:text-primary transition-colors">
+            Contact the Host
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
