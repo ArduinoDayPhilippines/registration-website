@@ -31,7 +31,7 @@ export const Input2 = React.forwardRef<HTMLInputElement, Input2Props>(
             value={value}
             onChange={onChange}
             className={cn(
-                "w-full text-base bg-transparent border-2 rounded-full px-6 py-3 outline-none text-white transition-all placeholder:text-white/20",
+                "w-full text-base !bg-transparent border-2 rounded-full px-6 py-3 outline-none !text-white transition-all placeholder:text-white/20",
                 styles[variant],
                 className
             )}
