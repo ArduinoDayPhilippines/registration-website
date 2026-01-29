@@ -1,19 +1,26 @@
-import Image from "next/image";
+import AdminLoginBackground from "@/components/admin/AdminLoginBackground";
+import AdminLoginHeader from "@/components/admin/AdminLoginHeader";
+import AdminLoginForm from "@/components/admin/AdminLoginForm";
 
 export default function Home() {
   return (
-    <div>
-      <main className="flex flex-col items-center p-24">
-        <h1 className="text-primary font-morganite text-5xl mb-8 text-center">
-          Welcome to Our ADPH App, Read README.md to get started!
-        </h1>
-        <Image
-          src="/images/logos/adph-logo.png"
-          alt="ADPH Logo"
-          width={100}
-          height={100}
-        />
-      </main>
+    <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-4">
+      {/* Background Layers */}
+      <AdminLoginBackground />
+
+      {/* Content */}
+      <div className="relative z-10 w-full max-w-[420px]">
+        {/* Logo and Title */}
+        <AdminLoginHeader />
+
+        {/* Login Card */}
+        <AdminLoginForm />
+
+        {/* Bottom Text */}
+        <p className="text-[rgba(255,255,255,0.25)] text-[10px] text-center mt-5 font-medium">
+          Powered by Arduino Community Philippines
+        </p>
+      </div>
     </div>
   );
 }
