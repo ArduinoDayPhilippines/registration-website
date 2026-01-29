@@ -1,0 +1,14 @@
+# --- Version ---
+POSTGRES_VERSION=postgres:18-alpine
+
+# --- Source Database ---
+SRC_DB_NAME=production_api
+SRC_DB_USER=source_admin
+SRC_DB_PASS=password
+SRC_DB_PORT=5433
+
+# --- Destination Database ---
+DEST_DB_NAME=data_warehouse
+DEST_DB_USER=warehouse_admin
+DEST_DB_PASS=password
+DEST_DB_PORT=5434
