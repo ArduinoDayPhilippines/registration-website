@@ -44,20 +44,20 @@ export function Step1({ formData, updateData, onNext }: Step1Props) {
                  {formData.agreedToPrivacy && <div className="w-2.5 h-1.5 border-l-2 border-b-2 border-white rotate-[-45deg] translate-y-[-1px]" />}
               </div>
             </div>
-             <span className="text-lg text-white/70 leading-tight group-hover:text-white transition-colors select-none">
+             <span className="text-sm md:text-lg text-white/70 leading-tight group-hover:text-white transition-colors select-none">
               I agree to the Privacy Policy. For more information, please visit the <a href="#" className="underline decoration-white/30 hover:decoration-primary hover:text-primary transition-colors">Arduino Day PH 2026</a> site for the Privacy Policy.
             </span>
           </label>
         </div>
       </div>
 
-      <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-full max-w-[200px]">
+      <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-full max-w-[200px] px-4 md:px-0">
         <Button 
           fullWidth 
           variant="primary" 
           size="lg" 
           disabled={!isValid}
-          className="shadow-[0_4px_20px_rgba(0,128,128,0.25)] rounded-2xl h-16 text-lg font-bold"
+          className="shadow-[0_4px_20px_rgba(0,128,128,0.25)] rounded-2xl h-14 md:h-16 text-base md:text-lg font-bold"
         >
           Continue
         </Button>

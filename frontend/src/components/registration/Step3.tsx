@@ -39,13 +39,13 @@ export function Step3({ formData, onBack, onSubmit }: Step3Props) {
         </div>
       </div>
 
-      <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-full max-w-[300px]">
+      <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-full max-w-[300px] px-4 md:px-0">
         <Button 
             variant="primary" 
             fullWidth
             size="lg"
             onClick={() => router.push('/')}
-            className="shadow-[0_4px_20px_rgba(0,128,128,0.25)] rounded-2xl h-16 text-lg font-bold"
+            className="shadow-[0_4px_20px_rgba(0,128,128,0.25)] rounded-2xl h-14 md:h-16 text-base md:text-lg font-bold"
         >
           Return to Home Page
         </Button>
