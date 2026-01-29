@@ -13,6 +13,7 @@ const globalColors = {
   secondary: "#EE7402",
   accent: "#1A6641",
   white: {
+    DEFAULT: "#FFFFFF",
     50: "#E8E8EA",
     100: "#FFFFFF",
   },
@@ -77,6 +78,7 @@ export default {
   },
   plugins: [
     typography,
+    require("tailwindcss-animate"),
     function ({ matchUtilities, theme }: PluginAPI) {
       matchUtilities(
         {
