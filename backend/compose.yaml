@@ -1,0 +1,75 @@
+services:
+  source_db:
+    container_name: source_db
+    image: ${POSTGRES_VERSION}
+    restart: always
+    shm_size: 128mb
+    environment:
+      - POSTGRES_DB=${SRC_DB_NAME}
+      - POSTGRES_USER=${SRC_DB_USER}
+      - POSTGRES_PASSWORD=${SRC_DB_PASS}
+    ports:
+      - "${SRC_DB_PORT}:5432"
+    volumes:
+      - ./source_db_init:/docker-entrypoint-initdb.d
+      - source_data:/var/lib/postgresql
+    networks:
+      - etl_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${SRC_DB_USER} -d ${SRC_DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  destination_db:
+    container_name: destination_db
+    image: ${POSTGRES_VERSION}
+    restart: always
+    shm_size: 128mb
+    environment:
+      - POSTGRES_DB=${DEST_DB_NAME}
+      - POSTGRES_USER=${DEST_DB_USER}
+      - POSTGRES_PASSWORD=${DEST_DB_PASS}
+    ports:
+      - "${DEST_DB_PORT}:5432"
+    # volumes:
+    #   - destination_data:/var/lib/postgresql
+    networks:
+      - etl_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DEST_DB_USER} -d ${DEST_DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  elt_script:
+    container_name: elt_script
+    build:
+      context: ./elt_script
+      dockerfile: Dockerfile
+    restart: on-failure
+    environment:
+      - SRC_DB_NAME=${SRC_DB_NAME}
+      - SRC_DB_USER=${SRC_DB_USER}
+      - SRC_DB_PASS=${SRC_DB_PASS}
+      - SRC_HOST=source_db
+      - DEST_DB_NAME=${DEST_DB_NAME}
+      - DEST_DB_USER=${DEST_DB_USER}
+      - DEST_DB_PASS=${DEST_DB_PASS}
+      - DEST_HOST=destination_db
+    command: ["python", "elt_script.py"]
+    depends_on:
+      source_db:
+        condition: service_healthy
+      destination_db:
+        condition: service_healthy
+    networks:
+      - etl_network
+
+volumes:
+  source_data:
+  destination_data:
+
+networks:
+  etl_network:
+    driver: bridge
