@@ -41,43 +41,43 @@ export const ActiveEvents: React.FC<ActiveEventsProps> = ({ events }) => {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <h2 className="text-2xl font-semibold flex items-center gap-2 !text-white" style={{ color: '#ffffff', fontFamily: 'Urbanist, sans-serif' }}>
           <Calendar className="w-6 h-6 text-[#06b6d4]" />
           Events
         </h2>
         
         {/* Filters */}
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
           <div className="flex items-center gap-2">
-            <SlidersHorizontal className="w-4 h-4 text-[#06b6d4]" />
+            <SlidersHorizontal className="w-4 h-4 text-[#06b6d4] flex-shrink-0" />
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-3 py-2 bg-gradient-to-r from-[#0B1F23]/80 to-[#0E1924]/80 border border-[#06b6d4]/30 rounded-lg !text-white text-sm focus:outline-none focus:border-[#06b6d4]/60 transition-all cursor-pointer [&>option]:bg-[#0B1F23] [&>option]:text-white [&>option]:py-2"
+              className="w-full sm:w-auto px-3 py-2 bg-gradient-to-r from-[#0B1F23]/80 to-[#0E1924]/80 border border-[#06b6d4]/30 rounded-lg !text-white text-sm focus:outline-none focus:border-[#06b6d4]/60 transition-all cursor-pointer [&>option]:bg-[#0B1F23] [&>option]:text-white [&>option]:py-2"
               style={{ color: '#ffffff', fontFamily: 'Urbanist, sans-serif' }}
             >
               <option value="all" style={{ backgroundColor: '#0B1F23', color: '#ffffff' }}>All Events</option>
               <option value="active" style={{ backgroundColor: '#0B1F23', color: '#ffffff' }}>Active Events</option>
               <option value="completed" style={{ backgroundColor: '#0B1F23', color: '#ffffff' }}>Finished Events</option>
             </select>
-            <select
-              value={filterCapacity}
-              onChange={(e) => setFilterCapacity(e.target.value)}
-              className="px-3 py-2 bg-gradient-to-r from-[#0B1F23]/80 to-[#0E1924]/80 border border-[#06b6d4]/30 rounded-lg !text-white text-sm focus:outline-none focus:border-[#06b6d4]/60 transition-all cursor-pointer [&>option]:bg-[#0B1F23] [&>option]:text-white [&>option]:py-2"
-              style={{ color: '#ffffff', fontFamily: 'Urbanist, sans-serif' }}
-            >
-              <option value="all" style={{ backgroundColor: '#0B1F23', color: '#ffffff' }}>All Capacity</option>
-              <option value="low" style={{ backgroundColor: '#0B1F23', color: '#ffffff' }}>Low (&lt;70%)</option>
-              <option value="medium" style={{ backgroundColor: '#0B1F23', color: '#ffffff' }}>Medium (70-89%)</option>
-              <option value="high" style={{ backgroundColor: '#0B1F23', color: '#ffffff' }}>High (≥90%)</option>
-            </select>
           </div>
+          <select
+            value={filterCapacity}
+            onChange={(e) => setFilterCapacity(e.target.value)}
+            className="w-full sm:w-auto px-3 py-2 bg-gradient-to-r from-[#0B1F23]/80 to-[#0E1924]/80 border border-[#06b6d4]/30 rounded-lg !text-white text-sm focus:outline-none focus:border-[#06b6d4]/60 transition-all cursor-pointer [&>option]:bg-[#0B1F23] [&>option]:text-white [&>option]:py-2"
+            style={{ color: '#ffffff', fontFamily: 'Urbanist, sans-serif' }}
+          >
+            <option value="all" style={{ backgroundColor: '#0B1F23', color: '#ffffff' }}>All Capacity</option>
+            <option value="low" style={{ backgroundColor: '#0B1F23', color: '#ffffff' }}>Low (&lt;70%)</option>
+            <option value="medium" style={{ backgroundColor: '#0B1F23', color: '#ffffff' }}>Medium (70-89%)</option>
+            <option value="high" style={{ backgroundColor: '#0B1F23', color: '#ffffff' }}>High (≥90%)</option>
+          </select>
           
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="px-3 py-2 bg-gradient-to-r from-[#0B1F23]/80 to-[#0E1924]/80 border border-[#06b6d4]/30 rounded-lg !text-white text-sm focus:outline-none focus:border-[#06b6d4]/60 transition-all cursor-pointer [&>option]:bg-[#0B1F23] [&>option]:text-white [&>option]:py-2"
+            className="w-full sm:w-auto px-3 py-2 bg-gradient-to-r from-[#0B1F23]/80 to-[#0E1924]/80 border border-[#06b6d4]/30 rounded-lg !text-white text-sm focus:outline-none focus:border-[#06b6d4]/60 transition-all cursor-pointer [&>option]:bg-[#0B1F23] [&>option]:text-white [&>option]:py-2"
             style={{ color: '#ffffff', fontFamily: 'Urbanist, sans-serif' }}
           >
             <option value="date" style={{ backgroundColor: '#0B1F23', color: '#ffffff' }}>Sort by Date</option>
