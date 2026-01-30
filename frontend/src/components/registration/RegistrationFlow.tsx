@@ -105,9 +105,6 @@ export function RegistrationFlow({
       )}
       {currentStep === 5 && (
         <Step5 
-            formData={formData} 
-            onBack={prevStep} 
-            onSubmit={handleSubmit}
             eventSlug={eventSlug}
         />
       )}
