@@ -3,7 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { PanelLeft, Users, Calendar, CheckCircle, BarChart3 } from 'lucide-react';
+import { Users, Calendar, CheckCircle, BarChart3 } from 'lucide-react';
 
 interface AdminSidebarProps {
   isOpen: boolean;
@@ -26,7 +26,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
     } else if (id === 'send-email') {
       router.push('/event-emailer');
     } else {
-      onTabChange(id as any);
+      onTabChange(id as typeof activeTab);
     }
   };
 

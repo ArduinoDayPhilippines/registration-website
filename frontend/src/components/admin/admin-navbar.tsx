@@ -1,4 +1,4 @@
-import { LogOut, Calendar, CheckCircle, BarChart3, Plus, Menu, X } from 'lucide-react';
+import { LogOut, Calendar, BarChart3, Plus, Menu, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useState } from 'react';

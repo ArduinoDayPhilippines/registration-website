@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useState } from 'react';
+import React from 'react';
 import { StatCard } from './stat-card';
-import { QuickActions } from './quick-actions';
 import { ActiveEvents } from './active-events';
 import { AnalyticsCharts } from './analytics-charts';
 import { 
@@ -27,53 +26,7 @@ const mockStats = {
   peakAttendance: 203,
 };
 
-const mockRecentRegistrants = [
-  {
-    id: '1',
-    name: 'Juan Dela Cruz',
-    email: 'juan.delacruz@email.com',
-    event: 'Arduino Workshop 101',
-    registeredAt: '2026-01-25T10:30:00',
-    status: 'confirmed',
-    isVolunteer: false,
-  },
-  {
-    id: '2',
-    name: 'Maria Santos',
-    email: 'maria.santos@email.com',
-    event: 'IoT with Arduino',
-    registeredAt: '2026-01-25T09:15:00',
-    status: 'pending',
-    isVolunteer: true,
-  },
-  {
-    id: '3',
-    name: 'Pedro Gonzales',
-    email: 'pedro.g@email.com',
-    event: 'Arduino Workshop 101',
-    registeredAt: '2026-01-24T16:45:00',
-    status: 'confirmed',
-    isVolunteer: false,
-  },
-  {
-    id: '4',
-    name: 'Ana Reyes',
-    email: 'ana.reyes@email.com',
-    event: 'Robotics Bootcamp',
-    registeredAt: '2026-01-24T14:20:00',
-    status: 'confirmed',
-    isVolunteer: true,
-  },
-  {
-    id: '5',
-    name: 'Carlos Mendoza',
-    email: 'carlos.m@email.com',
-    event: 'Advanced Arduino Programming',
-    registeredAt: '2026-01-24T11:00:00',
-    status: 'pending',
-    isVolunteer: false,
-  },
-];
+
 
 const mockEvents = [
   {
