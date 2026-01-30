@@ -10,6 +10,7 @@ import { ErrorState } from "@/components/ui/error-state";
 import { EventCoverImage } from "@/components/event/event-cover-image";
 import { EventDateTime } from "@/components/event/event-date-time";
 import { EventLocation } from "@/components/event/event-location";
+import { EventManageCard } from "@/components/event/event-manage-card";
 import { EventRegistrationCard } from "@/components/event/event-registration-card";
 import { EventAbout } from "@/components/event/event-about";
 import { EventHost } from "@/components/event/event-host";
@@ -54,6 +55,9 @@ export default function EventPage() {
           {/* Left Column - Cover Image (Desktop: + About + Hosted By) */}
           <div className="animate-fade-in space-y-6">
             <EventCoverImage src={event.coverImage || ""} alt={event.title} />
+
+            {/* Manage Event Card */}
+            <EventManageCard eventSlug={slug} />
 
             {/* About - Desktop Only */}
             <EventAbout 
