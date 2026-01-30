@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Eye, EyeOff } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export default function AdminLoginForm() {
@@ -11,6 +11,7 @@ export default function AdminLoginForm() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [focusedField, setFocusedField] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,7 +41,7 @@ export default function AdminLoginForm() {
       }
 
       if (data.ok) {
-        router.push('/event-emailer');
+        router.push('/dashboard');
       } else {
         setError('Login failed. Please try again.');
       }
@@ -104,28 +105,39 @@ export default function AdminLoginForm() {
           <label className="text-[#9dd5d5] text-[11px] font-medium block">
             Password
           </label>
-          <input
-            type="password"
-            placeholder="••••••••"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            onFocus={() => setFocusedField('password')}
-            onBlur={() => setFocusedField(null)}
-            disabled={isLoading}
-            className={`
-              w-full
-              !bg-[rgba(15,30,30,0.9)]
-              border ${focusedField === 'password' ? '!border-[#7dc5c5]' : '!border-[#5da5a5]'}
-              rounded-xl
-              px-4 py-3
-              !text-[#d5e5e5] text-sm
-              !placeholder:text-[rgba(197,213,213,0.5)]
-              outline-none
-              transition-all duration-200
-              focus:!border-[#7dc5c5]
-              disabled:opacity-50 disabled:cursor-not-allowed
-            `}
-          />
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onFocus={() => setFocusedField('password')}
+              onBlur={() => setFocusedField(null)}
+              disabled={isLoading}
+              className={`
+                w-full
+                !bg-[rgba(15,30,30,0.9)]
+                border ${focusedField === 'password' ? '!border-[#7dc5c5]' : '!border-[#5da5a5]'}
+                rounded-xl
+                px-4 py-3 pr-12
+                !text-[#d5e5e5] text-sm
+                !placeholder:text-[rgba(197,213,213,0.5)]
+                outline-none
+                transition-all duration-200
+                focus:!border-[#7dc5c5]
+                disabled:opacity-50 disabled:cursor-not-allowed
+              `}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              disabled={isLoading}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#7dc5c5] hover:text-[#9dd5d5] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
         </div>
 
         {/* Forgot Password */}
