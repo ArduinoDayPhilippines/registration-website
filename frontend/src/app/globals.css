@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600;700&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -153,6 +155,128 @@
 	opacity: 0.5;
 	filter: blur(27.409912109375px);
 	z-index: 0;
+}
+
+/* BatchMail dark mode overrides */
+.batchmail-dark {
+	color: #e2e8f0;
+	font-family: "Urbanist", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.batchmail-dark .font-morganite {
+	font-family: "Urbanist", system-ui, -apple-system, "Segoe UI", sans-serif !important;
+	letter-spacing: 0.01em;
+}
+
+.batchmail-dark .text-black,
+.batchmail-dark .text-slate-900,
+.batchmail-dark .text-gray-900 {
+	color: #e2e8f0;
+}
+
+.batchmail-dark .text-gray-700,
+.batchmail-dark .text-gray-600,
+.batchmail-dark .text-gray-500,
+.batchmail-dark .text-gray-400,
+.batchmail-dark .text-slate-700,
+.batchmail-dark .text-slate-600,
+.batchmail-dark .text-secondary {
+	color: rgba(226, 232, 240, 0.7);
+}
+
+.batchmail-dark .bg-white,
+.batchmail-dark .bg-white-100,
+.batchmail-dark .bg-gray-50,
+.batchmail-dark .bg-gray-100 {
+	background-color: rgba(15, 23, 42, 0.7) !important;
+}
+
+.batchmail-dark .prose {
+	color: rgba(226, 232, 240, 0.86);
+}
+
+.batchmail-dark .prose h1,
+.batchmail-dark .prose h2,
+.batchmail-dark .prose h3,
+.batchmail-dark .prose h4,
+.batchmail-dark .prose strong {
+	color: #f1f5f9;
+}
+
+.batchmail-dark .prose a {
+	color: #93c5fd;
+}
+
+.batchmail-dark .prose code,
+.batchmail-dark .prose pre {
+	color: #e2e8f0;
+	background-color: rgba(15, 23, 42, 0.9);
+	border: 1px solid rgba(148, 163, 184, 0.35);
+}
+
+.batchmail-dark .prose pre {
+	border-radius: 0.5rem;
+	padding: 0.75rem 1rem;
+}
+
+.batchmail-dark .prose hr {
+	border-color: rgba(148, 163, 184, 0.25);
+}
+
+.batchmail-dark .border-gray-200,
+.batchmail-dark .border-gray-300,
+.batchmail-dark .border-slate-300,
+.batchmail-dark .border-slate-200,
+.batchmail-dark .border {
+	border-color: rgba(148, 163, 184, 0.35) !important;
+}
+
+.batchmail-dark input,
+.batchmail-dark select,
+.batchmail-dark textarea {
+	background-color: rgba(15, 23, 42, 0.75) !important;
+	color: #e2e8f0 !important;
+	border-color: rgba(148, 163, 184, 0.35) !important;
+}
+
+.batchmail-dark input::placeholder,
+.batchmail-dark textarea::placeholder {
+	color: rgba(226, 232, 240, 0.45) !important;
+}
+
+.batchmail-dark .odd\:bg-white:nth-child(odd) {
+	background-color: rgba(15, 23, 42, 0.65) !important;
+}
+
+.batchmail-dark .even\:bg-gray-50:nth-child(even) {
+	background-color: rgba(15, 23, 42, 0.8) !important;
+}
+
+.batchmail-dark .email-editor-surface {
+	background-color: #0f172a !important;
+	color: #e2e8f0 !important;
+	border-color: rgba(148, 163, 184, 0.35) !important;
+}
+
+.batchmail-dark .editor-toolbar button {
+	background-color: rgba(15, 23, 42, 0.7) !important;
+	color: #e2e8f0 !important;
+	border-color: rgba(148, 163, 184, 0.35) !important;
+}
+
+.batchmail-dark .editor-toolbar button:hover {
+	background-color: rgba(30, 41, 59, 0.8) !important;
+}
+
+.batchmail-dark .hover\:bg-gray-50:hover,
+.batchmail-dark .hover\:bg-gray-100:hover,
+.batchmail-dark .hover\:bg-white:hover {
+	background-color: rgba(30, 41, 59, 0.6) !important;
+}
+
+.batchmail-dark .bg-gray-50,
+.batchmail-dark .bg-gray-100 {
+	background-color: rgba(15, 23, 42, 0.7) !important;
 }
 
 /* Custom Scrollbar */
