@@ -1,55 +1,99 @@
-import React from 'react';
+import { Input2 } from '@/components/ui/input-2';
 import { Button } from '@/components/ui/button';
 import { RegistrationFormData } from './types';
-import { useRouter } from 'next/navigation';
+import { cn } from '@/lib/utils';
 
 interface Step3Props {
   formData: RegistrationFormData;
+  updateData: (data: Partial<RegistrationFormData>) => void;
+  onNext: () => void;
   onBack: () => void;
-  onSubmit: () => void;
 }
 
-export function Step3({ formData, onBack, onSubmit }: Step3Props) {
-  const router = useRouter();
+export function Step3({ formData, updateData, onNext, onBack }: Step3Props) {
+  
+  const isValid = formData.occupation && formData.institution && formData.isPartnered;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isValid) onNext();
+  };
 
   return (
-    <div className="flex flex-col h-full animate-in fade-in duration-500 slide-in-from-right-4 relative">
-      <div className="flex-1 flex flex-col items-center justify-center text-center px-4">
-        <h2 className="text-3xl md:text-4xl font-bold font-sans mb-6 leading-tight">
-            Your Registration is now <br /> being Processed
-        </h2>
-        
-        <div className="space-y-6 max-w-md mx-auto">
-            <p className="text-white/80 text-lg leading-relaxed">
-                Are you interested in availing our <span className="text-secondary font-bold">official merchandise</span> of <span className="text-primary font-bold">Arduino Day Philippines 2026</span>?
-            </p>
-            
-            <p className="text-white/60">
-                Fill up the official order form to get our exclusive merchandise!
-            </p>
+    <form onSubmit={handleSubmit} className="flex flex-col h-full animate-in fade-in duration-500 slide-in-from-right-4">
+      <div className="flex-1">
+        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2 font-sans">Professional Information</h2>
+        <p className="text-white/50 mb-6 sm:mb-8 ml-1 text-sm sm:text-base">Tell us about your work or school</p>
 
-            <Button 
-                variant="secondary" 
-                size="lg"
-                className="font-bold px-8 shadow-[0_0_20px_rgba(238,116,2,0.4)] rounded-full mt-4"
-                onClick={() => window.open('#', '_blank')}
-            >
-                Open Order Form
-            </Button>
+        <div className="space-y-3 sm:space-y-4">
+            {/* Work/School */}
+            <Input2 
+                label="Occupation *" 
+                value={formData.occupation} 
+                onChange={e => updateData({ occupation: e.target.value })} 
+                required 
+            />
+            <Input2 
+                label="Company/School/Institution *" 
+                value={formData.institution} 
+                onChange={e => updateData({ institution: e.target.value })} 
+                required 
+            />
+
+            {/* Radio Questions */}
+            <div className="space-y-1 mt-4 sm:mt-6">
+                <span className="text-xs sm:text-sm font-semibold text-primary block mb-2">Are you a member of a partnered organization? *</span>
+                <div className="flex gap-4 sm:gap-6">
+                    {['Yes', 'No'].map(opt => {
+                        const isSelected = formData.isPartnered === opt;
+                        return (
+                            <label key={opt} className="flex items-center gap-2 cursor-pointer group relative">
+                                <input 
+                                    type="radio" 
+                                    className="sr-only"
+                                    name="isPartnered"
+                                    checked={isSelected}
+                                    onChange={() => updateData({ isPartnered: opt as any })}
+                                />
+                                <div className={cn(
+                                    "w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all",
+                                    isSelected ? "border-primary" : "border-white/30 group-hover:border-primary/70"
+                                )}>
+                                    <div className={cn(
+                                        "w-2.5 h-2.5 rounded-full bg-primary transition-transform",
+                                        isSelected ? "scale-100" : "scale-0"
+                                    )} />
+                                </div>
+                                <span className={cn(
+                                    "text-sm sm:text-base text-white/80 transition-colors",
+                                    isSelected ? "text-white" : "group-hover:text-white"
+                                )}>{opt}</span>
+                            </label>
+                        );
+                    })}
+                </div>
+            </div>
         </div>
       </div>
 
-      <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-full max-w-[300px] px-4 md:px-0">
+      <div className="mt-6 sm:mt-8 flex gap-3 sm:gap-4 pt-4 border-t border-white/10">
         <Button 
-            variant="primary" 
-            fullWidth
-            size="lg"
-            onClick={() => router.push('/')}
-            className="shadow-[0_4px_20px_rgba(0,128,128,0.25)] rounded-2xl h-14 md:h-16 text-base md:text-lg font-bold"
+            type="button"
+            variant="outline" 
+            onClick={onBack}
+            className="flex-1 text-sm sm:text-base"
         >
-          Return to Home Page
+          Back
+        </Button>
+        <Button 
+          type="submit"
+          variant="primary" 
+          disabled={!isValid}
+          className="flex-1 text-sm sm:text-base"
+        >
+          Continue
         </Button>
       </div>
-    </div>
+    </form>
   );
 }
