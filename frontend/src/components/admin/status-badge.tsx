@@ -23,7 +23,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
   const Icon = icons[status as keyof typeof icons] || AlertCircle;
   
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${styles[status as keyof typeof styles] || styles.pending}`}>
+    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${styles[status as keyof typeof styles] || styles.pending}`} style={{ fontFamily: 'Urbanist, sans-serif' }}>
       <Icon className="w-3 h-3" />
       {status.charAt(0).toUpperCase() + status.slice(1)}
     </span>
