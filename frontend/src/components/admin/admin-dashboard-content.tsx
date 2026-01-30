@@ -3,10 +3,8 @@
 import React, { useState } from 'react';
 import { StatCard } from './stat-card';
 import { QuickActions } from './quick-actions';
-import { RecentRegistrations } from './recent-registrations';
 import { ActiveEvents } from './active-events';
-import { FinishedEvents } from './finished-events';
-import { QuickStats } from './quick-stats';
+import { AnalyticsCharts } from './analytics-charts';
 import { 
   Users, 
   Calendar, 
@@ -24,6 +22,9 @@ const mockStats = {
   partneredOrgs: 15,
   recentRegistrations: 234,
   capacityUtilization: 78,
+  completionRate: 92,
+  waitlistCount: 47,
+  peakAttendance: 203,
 };
 
 const mockRecentRegistrants = [
@@ -128,155 +129,84 @@ const mockFinishedEvents = [
   },
 ];
 
-export const AdminDashboardContent: React.FC = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterStatus, setFilterStatus] = useState<string>('all');
-  const [activeTab, setActiveTab] = useState<'registrations' | 'events' | 'finished' | 'stats'>('registrations');
+interface AdminDashboardContentProps {
+  activeTab: 'dashboard' | 'events' | 'stats' | 'create-event' | 'export-data';
+  setActiveTab: (tab: 'dashboard' | 'events' | 'stats' | 'create-event' | 'export-data') => void;
+}
 
-  const filteredRegistrants = mockRecentRegistrants.filter(registrant => {
-    const matchesSearch = registrant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         registrant.email.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesFilter = filterStatus === 'all' || registrant.status === filterStatus;
-    return matchesSearch && matchesFilter;
-  });
+export const AdminDashboardContent: React.FC<AdminDashboardContentProps> = ({ activeTab, setActiveTab }) => {
 
   return (
-    <main className="max-w-7xl mx-auto px-4 md:px-8 py-8 mt-20">
-      {/* Header */}
+    <div className="flex min-h-screen">
+      {/* Main Content */}
+      <main className="flex-1 px-4 md:px-8 py-8 pt-28">
+        <div className="max-w-7xl mx-auto">
+
+      {/* Content based on active tab */}
       <div className="mb-8">
-        <h1 className="text-4xl md:text-5xl font-bold mb-2 !text-gray-50 drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]" style={{ color: '#f9fafb' }}>
-          Admin Dashboard
-        </h1>
+        {activeTab === 'dashboard' && (
+          <>
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <StatCard
+                title="Total Registrants"
+                value={mockStats.totalRegistrants}
+                icon={Users}
+                trend="+12% from last month"
+                trendUp={true}
+                color="bg-blue-500/20"
+              />
+              <StatCard
+                title="Active Events"
+                value={mockStats.activeEvents}
+                icon={Calendar}
+                trend={`${mockStats.upcomingEvents} upcoming`}
+                trendUp={true}
+                color="bg-purple-500/20"
+              />
+              <StatCard
+                title="Volunteers"
+                value={mockStats.volunteers}
+                icon={UserPlus}
+                trend="+8% this week"
+                trendUp={true}
+                color="bg-green-500/20"
+              />
+              <StatCard
+                title="Partnered Orgs"
+                value={mockStats.partneredOrgs}
+                icon={Building2}
+                color="bg-orange-500/20"
+              />
+            </div>
+
+            {/* Analytics Overview */}
+            <AnalyticsCharts />
+          </>
+        )}
+
+        {activeTab === 'events' && (
+          <ActiveEvents events={[...mockEvents, ...mockFinishedEvents]} />
+        )}
+
+        {activeTab === 'create-event' && (
+          <div className="bg-gradient-to-br from-[#0B1F23]/60 via-[#0E1924]/50 to-[#0B1F23]/60 backdrop-blur-sm rounded-xl p-8 border border-[#06b6d4]/30 shadow-lg shadow-[#0891b2]/20 text-center">
+            <Calendar className="w-16 h-16 text-[#06b6d4] mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: 'Urbanist, sans-serif' }}>Create New Event</h2>
+            <p className="text-gray-400 mb-6" style={{ fontFamily: 'Urbanist, sans-serif' }}>Redirecting to event creation page...</p>
+          </div>
+        )}
+
+        {activeTab === 'export-data' && (
+          <div className="bg-gradient-to-br from-[#092728]/60 via-[#0a2d2e]/50 to-[#092728]/60 backdrop-blur-sm rounded-xl p-8 border border-[#856730]/30 shadow-lg shadow-[#733C0B]/20 text-center">
+            <Building2 className="w-16 h-16 text-[#856730] mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: 'Urbanist, sans-serif' }}>Export All Data</h2>
+            <p className="text-gray-400 mb-6" style={{ fontFamily: 'Urbanist, sans-serif' }}>Preparing data export...</p>
+          </div>
+        )}
       </div>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <StatCard
-          title="Total Registrants"
-          value={mockStats.totalRegistrants}
-          icon={Users}
-          trend="+12% from last month"
-          trendUp={true}
-          color="bg-blue-500/20"
-        />
-        <StatCard
-          title="Active Events"
-          value={mockStats.activeEvents}
-          icon={Calendar}
-          trend={`${mockStats.upcomingEvents} upcoming`}
-          trendUp={true}
-          color="bg-purple-500/20"
-        />
-        <StatCard
-          title="Volunteers"
-          value={mockStats.volunteers}
-          icon={UserPlus}
-          trend="+8% this week"
-          trendUp={true}
-          color="bg-green-500/20"
-        />
-        <StatCard
-          title="Partnered Orgs"
-          value={mockStats.partneredOrgs}
-          icon={Building2}
-          color="bg-orange-500/20"
-        />
-      </div>
-
-      {/* Quick Actions */}
-      <QuickActions />
-
-      {/* Tabbed Section */}
-      <div className="mb-8">
-        {/* Tab Navigation */}
-        <div className="flex gap-2 mb-6 border-b border-[#2D504B]/30">
-          <button
-            onClick={() => setActiveTab('registrations')}
-            className={`px-6 py-3 font-semibold transition-all relative ${
-              activeTab === 'registrations'
-                ? '!text-white'
-                : 'text-gray-400 hover:text-gray-300'
-            }`}
-            style={activeTab === 'registrations' ? { color: '#ffffff' } : {}}
-          >
-            Recent Registrations
-            {activeTab === 'registrations' && (
-              <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-[#856730] to-[#733C0B]" />
-            )}
-          </button>
-          <button
-            onClick={() => setActiveTab('events')}
-            className={`px-6 py-3 font-semibold transition-all relative ${
-              activeTab === 'events'
-                ? '!text-white'
-                : 'text-gray-400 hover:text-gray-300'
-            }`}
-            style={activeTab === 'events' ? { color: '#ffffff' } : {}}
-          >
-            Active Events
-            {activeTab === 'events' && (
-              <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-[#856730] to-[#733C0B]" />
-            )}
-          </button>
-          <button
-            onClick={() => setActiveTab('finished')}
-            className={`px-6 py-3 font-semibold transition-all relative ${
-              activeTab === 'finished'
-                ? '!text-white'
-                : 'text-gray-400 hover:text-gray-300'
-            }`}
-            style={activeTab === 'finished' ? { color: '#ffffff' } : {}}
-          >
-            Finished Events
-            {activeTab === 'finished' && (
-              <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-[#856730] to-[#733C0B]" />
-            )}
-          </button>
-          <button
-            onClick={() => setActiveTab('stats')}
-            className={`px-6 py-3 font-semibold transition-all relative ${
-              activeTab === 'stats'
-                ? '!text-white'
-                : 'text-gray-400 hover:text-gray-300'
-            }`}
-            style={activeTab === 'stats' ? { color: '#ffffff' } : {}}
-          >
-            Quick Stats
-            {activeTab === 'stats' && (
-              <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-[#856730] to-[#733C0B]" />
-            )}
-          </button>
         </div>
-
-        {/* Tab Content */}
-        <div>
-          {activeTab === 'registrations' && (
-            <RecentRegistrations
-              registrants={filteredRegistrants}
-              searchQuery={searchQuery}
-              filterStatus={filterStatus}
-              onSearchChange={setSearchQuery}
-              onFilterChange={setFilterStatus}
-            />
-          )}
-
-          {activeTab === 'events' && (
-            <ActiveEvents events={mockEvents} />
-          )}
-
-          {activeTab === 'finished' && (
-            <FinishedEvents events={mockFinishedEvents} />
-          )}
-
-          {activeTab === 'stats' && (
-            <QuickStats stats={{
-              recentRegistrations: mockStats.recentRegistrations,
-              capacityUtilization: mockStats.capacityUtilization,
-              totalEvents: mockStats.totalEvents,
-            }} />
-          )}
-        </div>
-      </div>
-    </main>
+      </main>
+    </div>
   );
 };
