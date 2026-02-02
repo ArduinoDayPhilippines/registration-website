@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Navbar } from "@/components/navbar";
 import { ParallaxBackground } from "@/components/create-event/parallax-background";
@@ -10,10 +10,10 @@ import { ErrorState } from "@/components/ui/error-state";
 import { EventCoverImage } from "@/components/event/event-cover-image";
 import { EventDateTime } from "@/components/event/event-date-time";
 import { EventLocation } from "@/components/event/event-location";
+import { EventManageCard } from "@/components/event/event-manage-card";
 import { EventRegistrationCard } from "@/components/event/event-registration-card";
 import { EventAbout } from "@/components/event/event-about";
 import { EventHost } from "@/components/event/event-host";
-import { RsvpModal } from "@/components/event/rsvp-modal";
 import { useEvent } from "@/hooks/event/use-event";
 
 export default function EventPage() {
@@ -21,7 +21,6 @@ export default function EventPage() {
   const router = useRouter();
   const slug = params.slug as string;
   const { event, loading, error } = useEvent(slug);
-  const [isRsvpModalOpen, setIsRsvpModalOpen] = useState(false);
 
   if (loading) {
     return <LoadingSpinner message="Loading event..." />;
@@ -54,6 +53,9 @@ export default function EventPage() {
           {/* Left Column - Cover Image (Desktop: + About + Hosted By) */}
           <div className="animate-fade-in space-y-6">
             <EventCoverImage src={event.coverImage || ""} alt={event.title} />
+
+            {/* Manage Event Card */}
+            <EventManageCard eventSlug={slug} />
 
             {/* About - Desktop Only */}
             <EventAbout 
@@ -96,7 +98,7 @@ export default function EventPage() {
               requireApproval={event.requireApproval}
               ticketPrice={event.ticketPrice}
               capacity={event.capacity}
-              onRsvpClick={() => setIsRsvpModalOpen(true)}
+              onRsvpClick={() => router.push(`/event/${slug}/register`)}
             />
 
             {/* Hosted By - Mobile Only (at the end) */}
@@ -107,15 +109,6 @@ export default function EventPage() {
           </div>
         </div>
       </main>
-
-      {/* RSVP Modal */}
-      <RsvpModal
-        isOpen={isRsvpModalOpen}
-        onClose={() => setIsRsvpModalOpen(false)}
-        eventTitle={event.title}
-        questions={event.questions}
-        requireApproval={event.requireApproval}
-      />
     </div>
   );
 }

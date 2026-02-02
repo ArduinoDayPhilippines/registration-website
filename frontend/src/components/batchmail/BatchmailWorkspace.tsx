@@ -1,12 +1,10 @@
 "use client";
 
-<<<<<<< HEAD
-import { useMemo, useState, Suspense, useCallback } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { driver } from "driver.js";
 import type { DriveStep } from "driver.js";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import CsvUploader, { CsvMapping, ParsedCsv } from "@/components/ui/CsvUploader";
-// Legacy TemplateManager import removed; using TemplateLibrary instead.
 import TemplateLibrary from "@/components/ui/TemplateLibrary";
 import PreviewPane from "@/components/ui/PreviewPane";
 import CsvTable from "@/components/ui/CsvTable";
@@ -22,6 +20,7 @@ type RenderedEmail = {
 };
 
 type TabId = "csv" | "template" | "preview" | "docs";
+
 type StepConfig = {
   selector: string;
   title: string;
@@ -179,7 +178,7 @@ const buildSteps = (configs: StepConfig[]): DriveStep[] =>
     return acc;
   }, []);
 
-function PageInner() {
+export default function BatchmailWorkspace() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -189,8 +188,14 @@ function PageInner() {
   const [subjectTemplate, setSubjectTemplate] = useState<string>("{{ subject }}");
   const [attachmentsByName, setAttachmentsByName] = useState<AttachIndex>({});
   const [hasSelectedTemplate, setHasSelectedTemplate] = useState<boolean>(false);
-  // Keep a derived indicator but avoid unused variable warnings.
   const totalCount = useMemo(() => (csv?.rowCount ?? 0), [csv]);
+
+  const availableVars = useMemo(() => {
+    const s = new Set<string>();
+    if (csv?.headers) csv.headers.forEach(h => s.add(h));
+    if (mapping) { s.add("name"); s.add("recipient"); }
+    return Array.from(s);
+  }, [csv, mapping]);
 
   const startTabTutorial = useCallback((tabId: TabId) => {
     if (typeof window === "undefined") return;
@@ -237,11 +242,17 @@ function PageInner() {
   };
 
   return (
-    <div>
-      <main className="mx-auto max-w-6xl p-6 space-y-6">
+    <div className="batchmail-dark space-y-6">
       <header className="space-y-1">
-      <h1 className="text-3xl font-semibold tracking-tight flex items-center gap-3 text-primary font-urbanist">BatchMail <span className="keep-light-pill text-[12px] font-semibold px-2.5 py-1 rounded bg-white-100 text-slate-900 border border-slate-300 tracking-widest uppercase font-montserrat">ADPH</span></h1>
-        <p className="text-sm text-secondary">Upload CSV, edit/upload Jinja-style HTML template, preview, and export. {totalCount ? `(${totalCount} rows)` : ""}</p>
+        <h1 className="text-3xl font-semibold tracking-tight flex items-center gap-3 text-primary font-morganite">
+          BatchMail
+          <span className="keep-light-pill text-[12px] font-semibold px-2.5 py-1 rounded bg-white-100 text-slate-900 border border-slate-300 tracking-widest uppercase font-montserrat">
+            ADPH
+          </span>
+        </h1>
+        <p className="text-sm text-secondary">
+          Upload CSV, edit/upload Jinja-style HTML template, preview, and export. {totalCount ? `(${totalCount} rows)` : ""}
+        </p>
       </header>
 
       <div id="tutorial-tabs" className="rounded-xl border border-primary/20 bg-white p-4 shadow-sm">
@@ -266,7 +277,6 @@ function PageInner() {
                       onParsed={(data: { csv: ParsedCsv; mapping: CsvMapping }) => {
                         setCsv(data.csv);
                         setMapping(data.mapping);
-                        // Reset template selection on new CSV to reduce mistakes
                         setHasSelectedTemplate(false);
                       }}
                       currentMapping={mapping ?? undefined}
@@ -306,12 +316,7 @@ function PageInner() {
                     </button>
                   </div>
                   <TemplateLibrary
-                    availableVars={useMemo(() => {
-                      const s = new Set<string>();
-                      if (csv?.headers) csv.headers.forEach(h => s.add(h));
-                      if (mapping) { s.add("name"); s.add("recipient"); }
-                      return Array.from(s);
-                    }, [csv, mapping])}
+                    availableVars={availableVars}
                     initialHtml={template}
                     onUseTemplate={({ html }) => { setTemplate(html); setHasSelectedTemplate(true); }}
                   />
@@ -365,19 +370,18 @@ function PageInner() {
           ]}
           initialId={(searchParams.get("tab") as string) || "csv"}
           isDisabled={(id) => {
-            if (id === 'template') {
-              return !csv; // block if no CSV uploaded yet
+            if (id === "template") {
+              return !csv;
             }
-            if (id === 'preview') {
-              // require CSV+mapping and explicit template selection via "Use this template"
+            if (id === "preview") {
               return !csv || !mapping || !hasSelectedTemplate;
             }
             return false;
           }}
           getDisabledTitle={(id) => {
-            if (id === 'template' && !csv) return 'Upload a CSV first to configure the template.';
-            if (id === 'preview' && (!csv || !mapping)) return 'Upload CSV and set column mapping first.';
-            if (id === 'preview' && !hasSelectedTemplate) return 'Choose a template and click "Use this template" first.';
+            if (id === "template" && !csv) return "Upload a CSV first to configure the template.";
+            if (id === "preview" && (!csv || !mapping)) return "Upload CSV and set column mapping first.";
+            if (id === "preview" && !hasSelectedTemplate) return "Choose a template and click \"Use this template\" first.";
             return undefined;
           }}
           onChange={(id) => {
@@ -387,15 +391,6 @@ function PageInner() {
           }}
         />
       </div>
-    </main>
     </div>
-  );
-}
-
-export default function Home() {
-  return (
-    <Suspense fallback={<div className="p-6">Loading...</div>}>
-      <PageInner />
-    </Suspense>
   );
 }
