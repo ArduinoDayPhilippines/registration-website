@@ -140,7 +140,7 @@ export default function ManageEventPage() {
                 >
                   Cancel
                 </button>
-                <button className="font-montserrat px-6 py-2.5 md:py-3 bg-secondary hover:bg-secondary/90 rounded-lg text-white text-sm md:text-base font-medium transition-colors">
+                <button className="font-montserrat px-6 py-2.5 md:py-3 bg-cyan-600 hover:bg-cyan-700 rounded-lg text-white text-sm md:text-base font-medium transition-colors">
                   Save Changes
                 </button>
               </div>

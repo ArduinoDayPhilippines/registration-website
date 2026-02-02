@@ -67,7 +67,7 @@ export function EventPreviewCard({
             </div>
 
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-full bg-orange-500 flex items-center justify-center text-xs font-bold">
+              <div className="w-6 h-6 rounded-full bg-cyan-500 flex items-center justify-center text-xs font-bold">
                 C
               </div>
               <span className="text-sm text-white/70">Host</span>

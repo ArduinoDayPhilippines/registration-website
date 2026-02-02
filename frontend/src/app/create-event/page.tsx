@@ -11,7 +11,6 @@ import { AdminNavbar } from '@/components/admin/admin-navbar';
 import BokehBackground from '@/components/create-event/bokeh-background';
 import Squares from '@/components/create-event/squares-background';
 import { CoverImageUpload } from '@/components/create-event/cover-image-upload';
-import { ThemePreview } from '@/components/create-event/theme-preview';
 import { EventTitleInput } from '@/components/create-event/event-title-input';
 import { DateTimeInputs } from '@/components/create-event/date-time-inputs';
 import { DescriptionInput } from '@/components/create-event/description-input';
@@ -61,16 +60,10 @@ export default function CreateEventPage() {
             
             {/* Left Column: Visuals & Preview */}
             <div className="flex flex-col gap-4 justify-center">
-              <div className="space-y-4">
-                <CoverImageUpload 
-                  value={formData.coverImage} 
-                  onChange={(value) => updateField('coverImage', value)} 
-                />
-                <ThemePreview 
-                  value={formData.theme} 
-                  onChange={(value) => updateField('theme', value)} 
-                />
-              </div>
+              <CoverImageUpload 
+                value={formData.coverImage} 
+                onChange={(value) => updateField('coverImage', value)} 
+              />
             </div>
 
             {/* Right Column: Event Details Form */}
