@@ -1,9 +1,11 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { StatCard } from './stat-card';
 import { ActiveEvents } from './active-events';
 import { AnalyticsCharts } from './analytics-charts';
+import { eventStorage } from '@/lib/storage/event-storage';
+import { EventData } from '@/types/event';
 import { 
   Users, 
   Calendar, 
@@ -26,68 +28,32 @@ const mockStats = {
   peakAttendance: 203,
 };
 
-
-
-const mockEvents = [
-  {
-    id: '1',
-    title: 'Arduino Workshop 101',
-    date: '2026-02-15',
-    registered: 145,
-    capacity: 200,
-    status: 'active',
-  },
-  {
-    id: '2',
-    title: 'IoT with Arduino',
-    date: '2026-02-20',
-    registered: 89,
-    capacity: 150,
-    status: 'active',
-  },
-  {
-    id: '3',
-    title: 'Robotics Bootcamp',
-    date: '2026-03-01',
-    registered: 203,
-    capacity: 250,
-    status: 'active',
-  },
-];
-
-const mockFinishedEvents = [
-  {
-    id: '4',
-    title: 'Arduino Basics Workshop',
-    date: '2026-01-10',
-    registered: 180,
-    capacity: 200,
-    status: 'completed',
-  },
-  {
-    id: '5',
-    title: 'Sensors & Actuators',
-    date: '2026-01-15',
-    registered: 120,
-    capacity: 150,
-    status: 'completed',
-  },
-  {
-    id: '6',
-    title: 'Circuit Design 101',
-    date: '2026-01-20',
-    registered: 95,
-    capacity: 100,
-    status: 'completed',
-  },
-];
-
 interface AdminDashboardContentProps {
   activeTab: 'dashboard' | 'events' | 'stats' | 'create-event' | 'export-data';
   setActiveTab: (tab: 'dashboard' | 'events' | 'stats' | 'create-event' | 'export-data') => void;
 }
 
 export const AdminDashboardContent: React.FC<AdminDashboardContentProps> = ({ activeTab, setActiveTab }) => {
+  const [events, setEvents] = useState<EventData[]>([]);
+
+  useEffect(() => {
+    // Load events from storage
+    const loadedEvents = eventStorage.getAll();
+    console.log('Loaded events from storage:', loadedEvents);
+    setEvents(loadedEvents);
+  }, [activeTab]); // Reload when tab changes
+
+  // Transform EventData to match ActiveEvents component expected format
+  const transformedEvents = events.map(event => ({
+    id: event.slug,
+    title: event.title,
+    date: `${event.startDate}T${event.startTime}`,
+    registered: 0, // TODO: Add registration tracking
+    capacity: event.capacity === 'Unlimited' ? 999999 : parseInt(event.capacity) || 100,
+    status: new Date(`${event.startDate}T${event.startTime}`) > new Date() ? 'active' : 'completed',
+  }));
+  
+  console.log('Transformed events:', transformedEvents);
 
   return (
     <div className="flex min-h-screen">
@@ -139,7 +105,7 @@ export const AdminDashboardContent: React.FC<AdminDashboardContentProps> = ({ ac
         )}
 
         {activeTab === 'events' && (
-          <ActiveEvents events={[...mockEvents, ...mockFinishedEvents]} />
+          <ActiveEvents events={transformedEvents} />
         )}
 
         {activeTab === 'create-event' && (
