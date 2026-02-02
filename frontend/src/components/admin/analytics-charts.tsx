@@ -82,7 +82,7 @@ export const AnalyticsCharts: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Registration Trends */}
-        <div className="bg-gradient-to-br from-[#0B1F23]/60 via-[#0E1924]/50 to-[#0B1F23]/60 backdrop-blur-sm rounded-xl p-6 border border-[#06b6d4]/30 shadow-lg shadow-[#0891b2]/20">
+        <div className="bg-gradient-to-br from-[#0B1F23]/60 via-[#0E1924]/50 to-[#0B1F23]/60 backdrop-blur-sm rounded-xl p-6 border border-gray-800/50 hover:border-[#22d3ee]/60 shadow-lg shadow-black/20 hover:shadow-[#22d3ee]/30 transition-all duration-300">
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp className="w-5 h-5 text-[#60a5fa]" />
             <h3 className="text-lg font-semibold !text-white" style={{ color: '#ffffff', fontFamily: 'Urbanist, sans-serif' }}>
@@ -92,6 +92,7 @@ export const AnalyticsCharts: React.FC = () => {
           <p className="text-sm text-gray-400 mb-4" style={{ fontFamily: 'Urbanist, sans-serif' }}>
             Showing total visitors for the last 6 months • Jan 2026 - Jun 2026
           </p>
+          <div className="pointer-events-auto">
           <ResponsiveContainer width="100%" height={250}>
             <AreaChart data={registrationTrendData}>
               <defs>
@@ -113,6 +114,7 @@ export const AnalyticsCharts: React.FC = () => {
               <Area type="monotone" dataKey="volunteers" stroke="#34d399" fillOpacity={1} fill="url(#colorVolunteers)" strokeWidth={2} />
             </AreaChart>
           </ResponsiveContainer>
+          </div>
           <div className="flex items-center justify-between mt-4 pt-4 border-t border-[#06b6d4]/20">
             <span className="text-sm text-gray-400" style={{ fontFamily: 'Urbanist, sans-serif' }}>January - June 2026</span>
             <span className="text-sm font-semibold text-[#34d399] flex items-center gap-1" style={{ fontFamily: 'Urbanist, sans-serif' }}>
@@ -123,7 +125,7 @@ export const AnalyticsCharts: React.FC = () => {
         </div>
 
         {/* Capacity Utilization */}
-        <div className="bg-gradient-to-br from-[#0B1F23]/60 via-[#0E1924]/50 to-[#0B1F23]/60 backdrop-blur-sm rounded-xl p-6 border border-[#06b6d4]/30 shadow-lg shadow-[#0891b2]/20">
+        <div className="bg-gradient-to-br from-[#0B1F23]/60 via-[#0E1924]/50 to-[#0B1F23]/60 backdrop-blur-sm rounded-xl p-6 border border-gray-800/50 hover:border-[#22d3ee]/60 shadow-lg shadow-black/20 hover:shadow-[#22d3ee]/30 transition-all duration-300">
           <div className="flex items-center gap-2 mb-4">
             <Users className="w-5 h-5 text-[#c084fc]" />
             <h3 className="text-lg font-semibold !text-white" style={{ color: '#ffffff', fontFamily: 'Urbanist, sans-serif' }}>
@@ -133,6 +135,7 @@ export const AnalyticsCharts: React.FC = () => {
           <p className="text-sm text-gray-400 mb-4" style={{ fontFamily: 'Urbanist, sans-serif' }}>
             Event capacity trends over time • Jan 2026 - Jun 2026
           </p>
+          <div className="pointer-events-auto">
           <ResponsiveContainer width="100%" height={250}>
             <AreaChart data={capacityTrendData}>
               <defs>
@@ -154,6 +157,7 @@ export const AnalyticsCharts: React.FC = () => {
               <Area type="monotone" dataKey="available" stroke="#94a3b8" fillOpacity={1} fill="url(#colorAvailable)" strokeWidth={2} stackId="1" />
             </AreaChart>
           </ResponsiveContainer>
+          </div>
           <div className="flex items-center justify-between mt-4 pt-4 border-t border-[#06b6d4]/20">
             <span className="text-sm text-gray-400" style={{ fontFamily: 'Urbanist, sans-serif' }}>January - June 2026</span>
             <span className="text-sm font-semibold text-[#c084fc]" style={{ fontFamily: 'Urbanist, sans-serif' }}>
@@ -163,7 +167,7 @@ export const AnalyticsCharts: React.FC = () => {
         </div>
 
         {/* Event Timeline */}
-        <div className="bg-gradient-to-br from-[#0B1F23]/60 via-[#0E1924]/50 to-[#0B1F23]/60 backdrop-blur-sm rounded-xl p-6 border border-[#06b6d4]/30 shadow-lg shadow-[#0891b2]/20">
+        <div className="bg-gradient-to-br from-[#0B1F23]/60 via-[#0E1924]/50 to-[#0B1F23]/60 backdrop-blur-sm rounded-xl p-6 border border-gray-800/50 hover:border-[#22d3ee]/60 shadow-lg shadow-black/20 hover:shadow-[#22d3ee]/30 transition-all duration-300">
           <div className="flex items-center gap-2 mb-4">
             <Calendar className="w-5 h-5 text-[#34d399]" />
             <h3 className="text-lg font-semibold !text-white" style={{ color: '#ffffff', fontFamily: 'Urbanist, sans-serif' }}>
@@ -173,6 +177,7 @@ export const AnalyticsCharts: React.FC = () => {
           <p className="text-sm text-gray-400 mb-4" style={{ fontFamily: 'Urbanist, sans-serif' }}>
             Active, finished, and upcoming events • Jan 2026 - Jun 2026
           </p>
+          <div className="pointer-events-auto">
           <ResponsiveContainer width="100%" height={250}>
             <AreaChart data={eventTimelineData}>
               <defs>
@@ -199,6 +204,7 @@ export const AnalyticsCharts: React.FC = () => {
               <Area type="monotone" dataKey="upcoming" stroke="#f59e0b" fillOpacity={1} fill="url(#colorUpcoming)" strokeWidth={2} />
             </AreaChart>
           </ResponsiveContainer>
+          </div>
           <div className="flex items-center justify-between mt-4 pt-4 border-t border-[#06b6d4]/20">
             <span className="text-sm text-gray-400" style={{ fontFamily: 'Urbanist, sans-serif' }}>January - June 2026</span>
             <span className="text-sm font-semibold text-[#34d399]" style={{ fontFamily: 'Urbanist, sans-serif' }}>
@@ -208,7 +214,7 @@ export const AnalyticsCharts: React.FC = () => {
         </div>
 
         {/* Attendance Rate */}
-        <div className="bg-gradient-to-br from-[#0B1F23]/60 via-[#0E1924]/50 to-[#0B1F23]/60 backdrop-blur-sm rounded-xl p-6 border border-[#06b6d4]/30 shadow-lg shadow-[#0891b2]/20">
+        <div className="bg-gradient-to-br from-[#0B1F23]/60 via-[#0E1924]/50 to-[#0B1F23]/60 backdrop-blur-sm rounded-xl p-6 border border-gray-800/50 hover:border-[#22d3ee]/60 shadow-lg shadow-black/20 hover:shadow-[#22d3ee]/30 transition-all duration-300">
           <div className="flex items-center gap-2 mb-4">
             <CheckCircle className="w-5 h-5 text-[#22c55e]" />
             <h3 className="text-lg font-semibold !text-white" style={{ color: '#ffffff', fontFamily: 'Urbanist, sans-serif' }}>
@@ -218,6 +224,7 @@ export const AnalyticsCharts: React.FC = () => {
           <p className="text-sm text-gray-400 mb-4" style={{ fontFamily: 'Urbanist, sans-serif' }}>
             Comparing registrations to actual attendance • Jan 2026 - Jun 2026
           </p>
+          <div className="pointer-events-auto">
           <ResponsiveContainer width="100%" height={250}>
             <AreaChart data={attendanceData}>
               <defs>
@@ -239,6 +246,7 @@ export const AnalyticsCharts: React.FC = () => {
               <Area type="monotone" dataKey="attended" stroke="#22c55e" fillOpacity={1} fill="url(#colorAttended)" strokeWidth={2} />
             </AreaChart>
           </ResponsiveContainer>
+          </div>
           <div className="flex items-center justify-between mt-4 pt-4 border-t border-[#06b6d4]/20">
             <span className="text-sm text-gray-400" style={{ fontFamily: 'Urbanist, sans-serif' }}>January - June 2026</span>
             <span className="text-sm font-semibold text-[#22c55e]" style={{ fontFamily: 'Urbanist, sans-serif' }}>
