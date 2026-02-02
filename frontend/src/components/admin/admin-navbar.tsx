@@ -1,24 +1,24 @@
 import { LogOut, Calendar, BarChart3, Plus, Menu, X } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import Image from 'next/image';
 import { useState } from 'react';
 
 interface AdminNavbarProps {
   activeTab: string;
-  onTabChange: (tab: 'dashboard' | 'events' | 'stats' | 'create-event' | 'export-data') => void;
 }
 
-export function AdminNavbar({ activeTab, onTabChange }: AdminNavbarProps) {
+export function AdminNavbar({ activeTab }: AdminNavbarProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const menuItems = [
-    { id: 'dashboard' as const, label: 'Dashboard', icon: BarChart3 },
-    { id: 'events' as const, label: 'Events', icon: Calendar },
+    { id: 'dashboard' as const, label: 'Dashboard', icon: BarChart3, path: '/dashboard' },
+    { id: 'events' as const, label: 'Events', icon: Calendar, path: '/dashboard/events' },
   ];
 
-  const handleTabChange = (tab: 'dashboard' | 'events' | 'stats' | 'create-event' | 'export-data') => {
-    onTabChange(tab);
+  const handleTabChange = (path: string) => {
+    router.push(path);
     setMobileMenuOpen(false);
   };
 
@@ -64,7 +64,7 @@ export function AdminNavbar({ activeTab, onTabChange }: AdminNavbarProps) {
               return (
                 <button
                   key={item.id}
-                  onClick={() => handleTabChange(item.id)}
+                  onClick={() => handleTabChange(item.path)}
                   className={`flex items-center gap-2 px-4 py-1.5 rounded-md transition-all duration-200 font-urbanist ${
                     isActive
                       ? 'bg-cyan-500/10 text-cyan-400 shadow-sm shadow-cyan-500/10'
@@ -119,7 +119,7 @@ export function AdminNavbar({ activeTab, onTabChange }: AdminNavbarProps) {
                 return (
                   <button
                     key={item.id}
-                    onClick={() => handleTabChange(item.id)}
+                    onClick={() => handleTabChange(item.path)}
                     className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-md transition-all duration-200 font-urbanist ${
                       isActive
                         ? 'bg-cyan-500/10 text-cyan-400 shadow-sm'
