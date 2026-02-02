@@ -51,7 +51,6 @@ export function DateTimeInputs({
         label="Start" 
         icon={Calendar} 
         type="datetime-local" 
-        className="[color-scheme:dark]"
         iconAlwaysActive={true}
         value={startDateTime}
         onChange={handleStartChange}
@@ -61,7 +60,6 @@ export function DateTimeInputs({
         icon={Clock} 
         type="datetime-local" 
         variant="secondary"
-        className="[color-scheme:dark]"
         iconAlwaysActive={true}
         value={endDateTime}
         onChange={handleEndChange}

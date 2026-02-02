@@ -1,5 +1,6 @@
 import React from 'react';
 import Image from 'next/image';
+import { Ticket } from 'lucide-react';
 
 interface EventCoverImageProps {
   src: string;
@@ -14,7 +15,7 @@ export function EventCoverImage({ src, alt }: EventCoverImageProps) {
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center">
             <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-white/5 flex items-center justify-center">
-              <span className="text-3xl">🎫</span>
+              <Ticket className="w-8 h-8 text-white/40" />
             </div>
             <p className="text-white/40 text-xs uppercase tracking-wider">No Cover Image</p>
           </div>

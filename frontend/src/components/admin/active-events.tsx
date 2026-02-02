@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Calendar, Clock, SlidersHorizontal } from 'lucide-react';
 import { StatusBadge } from './status-badge';
 
@@ -12,6 +13,7 @@ interface Event {
   registered: number;
   capacity: number;
   status: string;
+  coverImage?: string;
 }
 
 interface ActiveEventsProps {
@@ -94,18 +96,32 @@ export const ActiveEvents: React.FC<ActiveEventsProps> = ({ events }) => {
             <div 
               key={event.id} 
               onClick={() => router.push(`/event/${event.id}/manage`)}
-              className="group bg-gradient-to-br from-[#0B1F23]/80 via-[#0E1924]/70 to-[#0B1F23]/80 backdrop-blur-sm rounded-2xl overflow-hidden border border-[#06b6d4]/40 shadow-xl shadow-[#0891b2]/30 hover:border-[#06b6d4]/70 transition-all duration-300 hover:shadow-2xl hover:shadow-[#0891b2]/50 hover:-translate-y-1 cursor-pointer"
+              className="group bg-gradient-to-br from-[#0B1F23]/80 via-[#0E1924]/70 to-[#0B1F23]/80 backdrop-blur-sm rounded-2xl overflow-hidden border border-gray-800/50 hover:border-[#22d3ee]/60 shadow-xl shadow-black/20 hover:shadow-[#22d3ee]/30 transition-all duration-300 hover:-translate-y-1 cursor-pointer"
             >
-              {/* Image Placeholder */}
+              {/* Cover Image */}
               <div className="relative w-full h-48 bg-gradient-to-br from-[#38311E]/60 via-[#373531]/50 to-[#35351C]/40 overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0B1F23]/60 to-transparent" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="p-4 bg-[#0B1F23]/40 backdrop-blur-sm rounded-2xl border border-[#06b6d4]/30 group-hover:scale-110 transition-transform duration-300">
-                    <Calendar className="w-14 h-14 text-[#06b6d4]" />
-                  </div>
-                </div>
+                {event.coverImage ? (
+                  <>
+                    <Image
+                      src={event.coverImage}
+                      alt={event.title}
+                      fill
+                      className="object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0B1F23]/60 to-transparent" />
+                  </>
+                ) : (
+                  <>
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0B1F23]/60 to-transparent" />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="p-4 bg-[#0B1F23]/40 backdrop-blur-sm rounded-2xl border border-[#06b6d4]/30 group-hover:scale-110 transition-transform duration-300">
+                        <Calendar className="w-14 h-14 text-[#06b6d4]" />
+                      </div>
+                    </div>
+                  </>
+                )}
                 {/* Status badge in corner */}
-                <div className="absolute top-4 right-4">
+                <div className="absolute top-4 right-4 z-10">
                   <StatusBadge status={event.status} />
                 </div>
               </div>

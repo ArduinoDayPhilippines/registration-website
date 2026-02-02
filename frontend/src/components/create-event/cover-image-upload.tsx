@@ -35,7 +35,7 @@ export function CoverImageUpload({ value, onChange }: CoverImageUploadProps) {
   return (
     <div 
       onClick={handleClick}
-      className="aspect-video w-full rounded-2xl bg-black/40 backdrop-blur-md border border-white/10 flex flex-col items-center justify-center relative overflow-hidden group cursor-pointer md:hover:border-primary transition-all duration-300 shadow-2xl shadow-black/50"
+      className="aspect-[4/4] w-full rounded-2xl bg-black/40 backdrop-blur-md border border-white/10 flex flex-col items-center justify-center relative overflow-hidden group cursor-pointer md:hover:border-primary transition-all duration-300 shadow-2xl shadow-black/50"
     >
       <input
         ref={fileInputRef}

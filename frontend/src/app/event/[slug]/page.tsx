@@ -3,7 +3,8 @@
 import React from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Navbar } from "@/components/navbar";
-import { ParallaxBackground } from "@/components/create-event/parallax-background";
+import BokehBackground from "@/components/create-event/bokeh-background";
+import Squares from "@/components/create-event/squares-background";
 import { BackButton } from "@/components/ui/back-button";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { ErrorState } from "@/components/ui/error-state";
@@ -37,8 +38,9 @@ export default function EventPage() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-[#0a0a0a] text-white relative overflow-x-hidden font-montserrat">
-      <ParallaxBackground />
+    <div className="min-h-screen w-full bg-gradient-to-br from-[#0a1f14] via-[#0a1520] to-[#120c08] text-white relative overflow-x-hidden font-montserrat">
+      <BokehBackground />
+      <Squares direction="diagonal" speed={0.3} />
 
       <main className="relative z-10 w-full max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-10 pb-16">
         {/* Back Button */}
