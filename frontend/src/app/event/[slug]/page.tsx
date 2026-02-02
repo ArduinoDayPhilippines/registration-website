@@ -40,8 +40,6 @@ export default function EventPage() {
     <div className="min-h-screen w-full bg-[#0a0a0a] text-white relative overflow-x-hidden font-montserrat">
       <ParallaxBackground />
 
-      <Navbar />
-
       <main className="relative z-10 w-full max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-10 pb-16">
         {/* Back Button */}
         <div className="animate-fade-in mb-6 md:mb-8">

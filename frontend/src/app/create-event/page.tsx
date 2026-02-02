@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { MapPin } from 'lucide-react';
 import { Question } from '@/types/event';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useScrollLock } from '@/hooks/use-scroll-lock';
 import { useEventForm } from '@/hooks/event/use-event-form';
-import { Navbar } from '@/components/navbar';
+import { AdminNavbar } from '@/components/admin/admin-navbar';
 import BokehBackground from '@/components/create-event/bokeh-background';
 import Squares from '@/components/create-event/squares-background';
 import { CoverImageUpload } from '@/components/create-event/cover-image-upload';
@@ -17,8 +17,12 @@ import { DateTimeInputs } from '@/components/create-event/date-time-inputs';
 import { DescriptionInput } from '@/components/create-event/description-input';
 import { EventOptions } from '@/components/create-event/event-options';
 import { RegistrationQuestions } from '@/components/create-event/registration-questions';
+import { useRouter } from 'next/navigation';
 
 export default function CreateEventPage() {
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'events' | 'stats' | 'create-event' | 'export-data'>('create-event');
+  
   const {
     formData,
     updateField,
@@ -37,6 +41,13 @@ export default function CreateEventPage() {
     // Scroll handling if needed
   };
 
+  const handleTabChange = (tab: 'dashboard' | 'events' | 'stats' | 'create-event' | 'export-data') => {
+    setActiveTab(tab);
+    if (tab === 'dashboard' || tab === 'events') {
+      router.push('/dashboard');
+    }
+  };
+
   return (
     <div 
       ref={containerRef}
@@ -49,9 +60,9 @@ export default function CreateEventPage() {
       {/* Grid Background */}
       <Squares direction="diagonal" speed={0.3} />
 
-      <Navbar />
+      <AdminNavbar activeTab={activeTab} onTabChange={handleTabChange} />
 
-      <main className="flex-1 w-full max-w-[1600px] mx-auto relative z-10 px-6 md:px-12 py-8 overflow-hidden h-[calc(100vh-4rem)]">
+      <main className="flex-1 w-full max-w-[1600px] mx-auto relative z-10 px-6 md:px-12 py-8 overflow-hidden h-[calc(100vh-4rem)] mt-16">
         
         <div className="h-full flex items-center justify-center">
           <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 max-h-full">
