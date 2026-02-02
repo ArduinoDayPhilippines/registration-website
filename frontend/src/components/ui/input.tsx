@@ -33,29 +33,29 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
 
     return (
       <div className={cn(
-        "bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl p-3 md:p-4 flex items-start gap-3 md:gap-4 transition-all group shadow-sm",
+        "bg-[rgba(13,27,42,0.5)] backdrop-blur-xl border border-[rgba(0,206,209,0.3)] rounded-xl p-2.5 flex items-start gap-2.5 transition-all group shadow-lg",
         currentStyle.container,
         className
       )}>
         <div className={cn(
-          "p-2 md:p-3 bg-white-50/5 rounded-xl transition-colors mt-0.5 md:mt-1",
+          "p-2 bg-white-50/5 rounded-lg transition-colors mt-0.5",
           currentStyle.iconWrapper
         )}>
           <Icon className={cn(
-            "w-4 h-4 md:w-5 md:h-5 transition-colors",
+            "w-4 h-4 transition-colors",
             iconAlwaysActive ? currentStyle.iconActive : currentStyle.iconInactive
           )} />
         </div>
-        <div className="flex-1 flex flex-col gap-1 md:gap-2">
+        <div className="flex-1 flex flex-col gap-0.5">
            {label && (
              <label className={cn(
-               "text-[10px] text-white/40 uppercase tracking-widest font-bold mb-0.5 md:mb-1 block transition-colors",
+               "text-[9px] text-white/40 uppercase tracking-widest font-bold block transition-colors",
                currentStyle.label
              )}>{label}</label>
            )}
            <input 
               ref={ref}
-              className="bg-transparent border-none outline-none shadow-none text-sm md:text-base focus:ring-0 w-full p-0 placeholder-white/20 text-white font-medium"
+              className="bg-transparent border-none outline-none shadow-none text-sm focus:ring-0 w-full p-0 placeholder-white text-white font-medium"
               {...props} 
            />
            {children}
