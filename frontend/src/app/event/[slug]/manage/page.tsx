@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowUpRight } from "lucide-react";
-import { Navbar } from "@/components/navbar";
+import { AdminNavbar } from "@/components/admin/admin-navbar";
 import { ParallaxBackground } from "@/components/create-event/parallax-background";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { ErrorState } from "@/components/ui/error-state";
@@ -27,6 +27,16 @@ export default function ManageEventPage() {
   const slug = params.slug as string;
   const { event, loading, error } = useEvent(slug);
   const [activeTab, setActiveTab] = useState("overview");
+  const [adminTab, setAdminTab] = useState<'dashboard' | 'events' | 'stats' | 'create-event' | 'export-data'>('events');
+
+  const handleAdminTabChange = (tab: 'dashboard' | 'events' | 'stats' | 'create-event' | 'export-data') => {
+    setAdminTab(tab);
+    if (tab === 'dashboard' || tab === 'events') {
+      router.push('/dashboard');
+    } else if (tab === 'create-event') {
+      router.push('/create-event');
+    }
+  };
 
   if (loading) {
     return <LoadingSpinner message="Loading event management..." />;
@@ -52,9 +62,9 @@ export default function ManageEventPage() {
     <div className="min-h-screen w-full bg-[#1a1a1a] text-white relative overflow-x-hidden font-montserrat">
       <ParallaxBackground />
 
-      <Navbar />
+      <AdminNavbar activeTab={adminTab} onTabChange={handleAdminTabChange} />
 
-      <main className="relative z-10 w-full max-w-6xl mx-auto px-3 md:px-6 lg:px-8 py-4 md:py-10 pb-16">
+      <main className="relative z-10 w-full max-w-6xl mx-auto px-3 md:px-6 lg:px-8 py-4 md:py-10 pb-16 mt-16">
         {/* Header with Event Page Link */}
         <div className="flex items-center justify-between gap-3 mb-4 md:mb-6">
           <div className="min-w-0 flex-1">
