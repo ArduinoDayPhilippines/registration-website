@@ -80,7 +80,7 @@ export function RsvpModal({
         {/* Header */}
         <div className="relative flex items-start justify-between p-6 md:p-8 border-b border-white/10">
           <div className="flex-1 pr-4">
-            <h2 className="font-morganite text-2xl md:text-3xl font-bold text-white leading-tight">
+            <h2 className="font-urbanist text-2xl md:text-3xl font-bold text-white leading-tight">
               {isSuccess ? 'Registration Complete!' : eventTitle}
             </h2>
           </div>
@@ -103,7 +103,7 @@ export function RsvpModal({
                   <CheckCircle size={40} className="text-white" />
                 </div>
               </div>
-              <h3 className="font-morganite text-2xl md:text-3xl font-bold text-white mb-3">
+              <h3 className="font-urbanist text-2xl md:text-3xl font-bold text-white mb-3">
                 {requireApproval ? 'Pending Approval' : 'You\'re Registered!'}
               </h3>
               <p className="text-white/70 text-base max-w-md mx-auto leading-relaxed">

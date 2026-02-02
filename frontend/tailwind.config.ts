@@ -13,6 +13,7 @@ const globalColors = {
   secondary: "#EE7402",
   accent: "#1A6641",
   white: {
+    DEFAULT: "#FFFFFF",
     50: "#E8E8EA",
     100: "#FFFFFF",
   },
@@ -32,6 +33,10 @@ export default {
       fontFamily: {
         montserrat: ["Montserrat", "sans-serif"],
         morganite: ["Morganite", "sans-serif"],
+        urbanist: ["var(--font-urbanist)", "sans-serif"],
+        inter: ["var(--font-inter)", "sans-serif"],
+        geist: ["var(--font-geist-sans)", "sans-serif"],
+        "geist-mono": ["var(--font-geist-mono)", "monospace"],
       },
       backgroundImage: {
         "gradient-hover": `linear-gradient(130deg, ${globalColors.primary} 0%, #42B7B7 44%, #71DEDF 77%, #7DC5C7 100%)`,
@@ -77,6 +82,7 @@ export default {
   },
   plugins: [
     typography,
+    require("tailwindcss-animate"),
     function ({ matchUtilities, theme }: PluginAPI) {
       matchUtilities(
         {

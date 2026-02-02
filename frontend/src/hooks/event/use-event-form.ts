@@ -112,7 +112,9 @@ export function useEventForm(): UseEventFormReturn {
         createdAt: new Date().toISOString(),
       };
 
+      console.log('Saving event:', eventData);
       eventStorage.save(eventData);
+      console.log('Event saved successfully, redirecting to event page...');
       router.push(`/event/${slug}`);
     } catch (error) {
       console.error('Error creating event:', error);

@@ -1,5 +1,6 @@
 "use client";
 
+<<<<<<< HEAD
 import { useMemo, useState, Suspense, useCallback } from "react";
 import { driver } from "driver.js";
 import type { DriveStep } from "driver.js";
@@ -239,7 +240,7 @@ function PageInner() {
     <div>
       <main className="mx-auto max-w-6xl p-6 space-y-6">
       <header className="space-y-1">
-      <h1 className="text-3xl font-semibold tracking-tight flex items-center gap-3 text-primary font-morganite">BatchMail <span className="keep-light-pill text-[12px] font-semibold px-2.5 py-1 rounded bg-white-100 text-slate-900 border border-slate-300 tracking-widest uppercase font-montserrat">ADPH</span></h1>
+      <h1 className="text-3xl font-semibold tracking-tight flex items-center gap-3 text-primary font-urbanist">BatchMail <span className="keep-light-pill text-[12px] font-semibold px-2.5 py-1 rounded bg-white-100 text-slate-900 border border-slate-300 tracking-widest uppercase font-montserrat">ADPH</span></h1>
         <p className="text-sm text-secondary">Upload CSV, edit/upload Jinja-style HTML template, preview, and export. {totalCount ? `(${totalCount} rows)` : ""}</p>
       </header>
 
