@@ -2,9 +2,10 @@
 
 import React, { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowUpRight, ArrowLeft } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { AdminNavbar } from "@/components/admin/admin-navbar";
-import { ParallaxBackground } from "@/components/create-event/parallax-background";
+import BokehBackground from "@/components/create-event/bokeh-background";
+import Squares from "@/components/create-event/squares-background";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { ErrorState } from "@/components/ui/error-state";
 import { useEvent } from "@/hooks/event/use-event";
@@ -49,31 +50,26 @@ export default function ManageEventPage() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#1a1a1a] text-white relative overflow-x-hidden font-montserrat">
-      <ParallaxBackground />
+    <div className="min-h-screen w-full bg-gradient-to-br from-[#0a1f14] via-[#0a1520] to-[#120c08] text-white relative overflow-x-hidden font-urbanist">
+      {/* Bokeh Background Effect */}
+      <BokehBackground />
+      
+      {/* Grid Background */}
+      <Squares direction="diagonal" speed={0.3} />
 
       <AdminNavbar activeTab="events" />
 
       <main className="relative z-10 w-full max-w-6xl mx-auto px-3 md:px-6 lg:px-8 py-4 md:py-10 pb-16 mt-16">
-        {/* Back Button */}
-        <button
-          onClick={() => router.push('/dashboard')}
-          className="flex items-center gap-2 px-3 py-2 mb-4 text-white/60 hover:text-white transition-colors group"
-        >
-          <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
-          <span className="text-sm font-medium">Back to Dashboard</span>
-        </button>
-
         {/* Header with Event Page Link */}
         <div className="flex items-center justify-between gap-3 mb-4 md:mb-6">
           <div className="min-w-0 flex-1">
-            <h1 className="font-morganite text-2xl md:text-3xl lg:text-4xl font-bold text-white truncate">
+            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white truncate">
               {event.title}
             </h1>
           </div>
           <button
             onClick={() => router.push(`/event/${slug}`)}
-            className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-white/10 hover:bg-white/20 rounded-lg text-white text-xs md:text-sm font-medium transition-colors whitespace-nowrap"
+            className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-white/10 hover:bg-white/20 rounded-lg text-white text-xs md:text-sm font-medium transition-colors whitespace-nowrap font-urbanist"
           >
             <span className="hidden sm:inline">Event Page</span>
             <span className="sm:hidden">View</span>
