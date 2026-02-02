@@ -33,12 +33,12 @@
 }
 @layer base {
 	body {
-		@apply bg-slate-50 text-base text-slate-900 font-montserrat scroll-smooth;
+		@apply bg-slate-50 text-base text-slate-900 scroll-smooth;
 	}
 		input,
 		select,
 		textarea {
-			@apply text-slate-900 placeholder-slate-400;
+			@apply text-white-100 placeholder-slate-400;
 		}
 		select,
 		input[type="text"],
@@ -48,20 +48,52 @@
 		input[type="url"],
 		input[type="tel"],
 		input[type="password"],
+		input[type="datetime-local"],
+		input[type="date"],
+		input[type="time"],
 		textarea {
-			@apply bg-white-100 border-slate-300;
+			@apply bg-transparent border-slate-300;
 		}
+
+	/* Datetime input styling */
+	input[type="datetime-local"],
+	input[type="date"],
+	input[type="time"] {
+		color-scheme: dark;
+		color: white !important;
+	}
+	
+	input[type="datetime-local"]::-webkit-datetime-edit,
+	input[type="date"]::-webkit-datetime-edit,
+	input[type="time"]::-webkit-datetime-edit {
+		color: white;
+	}
+	
+	input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+	input[type="date"]::-webkit-calendar-picker-indicator,
+	input[type="time"]::-webkit-calendar-picker-indicator {
+		filter: invert(1);
+		cursor: pointer;
+	}
+
+	input[type="datetime-local"]::placeholder,
+	input[type="date"]::placeholder,
+	input[type="time"]::placeholder {
+		color: white !important;
+		opacity: 1;
+	}
+
 	/* Section Headings */
 	h2 {
-		@apply font-morganite text-3xl font-bold leading-none sm:text-5xl;
+		@apply font-urbanist text-2xl font-bold leading-none sm:text-3xl;
 	}
 
 	h3 {
-		@apply font-morganite text-4xl font-bold leading-none;
+		@apply font-urbanist text-2xl font-bold leading-none;
 	}
 
 	h4 {
-		@apply font-morganite text-3xl font-medium leading-none;
+		@apply font-urbanist text-xl font-medium leading-none;
 	}
 
 	.container {
@@ -131,9 +163,9 @@
 	position: absolute;
 	transform: rotate(41.861deg);
 	flex-shrink: 0;
-	background: linear-gradient(180deg, #16A2AF 0%, #171425 100%);
-	opacity: 0.5;
-	filter: blur(40.13648223876953px);
+	background: linear-gradient(180deg, #00CED1 0%, #0d1b2a 100%);
+	opacity: 0.2;
+	filter: blur(80px);
 	z-index: 0;
 }
 
@@ -151,10 +183,100 @@
 	position: absolute;
 	transform: rotate(-156.151deg);
 	flex-shrink: 0;
-	background: linear-gradient(5deg, #EE7402 3.73%, rgba(136, 66, 1, 0.50) 63.57%);
-	opacity: 0.5;
-	filter: blur(27.409912109375px);
+	background: linear-gradient(5deg, #FF6B35 3.73%, rgba(13, 27, 42, 0.70) 63.57%);
+	opacity: 0.25;
+	filter: blur(70px);
 	z-index: 0;
+}
+
+.yellow-glow {
+	position: absolute;
+	border-radius: 50%;
+	background: radial-gradient(circle, rgba(255, 215, 0, 0.8) 0%, rgba(255, 200, 0, 0.6) 25%, rgba(255, 185, 0, 0.4) 50%, rgba(255, 170, 0, 0.2) 75%, transparent 100%);
+	filter: blur(30px);
+	opacity: 0.9;
+	z-index: 1;
+	animation: pulse-glow 3s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+	0%, 100% {
+		opacity: 0.7;
+		transform: scale(1);
+	}
+	50% {
+		opacity: 1;
+		transform: scale(1.15);
+	}
+}
+
+/* Bokeh Background */
+.bokeh-container {
+	position: fixed;
+	inset: 0;
+	pointer-events: none;
+	z-index: 0;
+	overflow: hidden;
+}
+
+.bokeh-circle {
+	position: absolute;
+	border-radius: 50%;
+	filter: blur(80px);
+	opacity: 0.75;
+	animation: float 24s ease-in-out infinite;
+}
+
+.bokeh-circle-1 {
+	width: 280px;
+	height: 280px;
+	background: radial-gradient(circle, rgba(255, 195, 0, 0.6) 0%, rgba(255, 175, 0, 0.35) 40%, rgba(255, 155, 0, 0.15) 70%, transparent 100%);
+	left: 8%;
+	top: 15%;
+	animation-delay: 0s;
+}
+
+.bokeh-circle-2 {
+	width: 250px;
+	height: 250px;
+	background: radial-gradient(circle, rgba(255, 205, 0, 0.55) 0%, rgba(255, 180, 0, 0.32) 40%, rgba(255, 160, 0, 0.12) 70%, transparent 100%);
+	left: 15%;
+	top: 50%;
+	animation-delay: -8s;
+}
+
+.bokeh-circle-3 {
+	width: 270px;
+	height: 270px;
+	background: radial-gradient(circle, rgba(255, 190, 0, 0.58) 0%, rgba(255, 170, 0, 0.34) 40%, rgba(255, 150, 0, 0.14) 70%, transparent 100%);
+	right: 10%;
+	top: 20%;
+	animation-delay: -5s;
+}
+
+.bokeh-circle-4 {
+	width: 240px;
+	height: 240px;
+	background: radial-gradient(circle, rgba(255, 200, 0, 0.52) 0%, rgba(255, 175, 0, 0.3) 40%, rgba(255, 155, 0, 0.11) 70%, transparent 100%);
+	right: 5%;
+	bottom: 15%;
+	animation-delay: -12s;
+}
+
+.bokeh-circle-5 {
+	display: none;
+}
+
+@keyframes float {
+	0%, 100% {
+		transform: translate(0, 0) scale(1);
+	}
+	33% {
+		transform: translate(30px, -30px) scale(1.1);
+	}
+	66% {
+		transform: translate(-20px, 20px) scale(0.9);
+	}
 }
 
 /* BatchMail dark mode overrides */

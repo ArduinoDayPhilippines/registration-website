@@ -7,8 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useScrollLock } from '@/hooks/use-scroll-lock';
 import { useEventForm } from '@/hooks/event/use-event-form';
-import { ParallaxBackground } from '@/components/create-event/parallax-background';
 import { Navbar } from '@/components/navbar';
+import BokehBackground from '@/components/create-event/bokeh-background';
+import Squares from '@/components/create-event/squares-background';
 import { CoverImageUpload } from '@/components/create-event/cover-image-upload';
 import { ThemePreview } from '@/components/create-event/theme-preview';
 import { EventTitleInput } from '@/components/create-event/event-title-input';
@@ -29,103 +30,112 @@ export default function CreateEventPage() {
   } = useEventForm();
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const parallaxRef = useRef<HTMLDivElement>(null);
 
   useScrollLock();
 
   const handleScroll = () => {
-    if (containerRef.current && parallaxRef.current) {
-      const scrollTop = containerRef.current.scrollTop;
-      parallaxRef.current.style.transform = `translateY(${scrollTop * 0.2}px)`;
-    }
+    // Scroll handling if needed
   };
 
   return (
     <div 
       ref={containerRef}
       onScroll={handleScroll}
-      className="h-screen w-full bg-[#0a0a0a] text-white-100 relative overflow-y-auto overflow-x-hidden font-montserrat flex flex-col custom-scrollbar"
+      className="h-screen w-full bg-gradient-to-br from-[#0a1f14] via-[#0a1520] to-[#120c08] text-white-100 relative isolate overflow-hidden font-urbanist flex flex-col custom-scrollbar"
     >
-      <ParallaxBackground ref={parallaxRef} />
+      {/* Bokeh Background Effect */}
+      <BokehBackground />
+      
+      {/* Grid Background */}
+      <Squares direction="diagonal" speed={0.3} />
 
       <Navbar />
 
-      <main className="flex-1 w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-12 relative z-10 px-4 md:px-12 pb-10 items-start">
+      <main className="flex-1 w-full max-w-[1600px] mx-auto relative z-10 px-6 md:px-12 py-8 overflow-hidden h-[calc(100vh-4rem)]">
         
-        {/* Left Column: Visuals & Preview */}
-        <div className="lg:col-span-5 flex flex-col gap-5 lg:sticky lg:top-24 pt-4 lg:pt-10">
-          <CoverImageUpload 
-            value={formData.coverImage} 
-            onChange={(value) => updateField('coverImage', value)} 
-          />
-          <ThemePreview 
-            value={formData.theme} 
-            onChange={(value) => updateField('theme', value)} 
-          />
-        </div>
+        <div className="h-full flex items-center justify-center">
+          <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 max-h-full">
+            
+            {/* Left Column: Visuals & Preview */}
+            <div className="flex flex-col gap-4 justify-center">
+              <div className="space-y-4">
+                <CoverImageUpload 
+                  value={formData.coverImage} 
+                  onChange={(value) => updateField('coverImage', value)} 
+                />
+                <ThemePreview 
+                  value={formData.theme} 
+                  onChange={(value) => updateField('theme', value)} 
+                />
+              </div>
+            </div>
 
-        {/* Right Column: Event Details Form */}
-        <div className="lg:col-span-7 flex flex-col gap-5 pt-4 lg:pt-10">
-           
-           <EventTitleInput 
-             value={formData.title} 
-             onChange={(value) => updateField('title', value)} 
-           />
+            {/* Right Column: Event Details Form */}
+            <div className="flex flex-col justify-center max-h-full">
+              <div className="overflow-y-auto custom-scrollbar pr-2 space-y-3.5">
+                
+                <EventTitleInput 
+                  value={formData.title} 
+                  onChange={(value) => updateField('title', value)} 
+                />
 
-           <DateTimeInputs 
-              startDate={formData.startDate}
-              startTime={formData.startTime}
-              endDate={formData.endDate}
-              endTime={formData.endTime}
-              onStartDateChange={(value) => updateField('startDate', value)}
-              onStartTimeChange={(value) => updateField('startTime', value)}
-              onEndDateChange={(value) => updateField('endDate', value)}
-              onEndTimeChange={(value) => updateField('endTime', value)}
-           />
+                <DateTimeInputs 
+                  startDate={formData.startDate}
+                  startTime={formData.startTime}
+                  endDate={formData.endDate}
+                  endTime={formData.endTime}
+                  onStartDateChange={(value) => updateField('startDate', value)}
+                  onStartTimeChange={(value) => updateField('startTime', value)}
+                  onEndDateChange={(value) => updateField('endDate', value)}
+                  onEndTimeChange={(value) => updateField('endTime', value)}
+                />
 
-           <Input 
-              label="Location" 
-              icon={MapPin} 
-              type="text" 
-              placeholder="Add Event Location..."
-              value={formData.location}
-              onChange={(e) => updateField('location', e.target.value)}
-           />
+                <Input 
+                  label="Location" 
+                  icon={MapPin} 
+                  type="text" 
+                  placeholder="Add Event Location..."
+                  value={formData.location}
+                  onChange={(e) => updateField('location', e.target.value)}
+                />
 
-           <DescriptionInput 
-             value={formData.description} 
-             onChange={(value) => updateField('description', value)} 
-           />
+                <DescriptionInput 
+                  value={formData.description} 
+                  onChange={(value) => updateField('description', value)} 
+                />
 
-           <EventOptions 
-              ticketPrice={formData.ticketPrice} 
-              setTicketPrice={(value) => updateField('ticketPrice', value)}
-              capacity={formData.capacity}
-              setCapacity={(value) => updateField('capacity', value)}
-              requireApproval={formData.requireApproval}
-              setRequireApproval={(value) => updateField('requireApproval', value)}
-           />
+                <EventOptions 
+                  ticketPrice={formData.ticketPrice} 
+                  setTicketPrice={(value) => updateField('ticketPrice', value)}
+                  capacity={formData.capacity}
+                  setCapacity={(value) => updateField('capacity', value)}
+                  requireApproval={formData.requireApproval}
+                  setRequireApproval={(value) => updateField('requireApproval', value)}
+                />
 
-           <RegistrationQuestions 
-              questions={formData.questions}
-              addQuestion={addQuestion}
-              removeQuestion={removeQuestion}
-              updateQuestion={(id: number, field: keyof Question, value: string | boolean) => 
-                updateQuestion(id, field, value)
-              }
-           />
+                <RegistrationQuestions 
+                  questions={formData.questions}
+                  addQuestion={addQuestion}
+                  removeQuestion={removeQuestion}
+                  updateQuestion={(id: number, field: keyof Question, value: string | boolean) => 
+                    updateQuestion(id, field, value)
+                  }
+                />
 
-           <div className="pt-6">
-              <Button 
-                onClick={handleSubmit}
-                disabled={isSubmitting}
-                fullWidth
-                size="lg"
-              >
-                {isSubmitting ? 'Creating Event...' : 'Create Event'}
-              </Button>
-           </div>
-           
+                <div className="pt-2">
+                  <Button 
+                    onClick={handleSubmit}
+                    disabled={isSubmitting}
+                    fullWidth
+                    size="lg"
+                  >
+                    {isSubmitting ? 'Creating Event...' : 'Create Event'}
+                  </Button>
+                </div>
+                
+              </div>
+            </div>
+          </div>
         </div>
       </main>
     </div>

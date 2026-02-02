@@ -12,15 +12,15 @@ interface RegistrationQuestionsProps {
 
 export function RegistrationQuestions({ questions, addQuestion, removeQuestion, updateQuestion }: RegistrationQuestionsProps) {
   return (
-    <div className="pt-8 space-y-4">
-      <div className="flex items-center justify-between border-b border-white/10 pb-2 mb-4">
-        <h3 className="text-2xl font-morganite font-bold text-white tracking-wide">Registration Questions</h3>
-        <button onClick={addQuestion} className="flex items-center gap-1 text-primary text-sm font-bold hover:text-primary/80 transition-colors uppercase tracking-wider">
-          <Plus className="w-4 h-4" /> Add Question
+    <div className="pt-2 space-y-2">
+      <div className="flex items-center justify-between border-b border-white/10 pb-1.5 mb-2">
+        <h3 className="text-sm font-urbanist font-bold text-white tracking-wide">Registration Questions</h3>
+        <button onClick={addQuestion} className="flex items-center gap-1 text-primary text-xs font-bold hover:text-primary/80 transition-colors uppercase tracking-wider">
+          <Plus className="w-3.5 h-3.5" /> Add
         </button>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-2">
         {questions.map((question) => (
           <Input 
             key={question.id}

@@ -73,7 +73,7 @@ export default function EventPage() {
           {/* Right Column - Event Info */}
           <div className="animate-fade-in animate-delay-200">
             {/* Event Title */}
-            <h1 className="font-morganite text-3xl md:text-4xl lg:text-5xl font-bold mb-6 leading-tight text-white">
+            <h1 className="font-urbanist text-3xl md:text-4xl lg:text-5xl font-bold mb-6 leading-tight text-white">
               {event.title}
             </h1>
 
