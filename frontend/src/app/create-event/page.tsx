@@ -21,7 +21,6 @@ import { useRouter } from 'next/navigation';
 
 export default function CreateEventPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'events' | 'stats' | 'create-event' | 'export-data'>('create-event');
   
   const {
     formData,
@@ -41,13 +40,6 @@ export default function CreateEventPage() {
     // Scroll handling if needed
   };
 
-  const handleTabChange = (tab: 'dashboard' | 'events' | 'stats' | 'create-event' | 'export-data') => {
-    setActiveTab(tab);
-    if (tab === 'dashboard' || tab === 'events') {
-      router.push('/dashboard');
-    }
-  };
-
   return (
     <div 
       ref={containerRef}
@@ -60,7 +52,7 @@ export default function CreateEventPage() {
       {/* Grid Background */}
       <Squares direction="diagonal" speed={0.3} />
 
-      <AdminNavbar activeTab={activeTab} onTabChange={handleTabChange} />
+      <AdminNavbar activeTab="create-event" />
 
       <main className="flex-1 w-full max-w-[1600px] mx-auto relative z-10 px-6 md:px-12 py-8 overflow-hidden h-[calc(100vh-4rem)] mt-16">
         
