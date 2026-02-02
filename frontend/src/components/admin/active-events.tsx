@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Calendar, Clock, SlidersHorizontal } from 'lucide-react';
 import { StatusBadge } from './status-badge';
 
@@ -18,6 +19,7 @@ interface ActiveEventsProps {
 }
 
 export const ActiveEvents: React.FC<ActiveEventsProps> = ({ events }) => {
+  const router = useRouter();
   const [filterCapacity, setFilterCapacity] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('active');
   const [sortBy, setSortBy] = useState<string>('date');
@@ -89,7 +91,11 @@ export const ActiveEvents: React.FC<ActiveEventsProps> = ({ events }) => {
         {filteredEvents.map((event) => {
           const percentage = Math.round((event.registered / event.capacity) * 100);
           return (
-            <div key={event.id} className="group bg-gradient-to-br from-[#0B1F23]/80 via-[#0E1924]/70 to-[#0B1F23]/80 backdrop-blur-sm rounded-2xl overflow-hidden border border-[#06b6d4]/40 shadow-xl shadow-[#0891b2]/30 hover:border-[#06b6d4]/70 transition-all duration-300 hover:shadow-2xl hover:shadow-[#0891b2]/50 hover:-translate-y-1">
+            <div 
+              key={event.id} 
+              onClick={() => router.push(`/event/${event.id}/manage`)}
+              className="group bg-gradient-to-br from-[#0B1F23]/80 via-[#0E1924]/70 to-[#0B1F23]/80 backdrop-blur-sm rounded-2xl overflow-hidden border border-[#06b6d4]/40 shadow-xl shadow-[#0891b2]/30 hover:border-[#06b6d4]/70 transition-all duration-300 hover:shadow-2xl hover:shadow-[#0891b2]/50 hover:-translate-y-1 cursor-pointer"
+            >
               {/* Image Placeholder */}
               <div className="relative w-full h-48 bg-gradient-to-br from-[#38311E]/60 via-[#373531]/50 to-[#35351C]/40 overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-t from-[#0B1F23]/60 to-transparent" />
