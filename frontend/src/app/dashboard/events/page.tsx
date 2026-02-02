@@ -24,6 +24,7 @@ export default function EventsPage() {
     registered: 0,
     capacity: event.capacity === 'Unlimited' ? 999999 : parseInt(event.capacity) || 100,
     status: new Date(`${event.startDate}T${event.startTime}`) > new Date() ? 'active' : 'completed',
+    coverImage: event.coverImage,
   }));
 
   console.log('Transformed events:', transformedEvents);
