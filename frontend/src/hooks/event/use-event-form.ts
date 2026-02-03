@@ -1,8 +1,5 @@
 import { useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import { EventFormData, Question, EventData } from '@/types/event';
-import { eventStorage } from '@/lib/storage/event-storage';
-import { generateSlug } from '@/lib/utils/slug';
+import { EventFormData, Question } from '@/types/event';
 
 interface UseEventFormReturn {
   formData: EventFormData;
@@ -10,8 +7,6 @@ interface UseEventFormReturn {
   addQuestion: () => void;
   removeQuestion: (id: number) => void;
   updateQuestion: (id: number, field: keyof Question, value: string | boolean) => void;
-  handleSubmit: () => void;
-  isSubmitting: boolean;
 }
 
 const initialFormData: EventFormData = {
@@ -30,14 +25,8 @@ const initialFormData: EventFormData = {
   questions: [{ id: 1, text: '', required: true }],
 };
 
-/**
- * Custom hook to manage event creation form state and logic
- * @returns Form data, update functions, and submit handler
- */
 export function useEventForm(): UseEventFormReturn {
-  const router = useRouter();
   const [formData, setFormData] = useState<EventFormData>(initialFormData);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const updateField = useCallback(<K extends keyof EventFormData>(
     field: K,
@@ -73,64 +62,11 @@ export function useEventForm(): UseEventFormReturn {
     }));
   }, []);
 
-  const validateForm = (): string | null => {
-    if (!formData.title.trim()) {
-      return 'Please enter an event title';
-    }
-    if (!formData.startDate || !formData.startTime) {
-      return 'Please enter event start date and time';
-    }
-    return null;
-  };
-
-  const handleSubmit = useCallback(() => {
-    const validationError = validateForm();
-    if (validationError) {
-      alert(validationError);
-      return;
-    }
-
-    try {
-      setIsSubmitting(true);
-
-      const slug = generateSlug(formData.title);
-      const eventData: EventData = {
-        slug,
-        title: formData.title,
-        startDate: formData.startDate,
-        startTime: formData.startTime,
-        endDate: formData.endDate || formData.startDate,
-        endTime: formData.endTime || formData.startTime,
-        location: formData.location,
-        description: formData.description,
-        ticketPrice: formData.ticketPrice,
-        capacity: formData.capacity,
-        requireApproval: formData.requireApproval,
-        coverImage: formData.coverImage,
-        theme: formData.theme,
-        questions: formData.questions.filter(q => q.text.trim() !== ''),
-        createdAt: new Date().toISOString(),
-      };
-
-      console.log('Saving event:', eventData);
-      eventStorage.save(eventData);
-      console.log('Event saved successfully, redirecting to event page...');
-      router.push(`/event/${slug}`);
-    } catch (error) {
-      console.error('Error creating event:', error);
-      alert('Failed to create event. Please try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, [formData, router]);
-
   return {
     formData,
     updateField,
     addQuestion,
     removeQuestion,
     updateQuestion,
-    handleSubmit,
-    isSubmitting,
   };
 }
