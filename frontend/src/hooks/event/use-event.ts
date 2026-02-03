@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 import { EventData } from "@/types/event";
-import { eventStorage } from "@/lib/storage/event-storage";
 
 interface UseEventReturn {
   event: EventData | null;
@@ -25,15 +24,25 @@ export function useEvent(slug: string): UseEventReturn {
       setLoading(true);
       setError(null);
 
-      // Simulate async operation
-      await new Promise((resolve) => setTimeout(resolve, 0));
+      const response = await fetch(`/api/events/${slug}`);
 
-      const foundEvent = eventStorage.getBySlug(slug);
-      setEvent(foundEvent);
-
-      if (!foundEvent) {
+      if (!response.ok) {
+        setEvent(null);
         setError("Event not found");
+        return;
       }
+
+      const json = await response.json();
+      const apiEvent = json.event as EventData | undefined;
+
+      if (!apiEvent) {
+        setEvent(null);
+        setError("Event not found");
+        return;
+      }
+
+      // API already returns EventData shape
+      setEvent(apiEvent);
     } catch (err) {
       setError("Failed to load event");
       console.error("Error loading event:", err);

@@ -1,12 +1,14 @@
-import React from 'react';
+import React from "react";
 
 interface EventHostProps {
-  eventTitle: string;
+  hostName?: string;
   className?: string;
 }
 
-export function EventHost({ eventTitle, className = '' }: EventHostProps) {
-  const initial = eventTitle.charAt(0).toUpperCase();
+export function EventHost({ hostName, className = "" }: EventHostProps) {
+  const safeName =
+    hostName && hostName.trim().length > 0 ? hostName : "Event Organizer";
+  const initial = safeName.charAt(0).toUpperCase();
 
   return (
     <div className={className}>
@@ -18,9 +20,7 @@ export function EventHost({ eventTitle, className = '' }: EventHostProps) {
           {initial}
         </div>
         <div>
-          <p className="text-white font-semibold text-sm">
-            Event Organizer
-          </p>
+          <p className="text-white font-semibold text-sm">{safeName}</p>
           <button className="text-white/60 text-xs hover:text-primary transition-colors">
             Contact the Host
           </button>

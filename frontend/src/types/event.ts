@@ -7,6 +7,8 @@ export interface Question {
 export interface EventData {
   slug: string;
   title: string;
+  // ID of the Supabase auth user who created the event
+  organizerId?: string | null;
   startDate: string;
   startTime: string;
   endDate: string;

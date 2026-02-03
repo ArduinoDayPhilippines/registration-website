@@ -3,11 +3,21 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { generateSlug } from "@/lib/utils/slug";
+import type { EventFormData } from "@/types/event";
 
-export async function createEvent(formData: any) {
+type CreateEventFormData = EventFormData;
+
+export async function createEvent(formData: CreateEventFormData) {
   const supabase = await createClient();
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error("You must be logged in to create an event.");
+  }
 
   const {
     title,
@@ -17,25 +27,29 @@ export async function createEvent(formData: any) {
     endTime,
     location,
     description,
-    coverImage,
     ticketPrice,
     requireApproval,
     capacity,
-    registrationQuestions,
+    questions,
   } = formData;
 
-  const parsedCapacity = capacity && capacity !== "Unlimited" ? parseInt(capacity) : null;
-  const parsedQuestions = registrationQuestions || [];
+  const parsedCapacity =
+    capacity && capacity !== "Unlimited" ? parseInt(capacity) : null;
+  const parsedQuestions = questions || [];
 
-  const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  const slug = generateSlug(title);
 
-  const { data, error: insertError } = await supabase
+  const { error: insertError } = await supabase
     .from("events")
     .insert({
       organizer_id: user.id,
       event_name: title,
+      slug,
       start_date: new Date(`${startDate}T${startTime}`).toISOString(),
-      end_date: endDate && endTime ? new Date(`${endDate}T${endTime}`).toISOString() : null,
+      end_date:
+        endDate && endTime
+          ? new Date(`${endDate}T${endTime}`).toISOString()
+          : null,
       location,
       description: description || null,
       price: ticketPrice || "free",
@@ -53,5 +67,5 @@ export async function createEvent(formData: any) {
   }
 
   revalidatePath("/dashboard");
-  redirect(`/event/${slug}/manage`);
+  redirect(`/event/${slug}`);
 }

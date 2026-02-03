@@ -7,8 +7,8 @@ import { Loader2, Eye, EyeOff } from "lucide-react";
 export default function AdminLoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [error] = useState("");
+  const [isLoading] = useState(false);
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -48,7 +48,11 @@ export default function AdminLoginForm() {
             className={`
               w-full
               !bg-[rgba(15,30,30,0.9)]
-              border ${focusedField === "email" ? "!border-[#7dc5c5]" : "!border-[#5da5a5]"}
+              border ${
+                focusedField === "email"
+                  ? "!border-[#7dc5c5]"
+                  : "!border-[#5da5a5]"
+              }
               rounded-xl
               px-4 py-3
               !text-[#d5e5e5] text-sm
@@ -78,7 +82,11 @@ export default function AdminLoginForm() {
               className={`
                 w-full
                 !bg-[rgba(15,30,30,0.9)]
-                border ${focusedField === "password" ? "!border-[#7dc5c5]" : "!border-[#5da5a5]"}
+                border ${
+                  focusedField === "password"
+                    ? "!border-[#7dc5c5]"
+                    : "!border-[#5da5a5]"
+                }
                 rounded-xl
                 px-4 py-3 pr-12
                 !text-[#d5e5e5] text-sm

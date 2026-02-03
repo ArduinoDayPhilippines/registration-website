@@ -2,8 +2,6 @@
 
 import { createClient } from "@/lib/supabase/server";
 
-const TEMP_EVENT_ID = "fac53a2f-fcb7-4765-9841-9d0b052dc7e7";
-
 type StoredQuestion = {
   id: number;
   text: string;
@@ -12,7 +10,12 @@ type StoredQuestion = {
 
 export async function eventManage(formData: FormData) {
   const operation = (formData.get("operation") as string | null) ?? "";
-  const slug = formData.get("slug") as string;
+  const slug = formData.get("slug") as string | null;
+
+  if (!slug) {
+    console.error("eventManage called without a slug");
+    return;
+  }
 
   const title = formData.get("title") as string | null;
   const description = formData.get("description") as string | null;
@@ -47,7 +50,7 @@ export async function eventManage(formData: FormData) {
         require_approval: requireApproval,
         modified_at: new Date().toISOString(),
       })
-      .eq("event_id", TEMP_EVENT_ID);
+      .eq("slug", slug);
 
     if (error) {
       console.error("Error updating event details:", error);
@@ -59,7 +62,7 @@ export async function eventManage(formData: FormData) {
         require_approval: requireApproval,
         modified_at: new Date().toISOString(),
       })
-      .eq("event_id", TEMP_EVENT_ID);
+      .eq("slug", slug);
 
     if (error) {
       console.error("Error updating event settings:", error);
@@ -72,7 +75,7 @@ export async function eventManage(formData: FormData) {
     const { data, error } = await supabase
       .from("events")
       .select("form_questions")
-      .eq("event_id", TEMP_EVENT_ID)
+      .eq("slug", slug)
       .single();
 
     if (error) {
@@ -99,6 +102,7 @@ export async function eventManage(formData: FormData) {
           : Boolean(requiredRaw);
 
       if (!text.trim()) {
+        return;
       }
       const newQuestion: StoredQuestion = {
         id: Date.now(),
@@ -112,6 +116,7 @@ export async function eventManage(formData: FormData) {
       const questionId = questionIdRaw ? Number(questionIdRaw) : NaN;
 
       if (!Number.isFinite(questionId)) {
+        return;
       }
 
       if (operation === "updateRegistrationQuestion") {
@@ -136,7 +141,7 @@ export async function eventManage(formData: FormData) {
         form_questions: updatedQuestions,
         modified_at: new Date().toISOString(),
       })
-      .eq("event_id", TEMP_EVENT_ID);
+      .eq("slug", slug);
 
     if (updateQuestionsError) {
       console.error("Error updating form questions:", updateQuestionsError);

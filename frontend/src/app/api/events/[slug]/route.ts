@@ -1,0 +1,78 @@
+import { NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+import { EventData, Question } from "@/types/event";
+
+// Shape of the row as it exists in your `events` table
+type EventRow = {
+  slug: string;
+  event_name: string;
+  organizer_id: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  location: string | null;
+  description: string | null;
+  price: string | null;
+  capacity: number | null;
+  require_approval: boolean | null;
+  form_questions: Question[] | null;
+  created_at: string | null;
+};
+
+function mapRowToEvent(row: EventRow): EventData {
+  const startDateObj = row.start_date ? new Date(row.start_date) : null;
+  const endDateObj = row.end_date ? new Date(row.end_date) : null;
+
+  return {
+    slug: row.slug,
+    title: row.event_name ?? "Untitled Event",
+    organizerId: row.organizer_id,
+    startDate: startDateObj ? startDateObj.toISOString().slice(0, 10) : "",
+    startTime: startDateObj ? startDateObj.toISOString().slice(11, 16) : "",
+    endDate: endDateObj ? endDateObj.toISOString().slice(0, 10) : "",
+    endTime: endDateObj ? endDateObj.toISOString().slice(11, 16) : "",
+    location: row.location ?? "",
+    description: row.description ?? "",
+    ticketPrice: row.price ?? "",
+    capacity:
+      row.capacity !== null && row.capacity !== undefined
+        ? String(row.capacity)
+        : "",
+    requireApproval: row.require_approval ?? false,
+    coverImage: undefined,
+    theme: "Minimal Dark",
+    questions: Array.isArray(row.form_questions) ? row.form_questions : [],
+    createdAt: row.created_at ?? new Date().toISOString(),
+  };
+}
+
+export async function GET(
+  _request: Request,
+  context: { params: Promise<{ slug: string }> }
+) {
+  const { slug } = await context.params;
+  if (!slug) {
+    return NextResponse.json({ error: "Missing slug" }, { status: 400 });
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("events")
+    .select("*")
+    .eq("slug", slug)
+    .single();
+
+  if (error) {
+    // PostgREST uses PGRST116 for "No rows"
+    if ((error as { code?: string }).code === "PGRST116") {
+      return NextResponse.json({ error: "Event not found" }, { status: 404 });
+    }
+
+    return NextResponse.json(
+      { error: error.message || "Failed to fetch event" },
+      { status: 500 }
+    );
+  }
+
+  const event = mapRowToEvent(data as EventRow);
+  return NextResponse.json({ event });
+}
