@@ -8,7 +8,7 @@ export async function GET() {
     const filenames = fs.readdirSync(templatesDir);
     const htmlFiles = filenames.filter((file) => file.endsWith(".html"));
     return NextResponse.json(htmlFiles);
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json(
       { error: "Failed to read templates directory" },
       { status: 500 }

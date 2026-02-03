@@ -1,10 +1,11 @@
 import type { Config } from "tailwindcss";
-import type { PluginAPI } from 'tailwindcss/types/config'
-import typography from '@tailwindcss/typography';
+import type { PluginAPI } from "tailwindcss/types/config";
+import typography from "@tailwindcss/typography";
+import tailwindcssAnimate from "tailwindcss-animate";
 
-declare module 'tailwindcss/types/config' {
+declare module "tailwindcss/types/config" {
   interface ThemeConfig {
-    textShadow?: { [key: string]: string }
+    textShadow?: { [key: string]: string };
   }
 }
 
@@ -18,7 +19,7 @@ const globalColors = {
     100: "#FFFFFF",
   },
   black: "#131118",
-  price: "#F2BC51"
+  price: "#F2BC51",
 };
 
 export default {
@@ -40,10 +41,12 @@ export default {
       },
       backgroundImage: {
         "gradient-hover": `linear-gradient(130deg, ${globalColors.primary} 0%, #42B7B7 44%, #71DEDF 77%, #7DC5C7 100%)`,
-        "gradient-clicked": "linear-gradient(135deg, #42B7B7 4%, #E2ECED 78%, #7DC5C7 100%)",
+        "gradient-clicked":
+          "linear-gradient(135deg, #42B7B7 4%, #E2ECED 78%, #7DC5C7 100%)",
         "gradient-border-default": `linear-gradient(0deg, ${globalColors.primary} 0%, #66F7F7 63%, #FFFFFF 100%)`,
         "gradient-border-active": `linear-gradient(0deg, #F8F7FC 0%, ${globalColors.accent} 100%)`,
-        "gradient-border-transparent": "linear-gradient(180deg, #D6EAEA 24%, #1A1A1C 100%)",
+        "gradient-border-transparent":
+          "linear-gradient(180deg, #D6EAEA 24%, #1A1A1C 100%)",
         "gradient-cta": `linear-gradient(90deg, #F8F7FC 0%, #008B9C 35.5%, #EE7402 68.5%, #F8F7FC 100%)`,
       },
       fontSize: {
@@ -57,11 +60,12 @@ export default {
         "5xl": ["73.96px", { letterSpacing: "0.05em" }],
       },
       textShadow: {
-        'glow': '0 0 25px #F8F7FC',
+        glow: "0 0 25px #F8F7FC",
       },
       animation: {
         shimmer: "shimmer 2s linear infinite",
-        scroll: "scroll var(--animation-duration, 40s) var(--animation-direction, forwards) linear infinite",
+        scroll:
+          "scroll var(--animation-duration, 40s) var(--animation-direction, forwards) linear infinite",
       },
       keyframes: {
         shimmer: {
@@ -82,16 +86,16 @@ export default {
   },
   plugins: [
     typography,
-    require("tailwindcss-animate"),
+    tailwindcssAnimate,
     function ({ matchUtilities, theme }: PluginAPI) {
       matchUtilities(
         {
-          'text-shadow': (value: string) => ({
+          "text-shadow": (value: string) => ({
             textShadow: value,
           }),
         },
-        { values: theme('textShadow') }
-      )
+        { values: theme("textShadow") }
+      );
     },
   ],
 } satisfies Config;

@@ -1,11 +1,9 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Navbar } from "@/components/navbar";
 import BokehBackground from "@/components/create-event/bokeh-background";
 import Squares from "@/components/create-event/squares-background";
-import { BackButton } from "@/components/ui/back-button";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { ErrorState } from "@/components/ui/error-state";
 import { EventCoverImage } from "@/components/event/event-cover-image";
@@ -15,6 +13,7 @@ import { EventManageCard } from "@/components/event/event-manage-card";
 import { EventRegistrationCard } from "@/components/event/event-registration-card";
 import { EventAbout } from "@/components/event/event-about";
 import { EventHost } from "@/components/event/event-host";
+import { createClient } from "@/lib/supabase/client";
 import { useEvent } from "@/hooks/event/use-event";
 
 export default function EventPage() {
@@ -22,6 +21,34 @@ export default function EventPage() {
   const router = useRouter();
   const slug = params.slug as string;
   const { event, loading, error } = useEvent(slug);
+  const [hostName, setHostName] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    async function loadHostName() {
+      if (!event?.organizerId) {
+        setHostName(undefined);
+        return;
+      }
+
+      try {
+        const supabase = createClient();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        if (user && user.id === event.organizerId) {
+          setHostName(user.email ?? "You");
+        } else {
+          setHostName("Event Organizer");
+        }
+      } catch (e) {
+        console.error("Failed to load organizer info:", e);
+        setHostName("Event Organizer");
+      }
+    }
+
+    loadHostName();
+  }, [event?.organizerId]);
 
   if (loading) {
     return <LoadingSpinner message="Loading event..." />;
@@ -43,11 +70,6 @@ export default function EventPage() {
       <Squares direction="diagonal" speed={0.3} />
 
       <main className="relative z-10 w-full max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-10 pb-16">
-        {/* Back Button */}
-        <div className="animate-fade-in mb-6 md:mb-8">
-          <BackButton />
-        </div>
-
         {/* Two Column Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-[400px_1fr] xl:grid-cols-[440px_1fr] gap-8 lg:gap-10 xl:gap-12">
           {/* Left Column - Cover Image (Desktop: + About + Hosted By) */}
@@ -58,15 +80,15 @@ export default function EventPage() {
             <EventManageCard eventSlug={slug} />
 
             {/* About - Desktop Only */}
-            <EventAbout 
-              description={event.description} 
-              className="hidden lg:block" 
+            <EventAbout
+              description={event.description}
+              className="hidden lg:block"
             />
 
             {/* Hosted By - Desktop Only */}
-            <EventHost 
-              eventTitle={event.title} 
-              className="hidden lg:block border-t border-white/10 pt-6" 
+            <EventHost
+              hostName={hostName}
+              className="hidden lg:block border-t border-white/10 pt-6"
             />
           </div>
 
@@ -78,9 +100,9 @@ export default function EventPage() {
             </h1>
 
             {/* About - Mobile Only (below title) */}
-            <EventAbout 
-              description={event.description} 
-              className="lg:hidden mb-6 pb-6 border-b border-white/10" 
+            <EventAbout
+              description={event.description}
+              className="lg:hidden mb-6 pb-6 border-b border-white/10"
             />
 
             {/* Date & Time */}
@@ -102,9 +124,9 @@ export default function EventPage() {
             />
 
             {/* Hosted By - Mobile Only (at the end) */}
-            <EventHost 
-              eventTitle={event.title} 
-              className="lg:hidden border-t border-white/10 pt-6 mt-8" 
+            <EventHost
+              hostName={hostName}
+              className="lg:hidden border-t border-white/10 pt-6 mt-8"
             />
           </div>
         </div>

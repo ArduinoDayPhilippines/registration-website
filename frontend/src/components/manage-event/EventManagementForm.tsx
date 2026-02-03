@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { EventData } from "@/types/event";
 import { eventManage } from "../../app/event/[slug]/manage/actions";
 import { Check, Pencil, Trash2 } from "lucide-react";
@@ -60,29 +60,62 @@ async function updateEventSettingsFormAction(
 export function EventManagementForm({
   event,
   slug,
-  onCancel: _onCancel,
-  onSuccess: _onSuccess,
+  onCancel,
+  onSuccess,
 }: EventManagementFormProps) {
-  void _onCancel;
-  void _onSuccess;
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  const updateEventDetailsAction = updateEventDetailsFormAction.bind(
-    null,
-    slug
-  );
-  const addQuestionAction = addRegistrationQuestionFormAction.bind(null, slug);
-  const updateQuestionAction = updateRegistrationQuestionFormAction.bind(
-    null,
-    slug
-  );
-  const removeQuestionAction = removeRegistrationQuestionFormAction.bind(
-    null,
-    slug
-  );
-  const updateSettingsAction = updateEventSettingsFormAction.bind(null, slug);
+  const handleSuccess = () => {
+    setSuccessMessage("Changes saved successfully.");
+    onSuccess();
+  };
+
+  const updateEventDetailsAction = async (formData: FormData) => {
+    await updateEventDetailsFormAction(slug, formData);
+    handleSuccess();
+  };
+
+  const addQuestionAction = async (formData: FormData) => {
+    await addRegistrationQuestionFormAction(slug, formData);
+    handleSuccess();
+  };
+
+  const updateQuestionAction = async (formData: FormData) => {
+    await updateRegistrationQuestionFormAction(slug, formData);
+    handleSuccess();
+  };
+
+  const removeQuestionAction = async (formData: FormData) => {
+    await removeRegistrationQuestionFormAction(slug, formData);
+    handleSuccess();
+  };
+
+  const updateSettingsAction = async (formData: FormData) => {
+    await updateEventSettingsFormAction(slug, formData);
+    handleSuccess();
+  };
 
   return (
     <div className="space-y-6">
+      {successMessage && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div className="bg-[#0a1520] border border-emerald-400/40 rounded-2xl px-6 py-5 max-w-sm w-[90%] text-center shadow-xl shadow-emerald-500/30">
+            <h3 className="font-urbanist text-lg font-bold text-emerald-300 mb-2">
+              Success
+            </h3>
+            <p className="font-urbanist text-sm text-emerald-100 mb-4">
+              {successMessage}
+            </p>
+            <button
+              type="button"
+              onClick={() => setSuccessMessage(null)}
+              className="font-montserrat px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 rounded-lg text-white text-sm font-medium transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
       <div className="bg-white/5 backdrop-blur-md rounded-xl p-4 md:p-6 border border-white/10">
         <h2 className="font-urbanist text-lg md:text-xl font-bold text-white mb-4 md:mb-6">
           Event Details
@@ -191,12 +224,13 @@ export function EventManagementForm({
           </div>
 
           <div className="flex flex-col sm:flex-row justify-end gap-3">
-            <a
-              href={`/event/${slug}/manage`}
+            <button
+              type="button"
+              onClick={onCancel}
               className="font-montserrat px-6 py-2.5 md:py-3 bg-white/5 hover:bg-white/10 rounded-lg text-white text-sm md:text-base font-medium transition-colors text-center"
             >
               Cancel
-            </a>
+            </button>
             <button
               type="submit"
               className="font-montserrat px-6 py-2.5 md:py-3 bg-cyan-600 hover:bg-cyan-700 rounded-lg text-white text-sm md:text-base font-medium transition-colors"

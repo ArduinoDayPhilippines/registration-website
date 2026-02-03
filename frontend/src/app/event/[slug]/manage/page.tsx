@@ -135,8 +135,8 @@ export default function ManageEventPage() {
             slug={slug}
             onCancel={() => setActiveTab("overview")}
             onSuccess={() => {
+              // Stay on the Registration tab; just refresh data after save
               refetch();
-              setActiveTab("overview");
             }}
           />
         )}
