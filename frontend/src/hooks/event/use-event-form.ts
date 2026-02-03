@@ -3,6 +3,7 @@ import { useRouter } from 'next/navigation';
 import { EventFormData, Question, EventData } from '@/types/event';
 import { eventStorage } from '@/lib/storage/event-storage';
 import { generateSlug } from '@/lib/utils/slug';
+import { validateEventData, createEvent } from '@/app/create-event/action';
 
 interface UseEventFormReturn {
   formData: EventFormData;
@@ -73,27 +74,39 @@ export function useEventForm(): UseEventFormReturn {
     }));
   }, []);
 
-  const validateForm = (): string | null => {
-    if (!formData.title.trim()) {
-      return 'Please enter an event title';
-    }
-    if (!formData.startDate || !formData.startTime) {
-      return 'Please enter event start date and time';
-    }
-    return null;
-  };
-
-  const handleSubmit = useCallback(() => {
-    const validationError = validateForm();
-    if (validationError) {
-      alert(validationError);
-      return;
-    }
-
+  const handleSubmit = useCallback(async () => {
+    console.log('Form submission started');
+    console.log('Sending data to server action for validation...');
+    
     try {
       setIsSubmitting(true);
 
-      const slug = generateSlug(formData.title);
+      // Call server action to validate data
+      const validation = await validateEventData(formData);
+      
+      if (!validation.success) {
+        console.error('Server validation failed:', validation.errors);
+        alert(`Validation errors:\n${validation.errors?.join('\n')}`);
+        return;
+      }
+
+      console.log('Server validation passed!');
+      console.log('Creating event...');
+
+      // Call server action to create event
+      const result = await createEvent(formData);
+      
+      if (!result.success) {
+        console.error('Event creation failed:', result.error);
+        alert(`Failed to create event: ${result.error}`);
+        return;
+      }
+
+      console.log(' Event created successfully!');
+      console.log('Event slug:', result.slug);
+
+      // For now, still save to local storage as well
+      const slug = result.slug || generateSlug(formData.title);
       const eventData: EventData = {
         slug,
         title: formData.title,
@@ -112,15 +125,17 @@ export function useEventForm(): UseEventFormReturn {
         createdAt: new Date().toISOString(),
       };
 
-      console.log('Saving event:', eventData);
+      console.log('Saving to local storage...');
       eventStorage.save(eventData);
-      console.log('Event saved successfully, redirecting to event page...');
+      console.log('Local storage updated');
+      console.log('Redirecting to event page...');
       router.push(`/event/${slug}`);
     } catch (error) {
-      console.error('Error creating event:', error);
+      console.error('Error during submission:', error);
       alert('Failed to create event. Please try again.');
     } finally {
       setIsSubmitting(false);
+      console.log('Form submission complete');
     }
   }, [formData, router]);
 

@@ -1,6 +1,5 @@
 "use client";
 
-import React, { useRef, useState } from 'react';
 import { MapPin } from 'lucide-react';
 import { Question } from '@/types/event';
 import { Input } from '@/components/ui/input';
@@ -16,11 +15,8 @@ import { DateTimeInputs } from '@/components/create-event/date-time-inputs';
 import { DescriptionInput } from '@/components/create-event/description-input';
 import { EventOptions } from '@/components/create-event/event-options';
 import { RegistrationQuestions } from '@/components/create-event/registration-questions';
-import { useRouter } from 'next/navigation';
 
 export default function CreateEventPage() {
-  const router = useRouter();
-  
   const {
     formData,
     updateField,
@@ -31,20 +27,10 @@ export default function CreateEventPage() {
     isSubmitting,
   } = useEventForm();
 
-  const containerRef = useRef<HTMLDivElement>(null);
-
   useScrollLock();
 
-  const handleScroll = () => {
-    // Scroll handling if needed
-  };
-
   return (
-    <div 
-      ref={containerRef}
-      onScroll={handleScroll}
-      className="h-screen w-full bg-gradient-to-br from-[#0a1f14] via-[#0a1520] to-[#120c08] text-white-100 relative isolate overflow-hidden font-urbanist flex flex-col custom-scrollbar"
-    >
+    <div className="h-screen w-full bg-gradient-to-br from-[#0a1f14] via-[#0a1520] to-[#120c08] text-white-100 relative isolate overflow-hidden font-urbanist flex flex-col custom-scrollbar">
       {/* Bokeh Background Effect */}
       <BokehBackground />
       
