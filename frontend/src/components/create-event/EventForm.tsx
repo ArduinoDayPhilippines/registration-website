@@ -359,8 +359,8 @@ export default function EventForm({
                     Required
                   </label>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
 
           {/* Submit Button */}

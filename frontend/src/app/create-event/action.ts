@@ -19,6 +19,10 @@ export async function createEvent(formData: CreateEventFormData) {
     throw new Error("You must be logged in to create an event.");
   }
 
+  if (!user) {
+    throw new Error("User not authenticated");
+  }
+
   const {
     title,
     startDate,
@@ -33,9 +37,15 @@ export async function createEvent(formData: CreateEventFormData) {
     questions,
   } = formData;
 
-  const parsedCapacity =
-    capacity && capacity !== "Unlimited" ? parseInt(capacity) : null;
-  const parsedQuestions = questions || [];
+  const parsedCapacity = capacity && capacity !== "Unlimited" ? parseInt(capacity) : null;
+  
+
+  const parsedQuestions = questions && questions.length > 0
+    ? questions.reduce((acc: any, question: any, index: number) => {
+        acc[`q${index + 1}`] = question.text;
+        return acc;
+      }, {})
+    : null;
 
   const slug = generateSlug(title);
 
