@@ -1,7 +1,7 @@
-import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
 
-export const runtime = 'nodejs';
+export const runtime = "nodejs";
 
 type CreateEventBody = {
   title?: string;
@@ -19,26 +19,26 @@ type CreateEventBody = {
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json() as CreateEventBody;
-    
-    const { 
-      title, 
-      startDate, 
-      startTime, 
+    const body = (await req.json()) as CreateEventBody;
+
+    const {
+      title,
+      startDate,
+      startTime,
       endDate,
       endTime,
-      location, 
+      location,
       description,
       coverImage,
       ticketPrice,
       maxAttendees,
-      requireApproval
+      requireApproval,
     } = body;
 
     // Validate required fields
     if (!title || !startDate || !startTime || !location) {
       return NextResponse.json(
-        { ok: false, error: 'Missing required fields' },
+        { ok: false, error: "Missing required fields" },
         { status: 400 }
       );
     }
@@ -47,7 +47,7 @@ export async function POST(req: Request) {
 
     // Insert event into database
     const { data, error } = await supabase
-      .from('events')
+      .from("events")
       .insert({
         title,
         start_date: startDate,
@@ -65,18 +65,18 @@ export async function POST(req: Request) {
       .single();
 
     if (error) {
-      console.error('Database error:', error);
+      console.error("Database error:", error);
       return NextResponse.json(
-        { ok: false, error: 'Failed to create event' },
+        { ok: false, error: "Failed to create event" },
         { status: 500 }
       );
     }
 
     return NextResponse.json({ ok: true, event: data });
   } catch (error) {
-    console.error('Create event error:', error);
+    console.error("Create event error:", error);
     return NextResponse.json(
-      { ok: false, error: 'Internal server error' },
+      { ok: false, error: "Internal server error" },
       { status: 500 }
     );
   }
