@@ -9,16 +9,16 @@ import Squares from "@/components/create-event/squares-background";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { ErrorState } from "@/components/ui/error-state";
 import { useEvent } from "@/hooks/event/use-event";
+import { useGuests } from "@/hooks/guest/use-guests";
 import {
   GuestStatistics,
   QuickActions,
   GuestListSection,
-  EventDetailsForm,
-  RegistrationQuestionsSection,
-  EventSettingsSection,
   EventPreviewCard,
   WhenWhereSidebar,
   InvitationsSection,
+  CoverImageChangeModal,
+  EventManagementForm,
 } from "@/components/manage-event";
 import BatchmailWorkspace from "@/components/batchmail/BatchmailWorkspace";
 
@@ -26,8 +26,10 @@ export default function ManageEventPage() {
   const params = useParams();
   const router = useRouter();
   const slug = params.slug as string;
-  const { event, loading, error } = useEvent(slug);
+  const { event, loading, error, refetch } = useEvent(slug);
+  const { guests, stats, refetch: refetchGuests } = useGuests(slug);
   const [activeTab, setActiveTab] = useState("overview");
+  const [showCoverImageModal, setShowCoverImageModal] = useState(false);
 
   if (loading) {
     return <LoadingSpinner message="Loading event management..." />;
@@ -51,16 +53,13 @@ export default function ManageEventPage() {
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-[#0a1f14] via-[#0a1520] to-[#120c08] text-white relative overflow-x-hidden font-urbanist">
-      {/* Bokeh Background Effect */}
       <BokehBackground />
-      
-      {/* Grid Background */}
+
       <Squares direction="diagonal" speed={0.3} />
 
       <AdminNavbar activeTab="events" />
 
       <main className="relative z-10 w-full max-w-6xl mx-auto px-3 md:px-6 lg:px-8 py-4 md:py-10 pb-16 mt-16">
-        {/* Header with Event Page Link */}
         <div className="flex items-center justify-between gap-3 mb-4 md:mb-6">
           <div className="min-w-0 flex-1">
             <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white truncate">
@@ -98,13 +97,17 @@ export default function ManageEventPage() {
         {activeTab === "guests" && (
           <>
             <GuestStatistics
-              totalRegistered={0}
-              going={0}
-              checkedIn={0}
-              waitlist={0}
+              totalRegistered={stats?.totalRegistered || 0}
+              going={stats?.going || 0}
+              checkedIn={stats?.checkedIn || 0}
+              waitlist={stats?.waitlist || 0}
             />
             <QuickActions />
-            <GuestListSection />
+            <GuestListSection
+              guests={guests}
+              slug={slug}
+              onRefresh={refetchGuests}
+            />
           </>
         )}
 
@@ -117,6 +120,7 @@ export default function ManageEventPage() {
                 eventUrl={eventUrl}
                 onCopy={copyToClipboard}
                 onEditEvent={() => setActiveTab("registration")}
+                onChangePhoto={() => setShowCoverImageModal(true)}
               />
               <WhenWhereSidebar event={event} />
             </div>
@@ -126,26 +130,15 @@ export default function ManageEventPage() {
 
         {/* Registration Tab Content */}
         {activeTab === "registration" && (
-          <>
-            <div className="space-y-6">
-              <EventDetailsForm event={event} />
-              <RegistrationQuestionsSection questions={event.questions} />
-              <EventSettingsSection requireApproval={event.requireApproval} />
-
-              {/* Save Button */}
-              <div className="flex flex-col sm:flex-row justify-end gap-3">
-                <button
-                  onClick={() => setActiveTab("overview")}
-                  className="font-montserrat px-6 py-2.5 md:py-3 bg-white/5 hover:bg-white/10 rounded-lg text-white text-sm md:text-base font-medium transition-colors"
-                >
-                  Cancel
-                </button>
-                <button className="font-montserrat px-6 py-2.5 md:py-3 bg-cyan-600 hover:bg-cyan-700 rounded-lg text-white text-sm md:text-base font-medium transition-colors">
-                  Save Changes
-                </button>
-              </div>
-            </div>
-          </>
+          <EventManagementForm
+            event={event}
+            slug={slug}
+            onCancel={() => setActiveTab("overview")}
+            onSuccess={() => {
+              refetch();
+              setActiveTab("overview");
+            }}
+          />
         )}
 
         {/* Batchmail Tab Content */}
@@ -153,6 +146,14 @@ export default function ManageEventPage() {
           <BatchmailWorkspace />
         </div>
       </main>
+
+      {/* Cover Image Change Modal */}
+      <CoverImageChangeModal
+        isOpen={showCoverImageModal}
+        onClose={() => setShowCoverImageModal(false)}
+        currentImage={event.coverImage}
+        slug={slug}
+      />
     </div>
   );
 }
