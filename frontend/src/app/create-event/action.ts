@@ -9,6 +9,10 @@ export async function createEvent(formData: any) {
 
   const { data: { user } } = await supabase.auth.getUser();
 
+  if (!user) {
+    throw new Error("User not authenticated");
+  }
+
   const {
     title,
     startDate,

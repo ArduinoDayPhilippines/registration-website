@@ -275,8 +275,8 @@ export default function EventForm({
                   <input 
                     type="text" 
                     placeholder="Type your question here..."
-                    value={question.question}
-                    onChange={(e) => updateQuestion(question.id, 'question', e.target.value)}
+                    value={question.text}
+                    onChange={(e) => updateQuestion(question.id, 'text', e.target.value)}
                     className="bg-transparent border-none outline-none text-sm focus:ring-0 flex-1 p-0 placeholder-white/30 text-white"
                   />
                   <button
