@@ -86,8 +86,15 @@ export default function EventForm({
       data.append('title', formData.title);
       data.append('startDate', formData.startDate);
       data.append('startTime', formData.startTime);
+      data.append('endDate', formData.endDate || '');
+      data.append('endTime', formData.endTime || '');
       data.append('location', formData.location);
       data.append('description', formData.description || '');
+      data.append('coverImage', formData.coverImage || '');
+      data.append('ticketPrice', formData.ticketPrice || 'Free');
+      data.append('requireApproval', formData.requireApproval ? 'true' : 'false');
+      data.append('capacity', formData.capacity || 'Unlimited');
+      data.append('registrationQuestions', JSON.stringify(formData.registrationQuestions || []));
       
      
       await createEvent(data);
@@ -217,17 +224,117 @@ export default function EventForm({
             </div>
           </div>
 
-          {/* Event Options (Visual Only for now as your Action doesn't handle these yet) */}
-          <div className="pt-2 space-y-2">
+          {/* Event Options */}
+          <div className="pt-2 space-y-3">
             <h3 className="text-sm font-urbanist font-bold text-white tracking-wide">Event Options</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 opacity-60">
-                <div className="flex items-center justify-between p-2.5 rounded-xl bg-black/40 border border-white/5">
-                  <span className="text-white text-xs">Ticket Price: {formData.ticketPrice}</span>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {/* Ticket Price */}
+              <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-xl p-3 hover:border-primary/30 transition-all group focus-within:border-primary">
+                <div className="flex items-center gap-2 mb-2">
+                  <Ticket className="w-4 h-4 text-primary" />
+                  <label className="text-[9px] text-white/40 uppercase tracking-widest font-bold">Ticket Price</label>
                 </div>
-                <div className="flex items-center justify-between p-2.5 rounded-xl bg-black/40 border border-white/5">
-                  <span className="text-white text-xs">Approval Required: {formData.requireApproval ? 'Yes' : 'No'}</span>
+                <input 
+                  type="text" 
+                  placeholder="Free"
+                  value={formData.ticketPrice}
+                  onChange={(e) => updateField('ticketPrice', e.target.value)}
+                  className="bg-transparent border-none outline-none text-sm focus:ring-0 w-full p-0 placeholder-white/40 text-white"
+                />
+              </div>
+
+              {/* Requires Approval */}
+              <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-xl p-3 hover:border-primary/30 transition-all">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    {formData.requireApproval ? (
+                      <Lock className="w-4 h-4 text-secondary" />
+                    ) : (
+                      <LockOpen className="w-4 h-4 text-white/50" />
+                    )}
+                    <label className="text-[9px] text-white/40 uppercase tracking-widest font-bold">Requires Approval</label>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => updateField('requireApproval', !formData.requireApproval)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      formData.requireApproval ? 'bg-secondary' : 'bg-white/10'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        formData.requireApproval ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
                 </div>
+              </div>
             </div>
+
+            {/* Capacity */}
+            <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-xl p-3 hover:border-primary/30 transition-all group focus-within:border-primary">
+              <div className="flex items-center gap-2 mb-2">
+                <Users className="w-4 h-4 text-primary" />
+                <label className="text-[9px] text-white/40 uppercase tracking-widest font-bold">Capacity</label>
+              </div>
+              <input 
+                type="text" 
+                placeholder="Unlimited"
+                value={formData.capacity}
+                onChange={(e) => updateField('capacity', e.target.value)}
+                className="bg-transparent border-none outline-none text-sm focus:ring-0 w-full p-0 placeholder-white/40 text-white"
+              />
+            </div>
+          </div>
+
+          {/* Registration Questions */}
+          <div className="pt-2 space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-urbanist font-bold text-white tracking-wide">Registration Questions</h3>
+              <button
+                type="button"
+                onClick={addQuestion}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/20 hover:bg-primary/30 text-primary text-xs font-bold uppercase tracking-wide transition-colors"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Add
+              </button>
+            </div>
+
+            {formData.registrationQuestions?.map((question: Question) => (
+              <div key={question.id} className="bg-black/40 backdrop-blur-md border border-white/10 rounded-xl p-3 hover:border-primary/30 transition-all group">
+                <div className="flex items-start gap-2.5 mb-3">
+                  <div className="p-1.5 bg-white-50/5 rounded-lg mt-0.5">
+                    <HelpCircle className="w-3.5 h-3.5 text-white/50" />
+                  </div>
+                  <input 
+                    type="text" 
+                    placeholder="Type your question here..."
+                    value={question.question}
+                    onChange={(e) => updateQuestion(question.id, 'question', e.target.value)}
+                    className="bg-transparent border-none outline-none text-sm focus:ring-0 flex-1 p-0 placeholder-white/30 text-white"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeQuestion(question.id)}
+                    className="p-1.5 hover:bg-red-500/20 rounded-lg transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4 text-red-400" />
+                  </button>
+                </div>
+                
+                <div className="flex items-center gap-2 pl-8">
+                  <input
+                    type="checkbox"
+                    checked={question.required}
+                    onChange={(e) => updateQuestion(question.id, 'required', e.target.checked)}
+                    className="w-3.5 h-3.5 rounded bg-white/5 border-white/20 text-primary focus:ring-primary focus:ring-offset-0"
+                  />
+                  <label className="text-[10px] text-white/50 uppercase tracking-wider font-medium">Required</label>
+                </div>
+              </div>
+            ))}
           </div>
 
           {/* Submit Button */}
