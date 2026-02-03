@@ -9,6 +9,10 @@ export async function createEvent(formData: any) {
 
   const { data: { user } } = await supabase.auth.getUser();
 
+  if (!user) {
+    throw new Error("User not authenticated");
+  }
+
   const {
     title,
     startDate,
@@ -21,11 +25,18 @@ export async function createEvent(formData: any) {
     ticketPrice,
     requireApproval,
     capacity,
-    registrationQuestions,
+    questions,
   } = formData;
 
   const parsedCapacity = capacity && capacity !== "Unlimited" ? parseInt(capacity) : null;
-  const parsedQuestions = registrationQuestions || [];
+  
+
+  const parsedQuestions = questions && questions.length > 0
+    ? questions.reduce((acc: any, question: any, index: number) => {
+        acc[`q${index + 1}`] = question.text;
+        return acc;
+      }, {})
+    : null;
 
   const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 

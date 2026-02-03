@@ -45,7 +45,7 @@ export default function EventForm({
   return (
     <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 max-h-full">
       {/* Left Column: Cover Image Upload */}
-      <div className="flex flex-col gap-4 justify-center">
+      <div className="flex flex-col gap-4 lg:sticky lg:top-0 lg:self-start">
         <div 
           onClick={() => fileInputRef.current?.click()}
           className="aspect-[4/4] w-full rounded-2xl bg-black/40 backdrop-blur-md border border-white/10 flex flex-col items-center justify-center relative overflow-hidden group cursor-pointer md:hover:border-primary transition-all duration-300 shadow-2xl shadow-black/50"
@@ -266,39 +266,41 @@ export default function EventForm({
               </button>
             </div>
 
-            {formData.registrationQuestions?.map((question: Question) => (
-              <div key={question.id} className="bg-black/40 backdrop-blur-md border border-white/10 rounded-xl p-3 hover:border-primary/30 transition-all group">
-                <div className="flex items-start gap-2.5 mb-3">
-                  <div className="p-1.5 bg-white-50/5 rounded-lg mt-0.5">
-                    <HelpCircle className="w-3.5 h-3.5 text-white/50" />
+            <div className="max-h-[250px] overflow-y-auto custom-scrollbar pr-2 space-y-3">
+              {formData.questions?.map((question: Question) => (
+                <div key={question.id} className="bg-black/40 backdrop-blur-md border border-white/10 rounded-xl p-3 hover:border-primary/30 transition-all group">
+                  <div className="flex items-start gap-2.5 mb-3">
+                    <div className="p-1.5 bg-white-50/5 rounded-lg mt-0.5">
+                      <HelpCircle className="w-3.5 h-3.5 text-white/50" />
+                    </div>
+                    <input 
+                      type="text" 
+                      placeholder="Type your question here..."
+                      value={question.text}
+                      onChange={(e) => updateQuestion(question.id, 'text', e.target.value)}
+                      className="bg-transparent border-none outline-none text-sm focus:ring-0 flex-1 p-0 placeholder-white/30 text-white"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeQuestion(question.id)}
+                      className="p-1.5 hover:bg-red-500/20 rounded-lg transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4 text-red-400" />
+                    </button>
                   </div>
-                  <input 
-                    type="text" 
-                    placeholder="Type your question here..."
-                    value={question.question}
-                    onChange={(e) => updateQuestion(question.id, 'question', e.target.value)}
-                    className="bg-transparent border-none outline-none text-sm focus:ring-0 flex-1 p-0 placeholder-white/30 text-white"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeQuestion(question.id)}
-                    className="p-1.5 hover:bg-red-500/20 rounded-lg transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4 text-red-400" />
-                  </button>
+                  
+                  <div className="flex items-center gap-2 pl-8">
+                    <input
+                      type="checkbox"
+                      checked={question.required}
+                      onChange={(e) => updateQuestion(question.id, 'required', e.target.checked)}
+                      className="w-3.5 h-3.5 rounded bg-white/5 border-white/20 text-primary focus:ring-primary focus:ring-offset-0"
+                    />
+                    <label className="text-[10px] text-white/50 uppercase tracking-wider font-medium">Required</label>
+                  </div>
                 </div>
-                
-                <div className="flex items-center gap-2 pl-8">
-                  <input
-                    type="checkbox"
-                    checked={question.required}
-                    onChange={(e) => updateQuestion(question.id, 'required', e.target.checked)}
-                    className="w-3.5 h-3.5 rounded bg-white/5 border-white/20 text-primary focus:ring-primary focus:ring-offset-0"
-                  />
-                  <label className="text-[10px] text-white/50 uppercase tracking-wider font-medium">Required</label>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
 
           {/* Submit Button */}
