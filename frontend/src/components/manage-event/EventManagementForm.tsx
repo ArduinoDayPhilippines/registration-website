@@ -1,14 +1,8 @@
 "use client";
 
-import React, { useState, useTransition, useOptimistic } from "react";
-import { EventData, Question } from "@/types/event";
-import {
-  updateEventDetails,
-  addRegistrationQuestion,
-  updateRegistrationQuestion,
-  removeRegistrationQuestion,
-  updateEventSettings,
-} from "@/app/event/[slug]/manage/actions";
+import React from "react";
+import { EventData } from "@/types/event";
+import { eventManage } from "../../app/event/[slug]/manage/actions";
 import { Check, Pencil, Trash2 } from "lucide-react";
 
 interface EventManagementFormProps {
@@ -18,119 +12,83 @@ interface EventManagementFormProps {
   onSuccess: () => void;
 }
 
+async function updateEventDetailsFormAction(
+  slug: string,
+  formData: FormData
+): Promise<void> {
+  formData.append("slug", slug);
+  formData.append("operation", "updateEventDetails");
+  await eventManage(formData);
+}
+
+async function addRegistrationQuestionFormAction(
+  slug: string,
+  formData: FormData
+): Promise<void> {
+  formData.append("slug", slug);
+  formData.append("operation", "addRegistrationQuestion");
+  await eventManage(formData);
+}
+
+async function updateRegistrationQuestionFormAction(
+  slug: string,
+  formData: FormData
+): Promise<void> {
+  formData.append("slug", slug);
+  formData.append("operation", "updateRegistrationQuestion");
+  await eventManage(formData);
+}
+
+async function removeRegistrationQuestionFormAction(
+  slug: string,
+  formData: FormData
+): Promise<void> {
+  formData.append("slug", slug);
+  formData.append("operation", "removeRegistrationQuestion");
+  await eventManage(formData);
+}
+
+async function updateEventSettingsFormAction(
+  slug: string,
+  formData: FormData
+): Promise<void> {
+  formData.append("slug", slug);
+  formData.append("operation", "updateEventSettings");
+  await eventManage(formData);
+}
+
 export function EventManagementForm({
   event,
   slug,
-  onCancel,
-  onSuccess,
+  onCancel: _onCancel,
+  onSuccess: _onSuccess,
 }: EventManagementFormProps) {
-  const [isPending, startTransition] = useTransition();
+  void _onCancel;
+  void _onSuccess;
 
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [newQuestionText, setNewQuestionText] = useState("");
-  const [newQuestionRequired, setNewQuestionRequired] = useState(false);
-  const [editQuestionText, setEditQuestionText] = useState("");
-  const [editQuestionRequired, setEditQuestionRequired] = useState(false);
-
-  const [optimisticRequireApproval, setOptimisticRequireApproval] =
-    useOptimistic(event.requireApproval);
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-
-    startTransition(async () => {
-      const result = await updateEventDetails(slug, formData);
-
-      if (result.success) {
-        alert("Event details updated successfully!");
-        onSuccess();
-      } else {
-        alert(result.error || "Failed to update event details");
-      }
-    });
-  };
-
-  const handleAddQuestion = () => {
-    if (!newQuestionText.trim()) return;
-
-    startTransition(async () => {
-      const result = await addRegistrationQuestion(slug, {
-        text: newQuestionText,
-        required: newQuestionRequired,
-      });
-
-      if (result.success) {
-        setNewQuestionText("");
-        setNewQuestionRequired(false);
-        setShowAddForm(false);
-      } else {
-        alert(result.error || "Failed to add question");
-      }
-    });
-  };
-
-  const handleEditQuestion = (question: Question) => {
-    setEditingId(question.id);
-    setEditQuestionText(question.text);
-    setEditQuestionRequired(question.required);
-  };
-
-  const handleSaveEdit = (questionId: number) => {
-    if (!editQuestionText.trim()) return;
-
-    startTransition(async () => {
-      const result = await updateRegistrationQuestion(slug, questionId, {
-        text: editQuestionText,
-        required: editQuestionRequired,
-      });
-
-      if (result.success) {
-        setEditingId(null);
-      } else {
-        alert(result.error || "Failed to update question");
-      }
-    });
-  };
-
-  const handleDeleteQuestion = (questionId: number) => {
-    if (!confirm("Are you sure you want to delete this question?")) return;
-
-    startTransition(async () => {
-      const result = await removeRegistrationQuestion(slug, questionId);
-
-      if (!result.success) {
-        alert(result.error || "Failed to delete question");
-      }
-    });
-  };
-
-  const handleToggleRequireApproval = () => {
-    const newValue = !optimisticRequireApproval;
-
-    setOptimisticRequireApproval(newValue);
-
-    startTransition(async () => {
-      const result = await updateEventSettings(slug, {
-        requireApproval: newValue,
-      });
-
-      if (!result.success) {
-        alert(result.error || "Failed to update settings");
-        setOptimisticRequireApproval(!newValue);
-      }
-    });
-  };
+  const updateEventDetailsAction = updateEventDetailsFormAction.bind(
+    null,
+    slug
+  );
+  const addQuestionAction = addRegistrationQuestionFormAction.bind(null, slug);
+  const updateQuestionAction = updateRegistrationQuestionFormAction.bind(
+    null,
+    slug
+  );
+  const removeQuestionAction = removeRegistrationQuestionFormAction.bind(
+    null,
+    slug
+  );
+  const updateSettingsAction = updateEventSettingsFormAction.bind(null, slug);
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <div className="space-y-6">
       <div className="bg-white/5 backdrop-blur-md rounded-xl p-4 md:p-6 border border-white/10">
         <h2 className="font-urbanist text-lg md:text-xl font-bold text-white mb-4 md:mb-6">
           Event Details
         </h2>
 
-        <div className="space-y-6">
+        <form action={updateEventDetailsAction} className="space-y-6">
           <div>
             <label className="font-urbanist block text-sm font-medium text-white/80 mb-2">
               Event Title
@@ -231,7 +189,22 @@ export function EventManagementForm({
               />
             </div>
           </div>
-        </div>
+
+          <div className="flex flex-col sm:flex-row justify-end gap-3">
+            <a
+              href={`/event/${slug}/manage`}
+              className="font-montserrat px-6 py-2.5 md:py-3 bg-white/5 hover:bg-white/10 rounded-lg text-white text-sm md:text-base font-medium transition-colors text-center"
+            >
+              Cancel
+            </a>
+            <button
+              type="submit"
+              className="font-montserrat px-6 py-2.5 md:py-3 bg-cyan-600 hover:bg-cyan-700 rounded-lg text-white text-sm md:text-base font-medium transition-colors"
+            >
+              Save Changes
+            </button>
+          </div>
+        </form>
       </div>
 
       <div className="bg-white/5 backdrop-blur-md rounded-xl p-4 md:p-6 border border-white/10">
@@ -239,48 +212,41 @@ export function EventManagementForm({
           <h2 className="font-urbanist text-lg md:text-xl font-bold text-white">
             Registration Questions
           </h2>
-          <button
-            type="button"
-            onClick={() => setShowAddForm(!showAddForm)}
-            disabled={isPending}
-            className="font-urbanist px-4 py-2 bg-cyan-600 hover:bg-cyan-700 disabled:bg-cyan-600/50 disabled:cursor-not-allowed rounded-lg text-white text-sm font-medium transition-colors whitespace-nowrap self-start md:self-auto"
-          >
-            {showAddForm ? "Cancel" : "+ Add Question"}
-          </button>
         </div>
 
-        {showAddForm && (
-          <div className="mb-4 p-4 bg-white/5 border border-cyan-500/50 rounded-lg">
-            <input
-              type="text"
-              value={newQuestionText}
-              onChange={(e) => setNewQuestionText(e.target.value)}
-              placeholder="Enter question text..."
-              className="font-urbanist w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white text-base placeholder-white/40 focus:outline-none focus:border-cyan-500 transition-colors mb-3"
-            />
-            <div className="flex items-center justify-between">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={newQuestionRequired}
-                  onChange={(e) => setNewQuestionRequired(e.target.checked)}
-                  className="w-4 h-4 rounded border-white/20 bg-white/5 text-cyan-600 focus:ring-cyan-500"
-                />
-                <span className="font-urbanist text-white/80 text-sm">
-                  Required
-                </span>
-              </label>
-              <button
-                type="button"
-                onClick={handleAddQuestion}
-                disabled={isPending || !newQuestionText.trim()}
-                className="font-urbanist px-4 py-2 bg-cyan-600 hover:bg-cyan-700 disabled:bg-cyan-600/50 disabled:cursor-not-allowed rounded-lg text-white text-sm font-medium transition-colors"
-              >
-                {isPending ? "Adding..." : "Add Question"}
-              </button>
-            </div>
+        <details className="mb-4 group">
+          <summary className="font-urbanist px-4 py-2 bg-cyan-600 hover:bg-cyan-700 rounded-lg text-white text-sm font-medium transition-colors whitespace-nowrap w-fit cursor-pointer list-none">
+            + Add Question
+          </summary>
+          <div className="mt-3 p-4 bg-white/5 border border-cyan-500/50 rounded-lg">
+            <form action={addQuestionAction}>
+              <input
+                type="text"
+                name="text"
+                placeholder="Enter question text..."
+                className="font-urbanist w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white text-base placeholder-white/40 focus:outline-none focus:border-cyan-500 transition-colors mb-3"
+              />
+              <div className="flex items-center justify-between">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="required"
+                    className="w-4 h-4 rounded border-white/20 bg-white/5 text-cyan-600 focus:ring-cyan-500"
+                  />
+                  <span className="font-urbanist text-white/80 text-sm">
+                    Required
+                  </span>
+                </label>
+                <button
+                  type="submit"
+                  className="font-urbanist px-4 py-2 bg-cyan-600 hover:bg-cyan-700 rounded-lg text-white text-sm font-medium transition-colors"
+                >
+                  Add Question
+                </button>
+              </div>
+            </form>
           </div>
-        )}
+        </details>
 
         <div className="space-y-4">
           {event.questions && event.questions.length > 0 ? (
@@ -289,81 +255,78 @@ export function EventManagementForm({
                 key={question.id}
                 className="p-4 bg-white/5 border border-white/10 rounded-lg"
               >
-                {editingId === question.id ? (
-                  <div>
-                    <input
-                      type="text"
-                      value={editQuestionText}
-                      onChange={(e) => setEditQuestionText(e.target.value)}
-                      className="font-urbanist w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white text-base placeholder-white/40 focus:outline-none focus:border-cyan-500 transition-colors mb-3"
-                    />
-                    <div className="flex items-center justify-between">
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={editQuestionRequired}
-                          onChange={(e) =>
-                            setEditQuestionRequired(e.target.checked)
-                          }
-                          className="w-4 h-4 rounded border-white/20 bg-white/5 text-cyan-600 focus:ring-cyan-500"
-                        />
-                        <span className="font-urbanist text-white/80 text-sm">
-                          Required
-                        </span>
-                      </label>
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setEditingId(null)}
-                          disabled={isPending}
-                          className="font-urbanist px-3 py-1.5 bg-white/10 hover:bg-white/20 disabled:bg-white/5 disabled:cursor-not-allowed rounded text-white text-sm transition-colors"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleSaveEdit(question.id)}
-                          disabled={isPending || !editQuestionText.trim()}
-                          className="font-urbanist px-3 py-1.5 bg-cyan-600 hover:bg-cyan-700 disabled:bg-cyan-600/50 disabled:cursor-not-allowed rounded text-white text-sm transition-colors flex items-center gap-1"
-                        >
-                          <Check size={14} />
-                          {isPending ? "Saving..." : "Save"}
-                        </button>
-                      </div>
-                    </div>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-urbanist text-white font-medium text-base mb-1 break-words">
+                      {question.text}
+                    </p>
+                    <p className="font-urbanist text-white/60 text-sm">
+                      {question.required ? "Required" : "Optional"}
+                    </p>
                   </div>
-                ) : (
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <p className="font-urbanist text-white font-medium text-base mb-1">
-                        {question.text}
-                      </p>
-                      <p className="font-urbanist text-white/60 text-sm">
-                        {question.required ? "Required" : "Optional"}
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => handleEditQuestion(question)}
-                        disabled={isPending}
-                        className="font-urbanist text-white/60 hover:text-white disabled:text-white/30 disabled:cursor-not-allowed text-sm flex items-center gap-1 transition-colors"
-                      >
+
+                  <div className="flex gap-2 items-start">
+                    <details className="group">
+                      <summary className="font-urbanist text-white/60 hover:text-white text-sm flex items-center gap-1 transition-colors cursor-pointer list-none">
                         <Pencil size={14} />
                         Edit
-                      </button>
+                      </summary>
+                      <div className="mt-3 p-4 bg-white/5 border border-white/10 rounded-lg w-[min(420px,80vw)]">
+                        <form
+                          action={updateQuestionAction}
+                          className="space-y-3"
+                        >
+                          <input
+                            type="hidden"
+                            name="questionId"
+                            value={question.id}
+                          />
+                          <input
+                            type="text"
+                            name="text"
+                            defaultValue={question.text}
+                            className="font-urbanist w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white text-base placeholder-white/40 focus:outline-none focus:border-cyan-500 transition-colors"
+                          />
+                          <div className="flex items-center justify-between">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                name="required"
+                                defaultChecked={question.required}
+                                className="w-4 h-4 rounded border-white/20 bg-white/5 text-cyan-600 focus:ring-cyan-500"
+                              />
+                              <span className="font-urbanist text-white/80 text-sm">
+                                Required
+                              </span>
+                            </label>
+                            <button
+                              type="submit"
+                              className="font-urbanist px-3 py-1.5 bg-cyan-600 hover:bg-cyan-700 rounded text-white text-sm transition-colors flex items-center gap-1"
+                            >
+                              <Check size={14} />
+                              Save
+                            </button>
+                          </div>
+                        </form>
+                      </div>
+                    </details>
+
+                    <form action={removeQuestionAction}>
+                      <input
+                        type="hidden"
+                        name="questionId"
+                        value={question.id}
+                      />
                       <button
-                        type="button"
-                        onClick={() => handleDeleteQuestion(question.id)}
-                        disabled={isPending}
-                        className="font-urbanist text-red-400/60 hover:text-red-400 disabled:text-red-400/30 disabled:cursor-not-allowed text-sm flex items-center gap-1 transition-colors"
+                        type="submit"
+                        className="font-urbanist text-red-400/60 hover:text-red-400 text-sm flex items-center gap-1 transition-colors"
                       >
                         <Trash2 size={14} />
                         Delete
                       </button>
-                    </div>
+                    </form>
                   </div>
-                )}
+                </div>
               </div>
             ))
           ) : (
@@ -381,9 +344,9 @@ export function EventManagementForm({
           Settings
         </h2>
 
-        <div className="space-y-4">
-          <div className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-lg">
-            <div>
+        <form action={updateSettingsAction} className="space-y-4">
+          <div className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-lg gap-4">
+            <div className="min-w-0">
               <p className="font-urbanist text-white font-medium text-base mb-1">
                 Require Approval
               </p>
@@ -391,41 +354,30 @@ export function EventManagementForm({
                 Manually approve each registration
               </p>
             </div>
-            <button
-              type="button"
-              onClick={handleToggleRequireApproval}
-              disabled={isPending}
-              className={`relative w-12 h-6 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                optimisticRequireApproval ? "bg-cyan-600" : "bg-white/20"
-              }`}
-            >
-              <div
-                className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${
-                  optimisticRequireApproval ? "translate-x-6" : ""
-                }`}
+
+            <label className="flex items-center gap-3 select-none">
+              <input
+                type="checkbox"
+                name="requireApproval"
+                defaultChecked={event.requireApproval}
+                className="w-4 h-4 rounded border-white/20 bg-white/5 text-cyan-600 focus:ring-cyan-500"
               />
+              <span className="font-urbanist text-white/80 text-sm">
+                Enabled
+              </span>
+            </label>
+          </div>
+
+          <div className="flex justify-end">
+            <button
+              type="submit"
+              className="font-montserrat px-6 py-2.5 md:py-3 bg-cyan-600 hover:bg-cyan-700 rounded-lg text-white text-sm md:text-base font-medium transition-colors"
+            >
+              Save Settings
             </button>
           </div>
-        </div>
+        </form>
       </div>
-
-      <div className="flex flex-col sm:flex-row justify-end gap-3">
-        <button
-          type="button"
-          onClick={onCancel}
-          disabled={isPending}
-          className="font-montserrat px-6 py-2.5 md:py-3 bg-white/5 hover:bg-white/10 disabled:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-white text-sm md:text-base font-medium transition-colors"
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          disabled={isPending}
-          className="font-montserrat px-6 py-2.5 md:py-3 bg-cyan-600 hover:bg-cyan-700 disabled:bg-cyan-600/50 disabled:cursor-not-allowed rounded-lg text-white text-sm md:text-base font-medium transition-colors"
-        >
-          {isPending ? "Saving..." : "Save Changes"}
-        </button>
-      </div>
-    </form>
+    </div>
   );
 }

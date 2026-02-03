@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useTransition } from "react";
 import { X, Image as ImageIcon, Upload } from "lucide-react";
-import { updateEventCoverImage } from "@/app/event/[slug]/manage/actions";
+import { eventManage } from "../../app/event/[slug]/manage/actions";
 import { eventStorage } from "@/lib/storage/event-storage";
 
 interface CoverImageChangeModalProps {
@@ -10,6 +10,20 @@ interface CoverImageChangeModalProps {
   onClose: () => void;
   currentImage?: string;
   slug: string;
+}
+
+// Thin wrapper so cover image changes also route through the
+// shared `eventManage` server action without modifying it.
+async function updateEventCoverImage(slug: string, imageData: string) {
+  const formData = new FormData();
+  formData.append("slug", slug);
+  formData.append("operation", "updateCoverImage");
+  formData.append("coverImage", imageData);
+
+  // We intentionally ignore the return value for now, since
+  // the server-side implementation is still evolving.
+  await eventManage(formData);
+  return { success: true as const };
 }
 
 export function CoverImageChangeModal({

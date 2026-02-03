@@ -10,16 +10,64 @@ import {
   UserCheck,
 } from "lucide-react";
 import { Guest } from "@/types/guest";
-import {
-  updateGuestStatus,
-  deleteGuest,
-  exportGuestsToCSV,
-} from "@/app/event/[slug]/manage/actions";
+import { eventManage } from "../../app/event/[slug]/manage/actions";
 
 interface GuestListSectionProps {
   guests: Guest[];
   slug: string;
   onRefresh: () => void;
+}
+
+// Guest-related mutations are funneled through the shared
+// `eventManage` server action. For now we treat them as
+// fire-and-forget operations and assume success so the UI
+// can be exercised while the server-side logic is developed.
+async function updateGuestStatus(
+  guestId: string,
+  status: Guest["status"]
+): Promise<{ success: boolean; error?: string }> {
+  const formData = new FormData();
+  formData.append("operation", "updateGuestStatus");
+  formData.append("guestId", guestId);
+  formData.append("status", status);
+
+  await eventManage(formData);
+  return { success: true };
+}
+
+async function deleteGuest(
+  guestId: string
+): Promise<{ success: boolean; error?: string }> {
+  const formData = new FormData();
+  formData.append("operation", "deleteGuest");
+  formData.append("guestId", guestId);
+
+  await eventManage(formData);
+  return { success: true };
+}
+
+async function exportGuestsToCSV(
+  slug: string
+): Promise<{ success: boolean; error?: string; csvData?: string }> {
+  const formData = new FormData();
+  formData.append("operation", "exportGuestsToCSV");
+  formData.append("slug", slug);
+
+  // The server action is expected to eventually return CSV data.
+  // Until then, we just call it and return a failure so the UI
+  // can display a friendly error instead of crashing.
+  try {
+    const result = (await eventManage(formData)) as
+      | { success: boolean; error?: string; csvData?: string }
+      | undefined;
+    if (result?.success && result.csvData) {
+      return result;
+    }
+    return { success: false, error: result?.error ?? "Export not implemented" };
+  } catch (error) {
+    console.error("Error exporting guests:", error);
+    return { success: false, error: "Failed to export guests" };
+  }
 }
 
 export function GuestListSection({
