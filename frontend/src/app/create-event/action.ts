@@ -2,36 +2,76 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { cookies } from "next/headers";
+import { AUTH_COOKIE } from "@/lib/auth";
 
-export async function createEvent(formData: FormData) {
-  const title = formData.get("title") as string;
-  const startDate = formData.get("startDate") as string;
-  const startTime = formData.get("startTime") as string;
-  const endDate = formData.get("endDate") as string;
-  const endTime = formData.get("endTime") as string;
-  const location = formData.get("location") as string;
-  const description = formData.get("description") as string;
-  const coverImage = formData.get("coverImage") as string;
-  const ticketPrice = formData.get("ticketPrice") as string;
-  const requireApproval = formData.get("requireApproval") as string;
-  const capacity = formData.get("capacity") as string;
-  const registrationQuestions = formData.get("registrationQuestions") as string;
+export async function createEvent(formData: any) {
+  // Verify admin is logged in
+  const cookieStore = await cookies();
+  const authToken = cookieStore.get(AUTH_COOKIE);
+  
+  if (!authToken) {
+    throw new Error("Unauthorized: Please login first");
+  }
+
+  const {
+    title,
+    startDate,
+    startTime,
+    endDate,
+    endTime,
+    location,
+    description,
+    coverImage,
+    ticketPrice,
+    requireApproval,
+    capacity,
+    registrationQuestions,
+  } = formData;
 
   
-  console.log("Title:", title);
-  console.log("Start Date:", startDate);
-  console.log("Start Time:", startTime);
-  console.log("End Date:", endDate);
-  console.log("End Time:", endTime);
-  console.log("Location:", location);
-  console.log("Description:", description);
-  console.log("Cover Image:", coverImage ? "Uploaded" : "None");
-  console.log("Ticket Price:", ticketPrice);
-  console.log("Require Approval:", requireApproval);
-  console.log("Capacity:", capacity);
-  console.log("Registration Questions:", registrationQuestions);
+  if (!title || !startDate || !startTime || !location) {
+    throw new Error("Missing required fields");
+  }
+
+  const supabase = createAdminClient();
+
+  // Get the authenticated user from Supabase
+  const { data: { user }, error: userError } = await supabase.auth.getUser(authToken.value);
+  
+  if (userError || !user) {
+    throw new Error("Invalid authentication");
+  }
+
+  const parsedCapacity = capacity && capacity !== "Unlimited" ? parseInt(capacity) : null;
+  const parsedQuestions = registrationQuestions || [];
 
   const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
-  redirect(`/${slug}/manage`);
+  const { data, error: insertError } = await supabase
+    .from("events")
+    .insert({
+      organizer_id: user.id,
+      event_name: title,
+      start_date: new Date(`${startDate}T${startTime}`).toISOString(),
+      end_date: endDate && endTime ? new Date(`${endDate}T${endTime}`).toISOString() : null,
+      location,
+      description: description || null,
+      price: ticketPrice || "free",
+      capacity: parsedCapacity,
+      require_approval: requireApproval || false,
+      form_questions: parsedQuestions,
+      status: "upcoming",
+    })
+    .select()
+    .single();
+
+  if (insertError) {
+    console.error("Insert error:", insertError);
+    throw new Error(`Failed to create event: ${insertError.message}`);
+  }
+
+  revalidatePath("/dashboard");
+  redirect(`/event/${slug}/manage`);
 }

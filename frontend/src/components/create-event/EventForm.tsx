@@ -26,83 +26,18 @@ export default function EventForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        updateField('coverImage', reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleImageClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleImageRemove = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    updateField('coverImage', '');
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
-  const handleStartChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    if (value) {
-      const [date, time] = value.split('T');
-      updateField('startDate', date);
-      updateField('startTime', time);
-    }
-  };
-
-  const handleEndChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    if (value) {
-      const [date, time] = value.split('T');
-      updateField('endDate', date);
-      updateField('endTime', time);
-    }
-  };
-
 
   const handleSubmit = async (e: React.MouseEvent) => {
     e.preventDefault();
     
-   
-    if (!formData.title || !formData.startDate || !formData.startTime || !formData.location) {
-      setError('Please fill in all required fields');
-      return;
-    }
-
     setError('');
     setIsSubmitting(true);
 
     try {
-     
-      const data = new FormData();
-      data.append('title', formData.title);
-      data.append('startDate', formData.startDate);
-      data.append('startTime', formData.startTime);
-      data.append('endDate', formData.endDate || '');
-      data.append('endTime', formData.endTime || '');
-      data.append('location', formData.location);
-      data.append('description', formData.description || '');
-      data.append('coverImage', formData.coverImage || '');
-      data.append('ticketPrice', formData.ticketPrice || 'Free');
-      data.append('requireApproval', formData.requireApproval ? 'true' : 'false');
-      data.append('capacity', formData.capacity || 'Unlimited');
-      data.append('registrationQuestions', JSON.stringify(formData.registrationQuestions || []));
-      
-     
-      await createEvent(data);
-      
-      
+      await createEvent(formData);
     } catch (err) {
       console.error('Create event error:', err);
-      setError('Failed to create event. Please try again.');
+      setError(err instanceof Error ? err.message : 'Failed to create event. Please try again.');
       setIsSubmitting(false);
     }
   };
@@ -112,14 +47,23 @@ export default function EventForm({
       {/* Left Column: Cover Image Upload */}
       <div className="flex flex-col gap-4 justify-center">
         <div 
-          onClick={handleImageClick}
+          onClick={() => fileInputRef.current?.click()}
           className="aspect-[4/4] w-full rounded-2xl bg-black/40 backdrop-blur-md border border-white/10 flex flex-col items-center justify-center relative overflow-hidden group cursor-pointer md:hover:border-primary transition-all duration-300 shadow-2xl shadow-black/50"
         >
           <input
             ref={fileInputRef}
             type="file"
             accept="image/*"
-            onChange={handleFileChange}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                  updateField('coverImage', reader.result as string);
+                };
+                reader.readAsDataURL(file);
+              }
+            }}
             className="hidden"
           />
 
@@ -131,7 +75,13 @@ export default function EventForm({
                 className="absolute inset-0 w-full h-full object-cover"
               />
               <button
-                onClick={handleImageRemove}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  updateField('coverImage', '');
+                  if (fileInputRef.current) {
+                    fileInputRef.current.value = '';
+                  }
+                }}
                 className="absolute top-4 right-4 p-2 bg-black/60 backdrop-blur-sm rounded-full hover:bg-black/80 transition-colors z-10"
               >
                 <X className="w-5 h-5 text-white" />
@@ -185,7 +135,14 @@ export default function EventForm({
               type="datetime-local" 
               iconAlwaysActive={true}
               value={formData.startDate && formData.startTime ? `${formData.startDate}T${formData.startTime}` : ''}
-              onChange={handleStartChange}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value) {
+                  const [date, time] = value.split('T');
+                  updateField('startDate', date);
+                  updateField('startTime', time);
+                }
+              }}
             />
             <Input 
               label="End" 
@@ -194,7 +151,14 @@ export default function EventForm({
               variant="secondary"
               iconAlwaysActive={true}
               value={formData.endDate && formData.endTime ? `${formData.endDate}T${formData.endTime}` : ''}
-              onChange={handleEndChange}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value) {
+                  const [date, time] = value.split('T');
+                  updateField('endDate', date);
+                  updateField('endTime', time);
+                }
+              }}
             />
           </div>
 
