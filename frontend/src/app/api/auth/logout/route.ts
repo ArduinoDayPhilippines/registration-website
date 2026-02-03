@@ -1,24 +1,11 @@
 import { NextResponse } from 'next/server';
-import { createAdminClient } from '@/lib/supabase/admin';
-import { AUTH_COOKIE, AUTH_COOKIE_BASE, isSecureCookie } from '@/lib/auth';
-import { cookies } from 'next/headers';
+import { createClient } from '@/lib/supabase/server';
 
 export async function POST() {
-  const cookieStore = await cookies();
-  const authToken = cookieStore.get(AUTH_COOKIE);
+  const supabase = await createClient();
   
-  if (authToken) {
-    const supabase = createAdminClient();
-    // Sign out from Supabase
-    await supabase.auth.signOut();
-  }
+  // Sign out from Supabase - this automatically clears the session cookies
+  await supabase.auth.signOut();
   
-  const res = NextResponse.json({ ok:true });
-  res.cookies.set(AUTH_COOKIE, '', {
-    ...AUTH_COOKIE_BASE,
-    httpOnly: true,
-    secure: isSecureCookie(),
-    maxAge: 0,
-  });
-  return res;
+  return NextResponse.json({ ok:true });
 }

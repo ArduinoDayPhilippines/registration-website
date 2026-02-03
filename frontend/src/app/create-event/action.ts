@@ -2,18 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { createAdminClient } from "@/lib/supabase/admin";
-import { cookies } from "next/headers";
-import { AUTH_COOKIE } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
 
 export async function createEvent(formData: any) {
-  // Verify admin is logged in
-  const cookieStore = await cookies();
-  const authToken = cookieStore.get(AUTH_COOKIE);
-  
-  if (!authToken) {
-    throw new Error("Unauthorized: Please login first");
-  }
+  const supabase = await createClient();
+
+  const { data: { user } } = await supabase.auth.getUser();
 
   const {
     title,
@@ -29,20 +23,6 @@ export async function createEvent(formData: any) {
     capacity,
     registrationQuestions,
   } = formData;
-
-  
-  if (!title || !startDate || !startTime || !location) {
-    throw new Error("Missing required fields");
-  }
-
-  const supabase = createAdminClient();
-
-  // Get the authenticated user from Supabase
-  const { data: { user }, error: userError } = await supabase.auth.getUser(authToken.value);
-  
-  if (userError || !user) {
-    throw new Error("Invalid authentication");
-  }
 
   const parsedCapacity = capacity && capacity !== "Unlimited" ? parseInt(capacity) : null;
   const parsedQuestions = registrationQuestions || [];
