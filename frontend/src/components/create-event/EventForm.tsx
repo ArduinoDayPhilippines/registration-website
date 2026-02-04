@@ -12,14 +12,13 @@ import {
   Users,
   Lock,
   LockOpen,
-  Plus,
-  HelpCircle,
-  Trash2,
+  Settings,
 } from "lucide-react";
 import { EventFormData, Question } from "@/types/event";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { createEvent } from "@/app/create-event/action";
+import { RegistrationQuestionsModal } from "@/components/create-event/registration-questions-modal";
 
 interface EventFormProps {
   formData: EventFormData;
@@ -46,6 +45,7 @@ export default function EventForm({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [isQuestionsModalOpen, setIsQuestionsModalOpen] = useState(false);
 
   const handleSubmit = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -303,64 +303,30 @@ export default function EventForm({
             </div>
           </div>
 
-          {/* Registration Questions */}
-          <div className="pt-2 space-y-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-urbanist font-bold text-white tracking-wide">
-                Registration Questions
-              </h3>
-              <button
-                type="button"
-                onClick={addQuestion}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/20 hover:bg-primary/30 text-primary text-xs font-bold uppercase tracking-wide transition-colors"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                Add
-              </button>
-            </div>
-
-            {formData.questions.map((question: Question) => (
-              <div
-                key={question.id}
-                className="bg-black/40 backdrop-blur-md border border-white/10 rounded-xl p-3 hover:border-primary/30 transition-all group"
-              >
-                <div className="flex items-start gap-2.5 mb-3">
-                  <div className="p-1.5 bg-white-50/5 rounded-lg mt-0.5">
-                    <HelpCircle className="w-3.5 h-3.5 text-white/50" />
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="Type your question here..."
-                    value={question.text}
-                    onChange={(e) =>
-                      updateQuestion(question.id, "text", e.target.value)
-                    }
-                    className="bg-transparent border-none outline-none text-sm focus:ring-0 flex-1 p-0 placeholder-white/30 text-white"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeQuestion(question.id)}
-                    className="p-1.5 hover:bg-red-500/20 rounded-lg transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4 text-red-400" />
-                  </button>
+          {/* Registration Questions Button */}
+          <div className="pt-2">
+            <button
+              type="button"
+              onClick={() => setIsQuestionsModalOpen(true)}
+              className="w-full bg-black/40 backdrop-blur-md border border-white/10 rounded-xl p-4 hover:border-primary/30 transition-all group flex items-center justify-between"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-white-50/5 rounded-lg">
+                  <Settings className="w-5 h-5 text-primary" />
                 </div>
-
-                <div className="flex items-center gap-2 pl-8">
-                  <input
-                    type="checkbox"
-                    checked={question.required}
-                    onChange={(e) =>
-                      updateQuestion(question.id, "required", e.target.checked)
-                    }
-                    className="w-3.5 h-3.5 rounded bg-white/5 border-white/20 text-primary focus:ring-primary focus:ring-offset-0"
-                  />
-                  <label className="text-[10px] text-white/50 uppercase tracking-wider font-medium">
-                    Required
-                  </label>
+                <div className="text-left">
+                  <h3 className="text-sm font-urbanist font-bold text-white tracking-wide">Registration Questions</h3>
+                  <p className="text-xs text-white/50 mt-0.5">
+                    {formData.questions?.length === 0 
+                      ? 'No questions added' 
+                      : `${formData.questions?.length} question${formData.questions?.length === 1 ? '' : 's'} configured`}
+                  </p>
                 </div>
-              ))}
-            </div>
+              </div>
+              <div className="text-primary text-xs font-bold uppercase tracking-wide px-3 py-1.5 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                Manage
+              </div>
+            </button>
           </div>
 
           {/* Submit Button */}
@@ -376,6 +342,16 @@ export default function EventForm({
           </div>
         </div>
       </div>
+
+      {/* Registration Questions Modal */}
+      <RegistrationQuestionsModal
+        isOpen={isQuestionsModalOpen}
+        onClose={() => setIsQuestionsModalOpen(false)}
+        questions={formData.questions || []}
+        addQuestion={addQuestion}
+        removeQuestion={removeQuestion}
+        updateQuestion={updateQuestion}
+      />
     </div>
   );
 }
