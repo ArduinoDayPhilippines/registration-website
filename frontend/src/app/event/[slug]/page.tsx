@@ -13,6 +13,7 @@ import { EventManageCard } from "@/components/event/event-manage-card";
 import { EventRegistrationCard } from "@/components/event/event-registration-card";
 import { EventAbout } from "@/components/event/event-about";
 import { EventHost } from "@/components/event/event-host";
+import { LocationMapPreview } from "@/components/event/location-map-preview";
 import { createClient } from "@/lib/supabase/client";
 import { useEvent } from "@/hooks/event/use-event";
 
@@ -102,6 +103,12 @@ export default function EventPage() {
 
             {/* Location */}
             <EventLocation location={event.location} />
+
+            {/* Location Map Preview */}
+            <LocationMapPreview
+              location={event.location}
+              className="mb-6"
+            />
 
             {/* Registration Card */}
             <EventRegistrationCard
