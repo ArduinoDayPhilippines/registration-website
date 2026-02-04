@@ -115,6 +115,7 @@ export default function EventPage() {
               requireApproval={event.requireApproval}
               ticketPrice={event.ticketPrice}
               capacity={event.capacity}
+              registeredCount={event.registeredCount}
               onRsvpClick={() => router.push(`/event/${slug}/register`)}
             />
 

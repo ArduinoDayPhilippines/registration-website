@@ -17,6 +17,7 @@ export interface EventData {
   description: string;
   ticketPrice: string;
   capacity: string;
+  registeredCount?: number;
   requireApproval: boolean;
   coverImage?: string;
   theme: string;
