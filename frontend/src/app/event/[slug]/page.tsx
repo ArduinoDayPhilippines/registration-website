@@ -13,6 +13,7 @@ import { EventManageCard } from "@/components/event/event-manage-card";
 import { EventRegistrationCard } from "@/components/event/event-registration-card";
 import { EventAbout } from "@/components/event/event-about";
 import { EventHost } from "@/components/event/event-host";
+import { LocationMapPreview } from "@/components/event/location-map-preview";
 import { createClient } from "@/lib/supabase/client";
 import { useEvent } from "@/hooks/event/use-event";
 
@@ -79,12 +80,6 @@ export default function EventPage() {
             {/* Manage Event Card */}
             <EventManageCard eventSlug={slug} />
 
-            {/* About - Desktop Only */}
-            <EventAbout
-              description={event.description}
-              className="hidden lg:block"
-            />
-
             {/* Hosted By - Desktop Only */}
             <EventHost
               hostName={hostName}
@@ -99,12 +94,6 @@ export default function EventPage() {
               {event.title}
             </h1>
 
-            {/* About - Mobile Only (below title) */}
-            <EventAbout
-              description={event.description}
-              className="lg:hidden mb-6 pb-6 border-b border-white/10"
-            />
-
             {/* Date & Time */}
             <EventDateTime
               startDate={event.startDate}
@@ -115,12 +104,25 @@ export default function EventPage() {
             {/* Location */}
             <EventLocation location={event.location} />
 
+            {/* Location Map Preview */}
+            <LocationMapPreview
+              location={event.location}
+              className="mb-6"
+            />
+
             {/* Registration Card */}
             <EventRegistrationCard
               requireApproval={event.requireApproval}
               ticketPrice={event.ticketPrice}
               capacity={event.capacity}
+              registeredCount={event.registeredCount}
               onRsvpClick={() => router.push(`/event/${slug}/register`)}
+            />
+
+            {/* About - Below RSVP */}
+            <EventAbout
+              description={event.description}
+              className="mt-6 pt-6 border-t border-white/10"
             />
 
             {/* Hosted By - Mobile Only (at the end) */}

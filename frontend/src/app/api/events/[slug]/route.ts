@@ -13,6 +13,7 @@ type EventRow = {
   description: string | null;
   price: string | null;
   capacity: number | null;
+  registered: number | null;
   require_approval: boolean | null;
   form_questions: any; 
   created_at: string | null;
@@ -87,5 +88,21 @@ export async function GET(
   }
 
   const event = mapRowToEvent(data as EventRow);
+  
+  // Use the registered column from the events table if available,
+  // otherwise fall back to counting from the guests table
+  if (data.registered !== null && data.registered !== undefined) {
+    event.registeredCount = data.registered;
+  } else {
+    // Fallback: Get registered guest count from guests table
+    const { count } = await supabase
+      .from("guests")
+      .select("*", { count: "exact", head: true })
+      .eq("event_slug", slug)
+      .in("status", ["approved", "pending"]);
+    
+    event.registeredCount = count ?? 0;
+  }
+  
   return NextResponse.json({ event });
 }

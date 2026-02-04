@@ -16,6 +16,15 @@ export function EventDateTime({ startDate, startTime, endTime }: EventDateTimePr
     day: "numeric",
   });
 
+  // Format time to include AM/PM
+  const formatTime = (time: string) => {
+    const [hours, minutes] = time.split(':');
+    const hour = parseInt(hours, 10);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = hour % 12 || 12;
+    return `${hour12}:${minutes} ${ampm}`;
+  };
+
   return (
     <div className="flex items-start gap-3 mb-4">
       <div className="flex-shrink-0 text-center">
@@ -33,7 +42,7 @@ export function EventDateTime({ startDate, startTime, endTime }: EventDateTimePr
           {fullDate}
         </p>
         <p className="text-white/60 text-sm">
-          {startTime} - {endTime}
+          {formatTime(startTime)} - {formatTime(endTime)}
         </p>
       </div>
     </div>
