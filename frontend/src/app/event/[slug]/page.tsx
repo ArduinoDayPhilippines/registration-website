@@ -79,12 +79,6 @@ export default function EventPage() {
             {/* Manage Event Card */}
             <EventManageCard eventSlug={slug} />
 
-            {/* About - Desktop Only */}
-            <EventAbout
-              description={event.description}
-              className="hidden lg:block"
-            />
-
             {/* Hosted By - Desktop Only */}
             <EventHost
               hostName={hostName}
@@ -98,12 +92,6 @@ export default function EventPage() {
             <h1 className="font-urbanist text-3xl md:text-4xl lg:text-5xl font-bold mb-6 leading-tight text-white">
               {event.title}
             </h1>
-
-            {/* About - Mobile Only (below title) */}
-            <EventAbout
-              description={event.description}
-              className="lg:hidden mb-6 pb-6 border-b border-white/10"
-            />
 
             {/* Date & Time */}
             <EventDateTime
@@ -121,6 +109,12 @@ export default function EventPage() {
               ticketPrice={event.ticketPrice}
               capacity={event.capacity}
               onRsvpClick={() => router.push(`/event/${slug}/register`)}
+            />
+
+            {/* About - Below RSVP */}
+            <EventAbout
+              description={event.description}
+              className="mt-6 pt-6 border-t border-white/10"
             />
 
             {/* Hosted By - Mobile Only (at the end) */}
