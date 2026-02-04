@@ -16,7 +16,6 @@ import {
   GuestListSection,
   EventPreviewCard,
   WhenWhereSidebar,
-  InvitationsSection,
   CoverImageChangeModal,
   EventManagementForm,
 } from "@/components/manage-event";
@@ -78,7 +77,7 @@ export default function ManageEventPage() {
 
         {/* Tab Navigation */}
         <div className="flex gap-4 md:gap-6 border-b border-white/10 mb-6 md:mb-8 overflow-x-auto -mx-3 md:mx-0 px-3 md:px-0">
-          {["Overview", "Guests", "Registration", "Batchmail"].map((tab) => (
+          {["Overview", "Guests", "Batchmail"].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab.toLowerCase())}
@@ -114,31 +113,25 @@ export default function ManageEventPage() {
         {/* Overview Tab Content */}
         {activeTab === "overview" && (
           <>
-            <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6 mb-8">
               <EventPreviewCard
                 event={event}
                 eventUrl={eventUrl}
                 onCopy={copyToClipboard}
-                onEditEvent={() => setActiveTab("registration")}
+                onEditEvent={() => {}}
                 onChangePhoto={() => setShowCoverImageModal(true)}
               />
               <WhenWhereSidebar event={event} />
             </div>
-            <InvitationsSection />
+            <EventManagementForm
+              event={event}
+              slug={slug}
+              onCancel={() => {}}
+              onSuccess={() => {
+                refetch();
+              }}
+            />
           </>
-        )}
-
-        {/* Registration Tab Content */}
-        {activeTab === "registration" && (
-          <EventManagementForm
-            event={event}
-            slug={slug}
-            onCancel={() => setActiveTab("overview")}
-            onSuccess={() => {
-              // Stay on the Registration tab; just refresh data after save
-              refetch();
-            }}
-          />
         )}
 
         {/* Batchmail Tab Content */}
