@@ -1,60 +1,20 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { Loader2, Eye, EyeOff } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useState } from "react";
+import { login } from "@/app/auth/actions";
+import { Loader2, Eye, EyeOff } from "lucide-react";
 
 export default function AdminLoginForm() {
-  const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error] = useState("");
+  const [isLoading] = useState(false);
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!email || !password) {
-      setError('Please fill in all fields');
-      return;
-    }
-
-    setError('');
-    setIsLoading(true);
-
-    try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError('Invalid admin credentials. Please try again.');
-        return;
-      }
-
-      if (data.ok) {
-        router.push('/dashboard');
-      } else {
-        setError('Login failed. Please try again.');
-      }
-    } catch (err) {
-      console.error('Login error:', err);
-      setError('Network error. Please check your connection.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
-    <div className="
+    <div
+      className="
       relative overflow-hidden
       bg-[rgba(255,255,255,0.03)]
       backdrop-blur-md
@@ -62,32 +22,37 @@ export default function AdminLoginForm() {
       rounded-[24px]
       p-8
       shadow-[0_8px_32px_rgba(0,0,0,0.4)]
-    ">
-      <form onSubmit={handleSubmit} className="space-y-5">
-        {/* Error message */}
+    "
+    >
+      <form className="space-y-5">
+        {/* error message */}
         {error && (
           <div className="bg-red-500/10 border border-red-400/30 rounded-xl px-4 py-3 mb-4">
             <p className="text-red-200 text-xs text-center">{error}</p>
           </div>
         )}
-
-        {/* Email Input */}
+        {/* email input */}
         <div className="space-y-2">
           <label className="text-[#9dd5d5] text-[11px] font-medium block">
-            Admin Email
+            Email
           </label>
           <input
+            name="email"
             type="email"
-            placeholder="admin@arduinoday.ph"
+            placeholder="admin@arduinodayphilippines.cc"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            onFocus={() => setFocusedField('email')}
+            onFocus={() => setFocusedField("email")}
             onBlur={() => setFocusedField(null)}
             disabled={isLoading}
             className={`
               w-full
               !bg-[rgba(15,30,30,0.9)]
-              border ${focusedField === 'email' ? '!border-[#7dc5c5]' : '!border-[#5da5a5]'}
+              border ${
+                focusedField === "email"
+                  ? "!border-[#7dc5c5]"
+                  : "!border-[#5da5a5]"
+              }
               rounded-xl
               px-4 py-3
               !text-[#d5e5e5] text-sm
@@ -99,25 +64,29 @@ export default function AdminLoginForm() {
             `}
           />
         </div>
-
-        {/* Password Input */}
+        {/* password input */}
         <div className="space-y-2">
           <label className="text-[#9dd5d5] text-[11px] font-medium block">
             Password
           </label>
           <div className="relative">
             <input
+              name="password"
               type={showPassword ? "text" : "password"}
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              onFocus={() => setFocusedField('password')}
+              onFocus={() => setFocusedField("password")}
               onBlur={() => setFocusedField(null)}
               disabled={isLoading}
               className={`
                 w-full
                 !bg-[rgba(15,30,30,0.9)]
-                border ${focusedField === 'password' ? '!border-[#7dc5c5]' : '!border-[#5da5a5]'}
+                border ${
+                  focusedField === "password"
+                    ? "!border-[#7dc5c5]"
+                    : "!border-[#5da5a5]"
+                }
                 rounded-xl
                 px-4 py-3 pr-12
                 !text-[#d5e5e5] text-sm
@@ -128,6 +97,7 @@ export default function AdminLoginForm() {
                 disabled:opacity-50 disabled:cursor-not-allowed
               `}
             />
+            {/* show password toggle */}
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
@@ -139,8 +109,7 @@ export default function AdminLoginForm() {
             </button>
           </div>
         </div>
-
-        {/* Forgot Password */}
+        {/* forgot password button */}
         <div className="text-right pt-1">
           <button
             type="button"
@@ -150,11 +119,11 @@ export default function AdminLoginForm() {
             Forgot password?
           </button>
         </div>
-
-        {/* Login Button - Muted/Disabled appearance */}
+        {/* submit button */}
         <button
           type="submit"
           disabled={isLoading}
+          formAction={login}
           className="
             w-full
             bg-[rgba(35,60,60,0.6)]
@@ -176,7 +145,7 @@ export default function AdminLoginForm() {
               Logging in...
             </span>
           ) : (
-            'Login to Dashboard'
+            "Login to Dashboard"
           )}
         </button>
       </form>

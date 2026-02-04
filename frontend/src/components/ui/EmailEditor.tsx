@@ -127,6 +127,8 @@ function EmailEditorInner(
     pendingHistoryRef.current = null;
     historyRef.current = [clean];
     historyIndexRef.current = 0;
+    // This setState is intentional to reflect the new history baseline.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     syncHistoryFlags(0);
   }, [value]);
 

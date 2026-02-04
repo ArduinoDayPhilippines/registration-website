@@ -1,13 +1,11 @@
 import { NextResponse } from 'next/server';
-import { AUTH_COOKIE, AUTH_COOKIE_BASE, isSecureCookie } from '@/lib/auth';
+import { createClient } from '@/lib/supabase/server';
 
 export async function POST() {
-  const res = NextResponse.json({ ok:true });
-  res.cookies.set(AUTH_COOKIE, '', {
-    ...AUTH_COOKIE_BASE,
-    httpOnly: true,
-    secure: isSecureCookie(),
-    maxAge: 0,
-  });
-  return res;
+  const supabase = await createClient();
+  
+  // Sign out from Supabase - this automatically clears the session cookies
+  await supabase.auth.signOut();
+  
+  return NextResponse.json({ ok:true });
 }

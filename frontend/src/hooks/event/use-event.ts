@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
-import { EventData } from '@/types/event';
-import { eventStorage } from '@/lib/storage/event-storage';
+import { useState, useEffect, useCallback } from "react";
+import { EventData } from "@/types/event";
 
 interface UseEventReturn {
   event: EventData | null;
   loading: boolean;
   error: string | null;
+  refetch: () => void;
 }
 
 /**
@@ -17,34 +17,49 @@ export function useEvent(slug: string): UseEventReturn {
   const [event, setEvent] = useState<EventData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refetchTrigger, setRefetchTrigger] = useState(0);
 
-  useEffect(() => {
-    const loadEvent = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        // Simulate async operation
-        await new Promise(resolve => setTimeout(resolve, 0));
-        
-        const foundEvent = eventStorage.getBySlug(slug);
-        setEvent(foundEvent);
-        
-        if (!foundEvent) {
-          setError('Event not found');
-        }
-      } catch (err) {
-        setError('Failed to load event');
-        console.error('Error loading event:', err);
-      } finally {
-        setLoading(false);
+  const loadEvent = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await fetch(`/api/events/${slug}`);
+
+      if (!response.ok) {
+        setEvent(null);
+        setError("Event not found");
+        return;
       }
-    };
 
-    if (slug) {
-      loadEvent();
+      const json = await response.json();
+      const apiEvent = json.event as EventData | undefined;
+
+      if (!apiEvent) {
+        setEvent(null);
+        setError("Event not found");
+        return;
+      }
+
+      // API already returns EventData shape
+      setEvent(apiEvent);
+    } catch (err) {
+      setError("Failed to load event");
+      console.error("Error loading event:", err);
+    } finally {
+      setLoading(false);
     }
   }, [slug]);
 
-  return { event, loading, error };
+  useEffect(() => {
+    if (slug) {
+      loadEvent();
+    }
+  }, [slug, loadEvent, refetchTrigger]);
+
+  const refetch = useCallback(() => {
+    setRefetchTrigger((prev) => prev + 1);
+  }, []);
+
+  return { event, loading, error, refetch };
 }

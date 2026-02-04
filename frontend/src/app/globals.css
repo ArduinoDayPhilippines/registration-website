@@ -59,7 +59,6 @@
 	input[type="datetime-local"],
 	input[type="date"],
 	input[type="time"] {
-		color-scheme: dark;
 		color: white !important;
 	}
 	
@@ -72,8 +71,9 @@
 	input[type="datetime-local"]::-webkit-calendar-picker-indicator,
 	input[type="date"]::-webkit-calendar-picker-indicator,
 	input[type="time"]::-webkit-calendar-picker-indicator {
-		filter: invert(1);
+		filter: invert(1) brightness(1.5);
 		cursor: pointer;
+		opacity: 1;
 	}
 
 	input[type="datetime-local"]::placeholder,

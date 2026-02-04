@@ -1,9 +1,8 @@
-export { GuestStatistics } from './GuestStatistics';
-export { QuickActions } from './QuickActions';
-export { GuestListSection } from './GuestListSection';
-export { EventDetailsForm } from './EventDetailsForm';
-export { RegistrationQuestionsSection } from './RegistrationQuestionsSection';
-export { EventSettingsSection } from './EventSettingsSection';
-export { EventPreviewCard } from './EventPreviewCard';
-export { WhenWhereSidebar } from './WhenWhereSidebar';
-export { InvitationsSection } from './InvitationsSection';
+export { GuestStatistics } from "./GuestStatistics";
+export { QuickActions } from "./QuickActions";
+export { GuestListSection } from "./GuestListSection";
+export { EventPreviewCard } from "./EventPreviewCard";
+export { WhenWhereSidebar } from "./WhenWhereSidebar";
+export { InvitationsSection } from "./InvitationsSection";
+export { CoverImageChangeModal } from "./CoverImageChangeModal";
+export { EventManagementForm } from "./EventManagementForm";

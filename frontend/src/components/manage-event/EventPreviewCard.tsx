@@ -16,6 +16,7 @@ interface EventPreviewCardProps {
   eventUrl: string;
   onCopy: () => void;
   onEditEvent: () => void;
+  onChangePhoto: () => void;
 }
 
 export function EventPreviewCard({
@@ -23,6 +24,7 @@ export function EventPreviewCard({
   eventUrl,
   onCopy,
   onEditEvent,
+  onChangePhoto,
 }: EventPreviewCardProps) {
   return (
     <div className="bg-gradient-to-br from-teal-900/40 to-cyan-800/40 backdrop-blur-md rounded-xl border border-teal-500/20 overflow-hidden">
@@ -67,7 +69,7 @@ export function EventPreviewCard({
             </div>
 
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-full bg-orange-500 flex items-center justify-center text-xs font-bold">
+              <div className="w-6 h-6 rounded-full bg-cyan-500 flex items-center justify-center text-xs font-bold">
                 C
               </div>
               <span className="text-sm text-white/70">Host</span>
@@ -100,7 +102,9 @@ export function EventPreviewCard({
       <div className="border-t border-white/10 p-4">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-4">
-            <span className="text-sm text-white/60 hidden md:inline">Share Event</span>
+            <span className="text-sm text-white/60 hidden md:inline">
+              Share Event
+            </span>
             <div className="flex gap-3">
               <button className="text-white/40 hover:text-white transition-colors">
                 <Facebook size={18} />
@@ -123,7 +127,10 @@ export function EventPreviewCard({
             >
               Edit Event
             </button>
-            <button className="flex-1 md:flex-none px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-white text-sm font-medium transition-colors whitespace-nowrap">
+            <button
+              onClick={onChangePhoto}
+              className="flex-1 md:flex-none px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-white text-sm font-medium transition-colors whitespace-nowrap"
+            >
               Change Photo
             </button>
           </div>
