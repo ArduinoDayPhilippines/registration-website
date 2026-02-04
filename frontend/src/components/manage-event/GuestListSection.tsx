@@ -21,26 +21,44 @@ interface GuestListSectionProps {
   event: EventData;
 }
 
-// Registrants from the table - removed status update since registrants table
-// doesn't have a status column. This can be re-implemented if needed.
 async function updateGuestStatus(
   guestId: string,
-  status: string
+  isRegistered: boolean,
+  slug: string
 ): Promise<{ success: boolean; error?: string }> {
-  // Placeholder - implement if status tracking is needed
-  console.log("Update guest status:", guestId, status);
-  return { success: true };
+  const formData = new FormData();
+  formData.append("operation", "updateGuestStatus");
+  formData.append("slug", slug);
+  formData.append("guestId", guestId);
+  formData.append("isRegistered", String(isRegistered));
+
+  try {
+    const result = await eventManage(formData) as { success: boolean; error?: string } | undefined;
+    console.log("updateGuestStatus result:", result);
+    return result || { success: false, error: "No response from server" };
+  } catch (error) {
+    console.error("Error updating guest status:", error);
+    return { success: false, error: "Failed to update status" };
+  }
 }
 
 async function deleteGuest(
-  guestId: string
+  guestId: string,
+  slug: string
 ): Promise<{ success: boolean; error?: string }> {
   const formData = new FormData();
   formData.append("operation", "deleteGuest");
+  formData.append("slug", slug);
   formData.append("guestId", guestId);
 
-  await eventManage(formData);
-  return { success: true };
+  try {
+    const result = await eventManage(formData) as { success: boolean; error?: string } | undefined;
+    console.log("deleteGuest result:", result);
+    return result || { success: false, error: "No response from server" };
+  } catch (error) {
+    console.error("Error deleting guest:", error);
+    return { success: false, error: "Failed to delete guest" };
+  }
 }
 
 async function exportGuestsToCSV(
@@ -95,12 +113,26 @@ export function GuestListSection({
     if (!confirm("Are you sure you want to remove this guest?")) return;
 
     startTransition(async () => {
-      const result = await deleteGuest(guestId);
+      const result = await deleteGuest(guestId, slug);
 
       if (result.success) {
         onRefresh();
       } else {
         alert(result.error || "Failed to delete guest");
+      }
+    });
+  };
+
+  const handleStatusChange = (guestId: string, newStatus: string) => {
+    const isRegistered = newStatus === "registered";
+    
+    startTransition(async () => {
+      const result = await updateGuestStatus(guestId, isRegistered, slug);
+
+      if (result.success) {
+        onRefresh();
+      } else {
+        alert(result.error || "Failed to update status");
       }
     });
   };
@@ -271,9 +303,9 @@ export function GuestListSection({
               onChange={(e) => setStatusFilter(e.target.value)}
               className="font-urbanist px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-cyan-500 transition-colors"
             >
-              <option value="all">All Status</option>
-              <option value="registered">Registered</option>
-              <option value="pending">Pending</option>
+              <option value="all" style={{ backgroundColor: '#0a1520', color: '#ffffff' }}>All Status</option>
+              <option value="registered" style={{ backgroundColor: '#0a1520', color: '#ffffff' }}>Registered</option>
+              <option value="pending" style={{ backgroundColor: '#0a1520', color: '#ffffff' }}>Pending</option>
             </select>
             <button
               onClick={handleExport}
@@ -353,15 +385,23 @@ export function GuestListSection({
                       )}
                     </td>
                     <td className="py-4 px-2">
-                      <span
-                        className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
+                      <select
+                        value={guest.is_registered ? "registered" : "pending"}
+                        onChange={(e) => handleStatusChange(guest.registrant_id, e.target.value)}
+                        disabled={isPending}
+                        className={`font-urbanist px-3 py-1.5 rounded-lg text-xs font-medium border transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-cyan-500/50 ${
                           guest.is_registered
-                            ? "bg-green-500/20 text-green-400"
-                            : "bg-yellow-500/20 text-yellow-400"
+                            ? "bg-green-500/20 text-green-400 border-green-500/30 hover:bg-green-500/30"
+                            : "bg-yellow-500/20 text-yellow-400 border-yellow-500/30 hover:bg-yellow-500/30"
                         }`}
                       >
-                        {guest.is_registered ? "Registered" : "Pending"}
-                      </span>
+                        <option value="registered" className="bg-[#0a1520] text-green-400">
+                          Registered
+                        </option>
+                        <option value="pending" className="bg-[#0a1520] text-yellow-400">
+                          Pending
+                        </option>
+                      </select>
                     </td>
                     <td className="py-4 px-2">
                       <div className="flex justify-end gap-2">

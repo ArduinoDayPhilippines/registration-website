@@ -35,7 +35,8 @@ export async function GET(
 
     console.log("Registrants query result:", { 
       count: registrants?.length, 
-      error: registrantsError 
+      error: registrantsError,
+      sampleData: registrants?.[0] 
     });
 
     if (registrantsError) {
