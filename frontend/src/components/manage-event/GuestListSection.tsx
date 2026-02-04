@@ -6,83 +6,19 @@ import {
   Download,
   Eye,
   Trash2,
-  Check,
-  X,
-  XCircle,
+  QrCode,
 } from "lucide-react";
 import { Guest } from "@/types/guest";
 import { EventData } from "@/types/event";
-import { eventManage } from "../../app/event/[slug]/manage/actions";
+import { updateGuestStatus, deleteGuest, exportGuestsToCSV } from "./guest-actions";
+import { generateQRCodeTicket } from "./qr-generator";
+import { GuestAnswersModal } from "./GuestAnswersModal";
 
 interface GuestListSectionProps {
   guests: Guest[];
   slug: string;
   onRefresh: () => void;
   event: EventData;
-}
-
-async function updateGuestStatus(
-  guestId: string,
-  isRegistered: boolean,
-  slug: string
-): Promise<{ success: boolean; error?: string }> {
-  const formData = new FormData();
-  formData.append("operation", "updateGuestStatus");
-  formData.append("slug", slug);
-  formData.append("guestId", guestId);
-  formData.append("isRegistered", String(isRegistered));
-
-  try {
-    const result = await eventManage(formData) as { success: boolean; error?: string } | undefined;
-    console.log("updateGuestStatus result:", result);
-    return result || { success: false, error: "No response from server" };
-  } catch (error) {
-    console.error("Error updating guest status:", error);
-    return { success: false, error: "Failed to update status" };
-  }
-}
-
-async function deleteGuest(
-  guestId: string,
-  slug: string
-): Promise<{ success: boolean; error?: string }> {
-  const formData = new FormData();
-  formData.append("operation", "deleteGuest");
-  formData.append("slug", slug);
-  formData.append("guestId", guestId);
-
-  try {
-    const result = await eventManage(formData) as { success: boolean; error?: string } | undefined;
-    console.log("deleteGuest result:", result);
-    return result || { success: false, error: "No response from server" };
-  } catch (error) {
-    console.error("Error deleting guest:", error);
-    return { success: false, error: "Failed to delete guest" };
-  }
-}
-
-async function exportGuestsToCSV(
-  slug: string
-): Promise<{ success: boolean; error?: string; csvData?: string }> {
-  const formData = new FormData();
-  formData.append("operation", "exportGuestsToCSV");
-  formData.append("slug", slug);
-
-  // The server action is expected to eventually return CSV data.
-  // Until then, we just call it and return a failure so the UI
-  // can display a friendly error instead of crashing.
-  try {
-    const result = (await eventManage(formData)) as
-      | { success: boolean; error?: string; csvData?: string }
-      | undefined;
-    if (result?.success && result.csvData) {
-      return result;
-    }
-    return { success: false, error: result?.error ?? "Export not implemented" };
-  } catch (error) {
-    console.error("Error exporting guests:", error);
-    return { success: false, error: "Failed to export guests" };
-  }
 }
 
 export function GuestListSection({
@@ -96,8 +32,6 @@ export function GuestListSection({
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedGuest, setSelectedGuest] = useState<Guest | null>(null);
   const [showAnswersModal, setShowAnswersModal] = useState(false);
-
-  // Create a map of answer keys (a1, a2, a3) to question text
   const getQuestionText = (answerKey: string): string => {
     const match = answerKey.match(/\d+$/);
     if (match && event.questions && Array.isArray(event.questions)) {
@@ -153,6 +87,38 @@ export function GuestListSection({
     }
   };
 
+  const handleGenerateQR = async (guest: Guest) => {
+    try {
+      // Create QR code data - can include registrant_id and other info
+      const qrData = JSON.stringify({
+        registrant_id: guest.registrant_id,
+        email: guest.email,
+        name: `${guest.first_name} ${guest.last_name}`,
+        event_slug: slug,
+      });
+
+      // Use QRCode library to generate QR code
+      const QRCode = (await import('qrcode')).default;
+      const qrCodeDataUrl = await QRCode.toDataURL(qrData, {
+        width: 400,
+        margin: 2,
+        color: {
+          dark: '#000000',
+          light: '#ffffff',
+        },
+      });
+
+      // Create a download link
+      const link = document.createElement('a');
+      link.href = qrCodeDataUrl;
+      link.download = `ticket-${guest.first_name}-${guest.last_name}-${guest.registrant_id.slice(0, 8)}.png`;
+      link.click();
+    } catch (error) {
+      console.error('Error generating QR code:', error);
+      alert('Failed to generate QR code');
+    }
+  };
+
   // Filter guests
   const filteredGuests = guests.filter((guest) => {
     const matchesSearch =
@@ -171,100 +137,14 @@ export function GuestListSection({
     <>
       {/* Answers Modal */}
       {showAnswersModal && selectedGuest && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          {/* Backdrop */}
-          <div
-            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-            onClick={() => {
-              setShowAnswersModal(false);
-              setSelectedGuest(null);
-            }}
-          />
-
-          {/* Modal */}
-          <div className="relative w-full max-w-3xl bg-gradient-to-br from-[#0a1f14] via-[#0a1520] to-[#120c08] border border-white/10 rounded-3xl max-h-[85vh] overflow-hidden flex flex-col">
-            {/* Glow Effect */}
-            <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-primary/10 via-transparent to-secondary/10 opacity-50 pointer-events-none" />
-
-            {/* Header */}
-            <div className="relative flex items-start justify-between p-6 md:p-8 border-b border-white/10">
-              <div className="flex-1 pr-4">
-                <h3 className="font-urbanist text-2xl md:text-3xl font-bold text-white leading-tight mb-2">
-                  Form Answers
-                </h3>
-                <p className="font-urbanist text-sm text-white/60">
-                  {selectedGuest.first_name} {selectedGuest.last_name}
-                </p>
-              </div>
-              <button
-                onClick={() => {
-                  setShowAnswersModal(false);
-                  setSelectedGuest(null);
-                }}
-                className="flex-shrink-0 w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-all hover:scale-105 active:scale-95"
-              >
-                <XCircle size={20} className="text-white/70" />
-              </button>
-            </div>
-
-            {/* Content */}
-            <div className="relative flex-1 overflow-y-auto custom-scrollbar p-6 md:p-8">
-              {selectedGuest.form_answers &&
-              typeof selectedGuest.form_answers === "object" &&
-              Object.keys(selectedGuest.form_answers).length > 0 ? (
-                <div className="space-y-4">
-                  {Object.entries(selectedGuest.form_answers).map(
-                    ([answerKey, answer], index) => {
-                      const questionText = getQuestionText(answerKey);
-                      return (
-                        <div
-                          key={index}
-                          className="bg-black/40 backdrop-blur-md border border-white/10 rounded-xl p-4 hover:border-primary/30 transition-all group"
-                        >
-                          <div className="flex items-start gap-3">
-                            <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary/80 border border-primary/30 flex items-center justify-center text-white text-sm font-bold shadow-[0_0_15px_rgba(0,128,128,0.3)]">
-                              {index + 1}
-                            </div>
-                            <div className="flex-1">
-                              <p className="font-urbanist text-sm font-medium text-white/60 mb-2">
-                                {questionText}
-                              </p>
-                              <p className="font-urbanist text-base text-white leading-relaxed">
-                                {String(answer)}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    }
-                  )}
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mx-auto mb-4">
-                    <Eye className="w-8 h-8 text-white/30" />
-                  </div>
-                  <p className="font-urbanist text-white/50 text-sm">
-                    No form answers available
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* Footer */}
-            <div className="relative p-6 md:p-8 border-t border-white/10 bg-black/20">
-              <button
-                onClick={() => {
-                  setShowAnswersModal(false);
-                  setSelectedGuest(null);
-                }}
-                className="w-full font-urbanist px-6 py-3 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 rounded-xl text-white text-sm font-bold uppercase tracking-wide transition-all shadow-[0_0_20px_rgba(0,128,128,0.3)] hover:shadow-[0_0_30px_rgba(0,128,128,0.4)]"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
+        <GuestAnswersModal
+          guest={selectedGuest}
+          event={event}
+          onClose={() => {
+            setShowAnswersModal(false);
+            setSelectedGuest(null);
+          }}
+        />
       )}
 
       <div className="bg-white/5 backdrop-blur-md rounded-xl border border-white/10 overflow-hidden">
@@ -415,6 +295,14 @@ export function GuestListSection({
                           title="View Answers"
                         >
                           <Eye size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleGenerateQR(guest)}
+                          disabled={isPending}
+                          className="p-1.5 hover:bg-purple-500/20 rounded text-purple-400 transition-colors disabled:opacity-50"
+                          title="Generate QR Code Ticket"
+                        >
+                          <QrCode size={16} />
                         </button>
                         <button
                           onClick={() => handleDeleteGuest(guest.registrant_id)}
