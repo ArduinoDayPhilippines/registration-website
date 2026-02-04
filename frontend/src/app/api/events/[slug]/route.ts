@@ -14,13 +14,27 @@ type EventRow = {
   price: string | null;
   capacity: number | null;
   require_approval: boolean | null;
-  form_questions: Question[] | null;
+  form_questions: any; 
   created_at: string | null;
 };
 
 function mapRowToEvent(row: EventRow): EventData {
   const startDateObj = row.start_date ? new Date(row.start_date) : null;
   const endDateObj = row.end_date ? new Date(row.end_date) : null;
+
+  // Transform form_questions from JSONB object to Question array
+  let questions: Question[] = [];
+  if (row.form_questions) {
+    if (Array.isArray(row.form_questions)) {
+      questions = row.form_questions;
+    } else if (typeof row.form_questions === 'object') {
+      questions = Object.entries(row.form_questions).map(([key, value], index) => ({
+        id: index + 1,
+        text: String(value),
+        required: true 
+      }));
+    }
+  }
 
   return {
     slug: row.slug,
@@ -40,7 +54,7 @@ function mapRowToEvent(row: EventRow): EventData {
     requireApproval: row.require_approval ?? false,
     coverImage: undefined,
     theme: "Minimal Dark",
-    questions: Array.isArray(row.form_questions) ? row.form_questions : [],
+    questions,
     createdAt: row.created_at ?? new Date().toISOString(),
   };
 }
@@ -62,7 +76,6 @@ export async function GET(
     .single();
 
   if (error) {
-    // PostgREST uses PGRST116 for "No rows"
     if ((error as { code?: string }).code === "PGRST116") {
       return NextResponse.json({ error: "Event not found" }, { status: 404 });
     }
