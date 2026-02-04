@@ -21,24 +21,55 @@ interface GuestStatsResult {
   error?: string;
 }
 
-// Placeholder implementations so the guests hook compiles and
-// can be wired up to a real backend later.
 async function getEventGuests(slug: string): Promise<GuestsResult> {
-  console.warn("getEventGuests is not yet implemented. slug:", slug);
-  return { success: true, guests: [] };
+  try {
+    const response = await fetch(`/api/registrants/${slug}`);
+    const data = await response.json();
+    
+    if (!response.ok) {
+      return { success: false, error: data.error || "Failed to fetch guests" };
+    }
+    
+    return { success: true, guests: data.guests || [] };
+  } catch (error) {
+    console.error("Error fetching guests:", error);
+    return { success: false, error: "Failed to fetch guests" };
+  }
 }
 
 async function getGuestStatistics(slug: string): Promise<GuestStatsResult> {
-  console.warn("getGuestStatistics is not yet implemented. slug:", slug);
-  return {
-    success: true,
-    stats: {
-      totalRegistered: 0,
-      going: 0,
-      checkedIn: 0,
-      waitlist: 0,
-    },
-  };
+  try {
+    const response = await fetch(`/api/registrants/${slug}`);
+    const data = await response.json();
+    
+    if (!response.ok) {
+      return { success: false, error: data.error || "Failed to fetch statistics" };
+    }
+    
+    const guests = data.guests || [];
+    const totalRegistered = guests.filter((g: Guest) => g.is_registered).length;
+    
+    return {
+      success: true,
+      stats: {
+        totalRegistered,
+        going: totalRegistered,
+        checkedIn: 0,
+        waitlist: 0,
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching statistics:", error);
+    return {
+      success: true,
+      stats: {
+        totalRegistered: 0,
+        going: 0,
+        checkedIn: 0,
+        waitlist: 0,
+      },
+    };
+  }
 }
 
 /**

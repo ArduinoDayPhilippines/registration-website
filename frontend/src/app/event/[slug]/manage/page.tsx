@@ -107,6 +107,7 @@ export default function ManageEventPage() {
               guests={guests}
               slug={slug}
               onRefresh={refetchGuests}
+              event={event}
             />
           </>
         )}
