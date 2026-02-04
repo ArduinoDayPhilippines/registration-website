@@ -22,7 +22,11 @@ const initialFormData: EventFormData = {
   ticketPrice: 'Free',
   capacity: 'Unlimited',
   requireApproval: false,
-  questions: [{ id: 1, text: '', required: true }],
+  questions: [
+    { id: 1, text: 'First Name', required: true },
+    { id: 2, text: 'Last Name', required: true },
+    { id: 3, text: 'Email', required: true },
+  ],
 };
 
 export function useEventForm(): UseEventFormReturn {
