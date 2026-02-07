@@ -4,7 +4,11 @@ import { useActionState, useState } from "react";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { register } from "@/app/register/actions";
 
-export default function UserRegisterForm() {
+interface UserRegisterFormProps {
+  nextUrl?: string;
+}
+
+export default function UserRegisterForm({ nextUrl }: UserRegisterFormProps) {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -23,7 +27,10 @@ export default function UserRegisterForm() {
     confirmPassword.length > 0 &&
     password !== confirmPassword;
 
-  const canGoNext = firstName.trim().length > 0 && lastName.trim().length > 0 && email.trim().length > 0;
+  const canGoNext =
+    firstName.trim().length > 0 &&
+    lastName.trim().length > 0 &&
+    email.trim().length > 0;
 
   return (
     <div
@@ -152,7 +159,7 @@ export default function UserRegisterForm() {
             {/* next button */}
             <button
               type="button"
-                disabled={isPending || !canGoNext}
+              disabled={isPending || !canGoNext}
               onClick={() => setStep(2)}
               className="
                 w-full
@@ -180,6 +187,7 @@ export default function UserRegisterForm() {
             <input type="hidden" name="firstName" value={firstName} />
             <input type="hidden" name="lastName" value={lastName} />
             <input type="hidden" name="email" value={email} />
+            {nextUrl && <input type="hidden" name="next" value={nextUrl} />}
 
             {/* password */}
             <div className="space-y-2">

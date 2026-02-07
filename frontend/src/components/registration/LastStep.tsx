@@ -1,5 +1,4 @@
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
 import { useState } from "react";
 
 interface LastStepProps {
@@ -36,31 +35,30 @@ export function LastStep({ eventSlug, onSubmit }: LastStepProps) {
   return (
     <div className="flex flex-col h-full animate-in fade-in duration-500 slide-in-from-right-4">
       <div className="flex-1 flex flex-col items-center justify-center text-center px-2 sm:px-4">
-        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold font-sans mb-4 sm:mb-6 leading-tight">
+        <h2 className="text-xl sm:text-2xl font-bold text-[#f5f5f5] tracking-tight mb-4 sm:mb-6 leading-tight">
           Review and Submit
         </h2>
 
         <div className="max-w-md mx-auto">
-          <p className="text-white/70 text-sm sm:text-base md:text-lg leading-relaxed">
+          <p className="text-[rgba(197,213,213,0.9)] text-sm sm:text-base leading-relaxed">
             You're almost done! Click the button below to complete your registration.
           </p>
         </div>
       </div>
 
-      <div className="mt-4 sm:mt-6 pt-4 border-t border-white/10 space-y-3">
-        <Button
-          variant="primary"
-          fullWidth
-          size="lg"
+      <div className="mt-4 sm:mt-6 pt-4 border-t border-[rgba(139,197,197,0.15)] space-y-3">
+        <button
+          type="button"
           onClick={handleSubmit}
           disabled={isSubmitting}
-          className="shadow-[0_4px_20px_rgba(0,128,128,0.25)] text-sm sm:text-base"
+          className="w-full bg-[rgba(35,60,60,0.6)] hover:bg-[rgba(35,60,60,0.7)] text-[#95b5b5] font-semibold py-3.5 rounded-xl transition-all duration-200 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {isSubmitting ? "Submitting..." : "Submit Registration"}
-        </Button>
+        </button>
         <button
+          type="button"
           onClick={handleReturn}
-          className="w-full text-white/60 hover:text-white text-sm transition-colors"
+          className="w-full text-[rgba(200,230,230,0.75)] hover:text-[#8de5e5] text-[11px] sm:text-sm transition-colors"
         >
           Back to Event Page
         </button>

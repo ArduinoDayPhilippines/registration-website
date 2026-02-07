@@ -1,6 +1,7 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { getCanManageEvent } from "@/lib/auth/can-manage-event";
 
 type StoredQuestion = {
   id: number;
@@ -14,6 +15,12 @@ export async function eventManage(formData: FormData) {
 
   if (!slug) {
     console.error("eventManage called without a slug");
+    return;
+  }
+
+  const canManage = await getCanManageEvent(slug);
+  if (!canManage) {
+    console.error("eventManage: user is not admin or event organizer");
     return;
   }
 
@@ -32,7 +39,7 @@ export async function eventManage(formData: FormData) {
       ? requireApprovalRaw === "on"
       : Boolean(requireApprovalRaw);
 
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   if (operation === "updateEventDetails") {
     const startDateTime = new Date(`${startDate}T${startTime}`);
     const endDateTime = endTime ? new Date(`${startDate}T${endTime}`) : null;
