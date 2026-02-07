@@ -2,12 +2,12 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 
-interface Step5Props {
+interface LastStepProps {
   eventSlug?: string;
   onSubmit?: () => Promise<void>;
 }
 
-export function Step5({ eventSlug, onSubmit }: Step5Props) {
+export function LastStep({ eventSlug, onSubmit }: LastStepProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
 

@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { RegistrationLayout } from './RegistrationLayout';
 import { Step0 } from './Step0';
-import { Step1 } from './Step1';
-import { Step5 } from './Step3';
+import { LastStep } from './LastStep';
 import { StepDynamic } from './StepDynamic';
 import { INITIAL_DATA, RegistrationFormData } from './types';
 import { Question } from '@/types/event';
+import { createClient } from '@/lib/supabase/client';
 
 export interface RegistrationFlowProps {
   eventSlug?: string;
@@ -21,6 +21,26 @@ export function RegistrationFlow({
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState<RegistrationFormData>(INITIAL_DATA);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Get logged-in user on mount
+  useEffect(() => {
+    const getUser = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        setUserId(user.id);
+      } else {
+        // Redirect to login if not authenticated
+        window.location.href = '/';
+      }
+      setIsLoading(false);
+    };
+    
+    getUser();
+  }, []);
 
   // Group questions into chunks of 3
   const questionSteps = useMemo(() => {
@@ -30,12 +50,12 @@ export function RegistrationFlow({
     }
     console.log('Form Questions:', formQuestions);
     console.log('Question Steps:', steps);
-    console.log('Total Steps:', 2 + steps.length + 1);
+    console.log('Total Steps:', 1 + steps.length + 1);
     return steps;
   }, [formQuestions]);
 
-  // Calculate total steps: Step0 + Step1 + Dynamic Question Steps + Final Step
-  const totalSteps = 2 + questionSteps.length + 1;
+  // Calculate total steps: Step0 + Dynamic Question Steps + LastStep
+  const totalSteps = 1 + questionSteps.length + 1;
   const maxStepIndex = totalSteps - 1;
 
   const updateData = (data: Partial<RegistrationFormData>) => {
@@ -48,6 +68,11 @@ export function RegistrationFlow({
   const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 0));
 
   const handleSubmit = async () => {
+    if (!userId) {
+      alert('You must be logged in to register');
+      return;
+    }
+
     const formAnswers: Record<string, string> = {};
     
     if (formData.dynamicAnswers && formQuestions.length > 0) {
@@ -62,9 +87,7 @@ export function RegistrationFlow({
     // Prepare data for registrants table
     const registrantData = {
       event_id: eventSlug, 
-      email: formData.email,
-      first_name: formData.firstName,
-      last_name: formData.lastName,
+      user_id: userId, // Use logged-in user's ID instead
       terms_approval: formData.agreedToPrivacy,
       form_answers: formAnswers, 
     };
@@ -88,7 +111,7 @@ export function RegistrationFlow({
       if (!response.ok) {
         console.error("Registration failed:", result.error);
         alert(`Registration failed: ${result.error}`);
-        throw new Error(result.error); // Throw error to trigger catch in Step5
+        throw new Error(result.error); // Throw error to trigger catch in LastStep
       }
 
       console.log("Registration successful:", result);
@@ -100,6 +123,19 @@ export function RegistrationFlow({
       throw error; 
     }
   };
+
+  if (isLoading) {
+    return (
+      <RegistrationLayout 
+        currentStep={0}
+        totalSteps={totalSteps}
+      >
+        <div className="flex items-center justify-center h-full">
+          <p className="text-white/60">Loading...</p>
+        </div>
+      </RegistrationLayout>
+    );
+  }
 
   if (isSuccess) {
      return (
@@ -117,7 +153,7 @@ export function RegistrationFlow({
                 </div>
                 <h2 className="text-4xl font-morganite tracking-wide text-primary mb-2">REGISTRATION SUCCESSFUL!</h2>
                 <p className="text-white/60 max-w-sm mb-6">
-                    Thank you, {formData.firstName}. Your spot has been secured.
+                    Your spot has been secured.
                 </p>
                 <button 
                     onClick={() => window.location.href = `/event/${eventSlug}`}
@@ -140,18 +176,10 @@ export function RegistrationFlow({
             onNext={nextStep} 
         />
       )}
-      {currentStep === 1 && (
-        <Step1 
-            formData={formData} 
-            updateData={updateData} 
-            onNext={nextStep}
-            onBack={prevStep}
-        />
-      )}
       
       {/* Dynamic question steps */}
       {questionSteps.map((questions, index) => {
-        const stepIndex = 2 + index;
+        const stepIndex = 1 + index;
         return currentStep === stepIndex && (
           <StepDynamic
             key={stepIndex}
@@ -166,7 +194,7 @@ export function RegistrationFlow({
       
       {/* Final confirmation step */}
       {currentStep === maxStepIndex && (
-        <Step5 
+        <LastStep 
             eventSlug={eventSlug}
             onSubmit={handleSubmit}
         />
