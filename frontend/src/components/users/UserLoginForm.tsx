@@ -1,16 +1,22 @@
 "use client";
 
+import { useActionState } from "react";
 import { useState } from "react";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { login } from "@/app/auth/actions";
 
-export default function UserLoginForm() {
+type UserLoginFormProps = { showRegisteredMessage?: boolean };
+
+export default function UserLoginForm({
+  showRegisteredMessage,
+}: UserLoginFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error] = useState("");
-  const [isLoading] = useState(false);
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+
+  const [state, formAction, isPending] = useActionState(login, null);
+  const error = state?.error ?? "";
 
   return (
     <div
@@ -24,7 +30,14 @@ export default function UserLoginForm() {
       shadow-[0_8px_32px_rgba(0,0,0,0.4)]
     "
     >
-      <form className="space-y-5">
+      {showRegisteredMessage && (
+        <div className="mb-4 rounded-xl bg-emerald-500/10 border border-emerald-400/30 px-4 py-3 text-center">
+          <p className="text-emerald-200 text-xs">
+            Account created. Login to continue.
+          </p>
+        </div>
+      )}
+      <form action={formAction} className="space-y-5">
         {/* error message */}
         {error && (
           <div className="bg-red-500/10 border border-red-400/30 rounded-xl px-4 py-3 mb-4">
@@ -45,7 +58,7 @@ export default function UserLoginForm() {
             onChange={(e) => setEmail(e.target.value)}
             onFocus={() => setFocusedField("email")}
             onBlur={() => setFocusedField(null)}
-            disabled={isLoading}
+            disabled={isPending}
             className={`
               w-full
               !bg-[rgba(15,30,30,0.9)]
@@ -80,7 +93,7 @@ export default function UserLoginForm() {
               onChange={(e) => setPassword(e.target.value)}
               onFocus={() => setFocusedField("password")}
               onBlur={() => setFocusedField(null)}
-              disabled={isLoading}
+              disabled={isPending}
               className={`
                 w-full
                 !bg-[rgba(15,30,30,0.9)]
@@ -104,7 +117,7 @@ export default function UserLoginForm() {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              disabled={isLoading}
+              disabled={isPending}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-[#7dc5c5] hover:text-[#9dd5d5] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
@@ -116,8 +129,7 @@ export default function UserLoginForm() {
         {/* submit button */}
         <button
           type="submit"
-          disabled={isLoading}
-          formAction={login}
+          disabled={isPending}
           className="
             w-full
             bg-[rgba(35,60,60,0.6)]
@@ -133,7 +145,7 @@ export default function UserLoginForm() {
             disabled:cursor-not-allowed
           "
         >
-          {isLoading ? (
+          {isPending ? (
             <span className="flex items-center justify-center gap-2">
               <Loader2 className="w-4 h-4 animate-spin" />
               Logging in...

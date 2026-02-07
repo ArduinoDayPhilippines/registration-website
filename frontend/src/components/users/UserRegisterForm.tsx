@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useActionState, useState } from "react";
 import { Loader2, Eye, EyeOff } from "lucide-react";
+import { register } from "@/app/register/actions";
 
 export default function UserRegisterForm() {
   const [fullName, setFullName] = useState("");
@@ -10,10 +11,11 @@ export default function UserRegisterForm() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [error] = useState("");
-  const [isLoading] = useState(false);
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const [step, setStep] = useState<1 | 2>(1);
+
+  const [state, formAction, isPending] = useActionState(register, null);
+  const error = state?.error ?? "";
 
   const passwordsMismatch =
     password.length > 0 &&
@@ -34,7 +36,7 @@ export default function UserRegisterForm() {
       shadow-[0_8px_32px_rgba(0,0,0,0.4)]
     "
     >
-      <form className="space-y-5">
+      <form action={step === 2 ? formAction : undefined} className="space-y-5">
         {/* error message */}
         {error && (
           <div className="bg-red-500/10 border border-red-400/30 rounded-xl px-4 py-3 mb-4">
@@ -57,7 +59,7 @@ export default function UserRegisterForm() {
                 onChange={(e) => setFullName(e.target.value)}
                 onFocus={() => setFocusedField("fullName")}
                 onBlur={() => setFocusedField(null)}
-                disabled={isLoading}
+                disabled={isPending}
                 className={`
                   w-full
                   !bg-[rgba(15,30,30,0.9)]
@@ -91,7 +93,7 @@ export default function UserRegisterForm() {
                 onChange={(e) => setEmail(e.target.value)}
                 onFocus={() => setFocusedField("email")}
                 onBlur={() => setFocusedField(null)}
-                disabled={isLoading}
+                disabled={isPending}
                 className={`
                   w-full
                   !bg-[rgba(15,30,30,0.9)]
@@ -115,7 +117,7 @@ export default function UserRegisterForm() {
             {/* next button */}
             <button
               type="button"
-              disabled={isLoading || !canGoNext}
+                disabled={isPending || !canGoNext}
               onClick={() => setStep(2)}
               className="
                 w-full
@@ -157,7 +159,7 @@ export default function UserRegisterForm() {
                   onChange={(e) => setPassword(e.target.value)}
                   onFocus={() => setFocusedField("password")}
                   onBlur={() => setFocusedField(null)}
-                  disabled={isLoading}
+                  disabled={isPending}
                   className={`
                     w-full
                     !bg-[rgba(15,30,30,0.9)]
@@ -181,7 +183,7 @@ export default function UserRegisterForm() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  disabled={isLoading}
+                  disabled={isPending}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-[#7dc5c5] hover:text-[#9dd5d5] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
@@ -204,7 +206,7 @@ export default function UserRegisterForm() {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   onFocus={() => setFocusedField("confirmPassword")}
                   onBlur={() => setFocusedField(null)}
-                  disabled={isLoading}
+                  disabled={isPending}
                   className={`
                     w-full
                     !bg-[rgba(15,30,30,0.9)]
@@ -228,7 +230,7 @@ export default function UserRegisterForm() {
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  disabled={isLoading}
+                  disabled={isPending}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-[#7dc5c5] hover:text-[#9dd5d5] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   aria-label={
                     showConfirmPassword ? "Hide password" : "Show password"
@@ -252,7 +254,7 @@ export default function UserRegisterForm() {
             <div className="flex gap-3 pt-1">
               <button
                 type="button"
-                disabled={isLoading}
+                disabled={isPending}
                 onClick={() => setStep(1)}
                 className="
                   w-full
@@ -273,8 +275,8 @@ export default function UserRegisterForm() {
               </button>
 
               <button
-                type="button"
-                disabled={isLoading || passwordsMismatch || !password}
+                type="submit"
+                disabled={isPending || passwordsMismatch || !password}
                 className="
                   w-full
                   bg-[rgba(35,60,60,0.6)]
@@ -289,7 +291,7 @@ export default function UserRegisterForm() {
                   disabled:cursor-not-allowed
                 "
               >
-                {isLoading ? (
+                {isPending ? (
                   <span className="flex items-center justify-center gap-2">
                     <Loader2 className="w-4 h-4 animate-spin" />
                     Creating account...
