@@ -126,7 +126,7 @@ const TAB_TUTORIALS: Record<TabId, StepConfig[]> = {
       selector: "#tutorial-env-controls",
       title: "Sender Environment",
       description:
-        "Select your system variant, upload/paste a .env override, or reupload credentials before sending.",
+        "Sender uses the Arduino Day Philippines account configured in the app env.",
       side: "bottom",
       align: "start",
     },

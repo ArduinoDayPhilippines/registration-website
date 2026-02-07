@@ -17,7 +17,7 @@ type RenderedEmail = {
   html: string;
 };
 
-type TabId = "guests" | "preview" | "docs";
+type TabId = "guests" | "message" | "preview" | "docs";
 
 type StepConfig = {
   selector: string;
@@ -47,6 +47,7 @@ const TAB_TUTORIALS: Record<TabId, StepConfig[]> = {
       align: "center",
     },
   ],
+  message: [],
   preview: [
     {
       selector: tabSelector("preview"),
@@ -58,7 +59,7 @@ const TAB_TUTORIALS: Record<TabId, StepConfig[]> = {
     {
       selector: "#tutorial-env-controls",
       title: "Sender Environment",
-      description: "Select your system variant, upload/paste a .env override, or reupload credentials before sending.",
+      description: "Sender uses the Arduino Day Philippines account configured in the app env.",
       side: "bottom",
       align: "start",
     },
@@ -68,13 +69,6 @@ const TAB_TUTORIALS: Record<TabId, StepConfig[]> = {
       description: "Double-check who will receive the run—scroll this list to verify every mapped email.",
       side: "right",
       align: "center",
-    },
-    {
-      selector: "#tutorial-subject-editor",
-      title: "Subject Controls",
-      description: "Change the subject to anything you want and inject variables like {{ name }} on the fly.",
-      side: "left",
-      align: "start",
     },
     {
       selector: "#tutorial-preview-frame",
@@ -158,13 +152,32 @@ export default function BatchmailWorkspace({ guests }: BatchmailWorkspaceProps) 
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
-  const csv = useMemo(() => buildGuestCsv(guests), [guests]);
+  const [recipientScope, setRecipientScope] = useState<"all" | "registered" | "pending">("all");
+  const filteredGuests = useMemo(() => {
+    if (recipientScope === "all") return guests;
+    if (recipientScope === "registered") {
+      return guests.filter((guest) => guest.is_registered);
+    }
+    return guests.filter((guest) => !guest.is_registered);
+  }, [guests, recipientScope]);
+  const recipientCountLabel = useMemo(() => {
+    if (recipientScope === "registered") return "Registered";
+    if (recipientScope === "pending") return "Pending";
+    return "All";
+  }, [recipientScope]);
+  const csv = useMemo(() => buildGuestCsv(filteredGuests), [filteredGuests]);
   const mapping = useMemo<CsvMapping | null>(() => {
     if (!csv) return null;
     return { recipient: "email", name: "name", subject: null };
   }, [csv]);
   const [template, setTemplate] = useState<string>("");
   const [subjectTemplate, setSubjectTemplate] = useState<string>("{{ subject }}");
+  const [headerContent, setHeaderContent] = useState<string>("Hi {{ recipient }},");
+  const [messageContent, setMessageContent] = useState<string>("");
+  const messageContentHtml = useMemo(
+    () => messageContent.replace(/\n/g, "<br />"),
+    [messageContent]
+  );
   const totalCount = useMemo(() => (csv?.rowCount ?? 0), [csv]);
   const templateReady = template.trim().length > 0;
 
@@ -215,7 +228,13 @@ export default function BatchmailWorkspace({ guests }: BatchmailWorkspaceProps) 
         to: String(r[mapping.recipient]),
         name: r[mapping.name] ? String(r[mapping.name]) : undefined,
         subject: subjectTemplate?.trim()
-          ? nunjucks.renderString(subjectTemplate, { ...r, name: r[mapping.name], recipient: r[mapping.recipient] })
+          ? nunjucks.renderString(subjectTemplate, {
+              ...r,
+              content: messageContentHtml,
+              header: headerContent,
+              name: r[mapping.name],
+              recipient: r[mapping.recipient],
+            })
           : (mapping.subject ? String(r[mapping.subject]) : undefined),
         html: htmlRender(r),
       }));
@@ -259,8 +278,12 @@ export default function BatchmailWorkspace({ guests }: BatchmailWorkspaceProps) 
                     <div className="text-xs text-secondary mt-2">Total recipients: {totalCount}</div>
                   </section>
                   <section className="rounded-lg border border-primary/20 bg-white overflow-hidden" id="tutorial-guest-table">
-                    {guests.length === 0 ? (
-                      <div className="p-6 text-sm text-secondary">No guests yet. Add or import guests in the Guests tab to enable batch mail.</div>
+                    {filteredGuests.length === 0 ? (
+                      <div className="p-6 text-sm text-secondary">
+                        {guests.length === 0
+                          ? "No guests yet. Add or import guests in the Guests tab to enable batch mail."
+                          : "No guests match the selected recipient filters."}
+                      </div>
                     ) : (
                       <div className="max-h-[380px] overflow-auto">
                         <table className="min-w-full text-sm">
@@ -272,7 +295,7 @@ export default function BatchmailWorkspace({ guests }: BatchmailWorkspaceProps) 
                             </tr>
                           </thead>
                           <tbody>
-                            {guests.map((guest) => (
+                            {filteredGuests.map((guest) => (
                               <tr key={guest.registrant_id} className="border-t border-primary/10">
                                 <td className="px-4 py-2 text-secondary">
                                   {guest.users?.first_name || 'N/A'} {guest.users?.last_name || ''}
@@ -288,6 +311,87 @@ export default function BatchmailWorkspace({ guests }: BatchmailWorkspaceProps) 
                       </div>
                     )}
                   </section>
+                </div>
+              ),
+            },
+            {
+              id: "message",
+              label: "Message",
+              content: (
+                <div className="space-y-4">
+                  <section className="rounded-lg border border-primary/20 bg-white p-4">
+                    <h2 className="text-lg font-semibold text-primary">Recipients</h2>
+                    <p className="text-sm text-secondary">
+                      Choose which guests should receive this message.
+                    </p>
+                    <div className="mt-4 grid gap-3 md:grid-cols-[1fr_auto] md:items-center">
+                      <div className="relative">
+                        <select
+                          value={recipientScope}
+                          onChange={(event) =>
+                            setRecipientScope(event.target.value as "all" | "registered" | "pending")
+                          }
+                          className="w-full appearance-none rounded-xl border border-primary/30 bg-white px-3 py-2.5 pr-11 text-sm text-primary shadow-sm transition focus:border-primary/60 focus:ring-2 focus:ring-primary/20 focus:outline-none hover:border-primary/50"
+                        >
+                          <option value="all">All guests</option>
+                          <option value="registered">Registered only</option>
+                          <option value="pending">Pending only</option>
+                        </select>
+                        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-primary/60">
+                          ▾
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-start md:justify-end">
+                        <span className="rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary">
+                          {recipientCountLabel} · {totalCount}
+                        </span>
+                      </div>
+                    </div>
+                  </section>
+
+                  <section className="rounded-lg border border-primary/20 bg-white p-4">
+                    <h2 className="text-lg font-semibold text-primary">Subject</h2>
+                    <p className="text-xs text-secondary mb-2">
+                      You can use variables like {"{{ name }}"} or {"{{ recipient }}"}.
+                    </p>
+                    <input
+                      type="text"
+                      value={subjectTemplate}
+                      onChange={(event) => setSubjectTemplate(event.target.value)}
+                      placeholder="Enter subject line"
+                      className="w-full rounded border border-primary/20 px-3 py-2 text-sm text-primary"
+                    />
+                  </section>
+
+                  <section className="rounded-lg border border-primary/20 bg-white p-4">
+                    <h2 className="text-lg font-semibold text-primary">Header</h2>
+                    <p className="text-xs text-secondary mb-2">
+                      This line appears at the top of the email body. You can use
+                      variables like {"{{ recipient }}"}.
+                    </p>
+                    <input
+                      type="text"
+                      value={headerContent}
+                      onChange={(event) => setHeaderContent(event.target.value)}
+                      placeholder="Hi {{ recipient }},"
+                      className="w-full rounded border border-primary/20 px-3 py-2 text-sm text-primary"
+                    />
+                  </section>
+
+                  <section className="rounded-lg border border-primary/20 bg-white p-4">
+                    <h2 className="text-lg font-semibold text-primary">Message</h2>
+                    <p className="text-xs text-secondary mb-2">
+                      The message is injected into the ADPH template. New lines are preserved.
+                    </p>
+                    <textarea
+                      value={messageContent}
+                      onChange={(event) => setMessageContent(event.target.value)}
+                      placeholder="Write the email content here."
+                      rows={8}
+                      className="w-full rounded border border-primary/20 px-3 py-2 text-sm text-primary"
+                    />
+                  </section>
+
                 </div>
               ),
             },
@@ -312,6 +416,8 @@ export default function BatchmailWorkspace({ guests }: BatchmailWorkspaceProps) 
                     onExportJson={onExportJson}
                     subjectTemplate={subjectTemplate}
                     onSubjectChange={setSubjectTemplate}
+                    extraContext={{ content: messageContentHtml, header: headerContent }}
+                    showSubjectEditor={false}
                   />
                 </div>
               ),
@@ -339,7 +445,7 @@ export default function BatchmailWorkspace({ guests }: BatchmailWorkspaceProps) 
             const raw = searchParams.get("tab") || "guests";
             if (raw === "csv") return "guests";
             if (raw === "template") return "preview";
-            if (raw === "preview" || raw === "docs" || raw === "guests") return raw;
+            if (raw === "preview" || raw === "docs" || raw === "guests" || raw === "message") return raw;
             return "guests";
           })()}
           isDisabled={(id) => {
