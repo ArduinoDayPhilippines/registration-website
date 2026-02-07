@@ -44,7 +44,7 @@ export function GuestAnswersModal({ guest, event, onClose }: GuestAnswersModalPr
               Form Answers
             </h3>
             <p className="font-urbanist text-sm text-white/60">
-              {guest.first_name} {guest.last_name}
+              {guest.users?.first_name || 'N/A'} {guest.users?.last_name || ''}
             </p>
           </div>
           <button

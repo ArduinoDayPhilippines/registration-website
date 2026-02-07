@@ -144,10 +144,10 @@ const buildGuestCsv = (guests: Guest[]): ParsedCsv | null => {
   const rows = guests.map((guest) => ({
     registrant_id: guest.registrant_id,
     event_id: guest.event_id,
-    email: guest.email,
-    first_name: guest.first_name,
-    last_name: guest.last_name,
-    name: `${guest.first_name} ${guest.last_name}`.trim(),
+    email: guest.users?.email || '',
+    first_name: guest.users?.first_name || '',
+    last_name: guest.users?.last_name || '',
+    name: `${guest.users?.first_name || ''} ${guest.users?.last_name || ''}`.trim(),
     terms_approval: guest.terms_approval ? "true" : "false",
     is_registered: guest.is_registered ? "true" : "false",
   }));
@@ -275,9 +275,9 @@ export default function BatchmailWorkspace({ guests }: BatchmailWorkspaceProps) 
                             {guests.map((guest) => (
                               <tr key={guest.registrant_id} className="border-t border-primary/10">
                                 <td className="px-4 py-2 text-secondary">
-                                  {guest.first_name} {guest.last_name}
+                                  {guest.users?.first_name || 'N/A'} {guest.users?.last_name || ''}
                                 </td>
-                                <td className="px-4 py-2 text-secondary">{guest.email}</td>
+                                <td className="px-4 py-2 text-secondary">{guest.users?.email || 'No email'}</td>
                                 <td className="px-4 py-2 text-secondary">
                                   {guest.is_registered ? "Registered" : "Pending"}
                                 </td>

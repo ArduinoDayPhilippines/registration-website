@@ -27,10 +27,17 @@ export async function GET(
       );
     }
 
-    // Fetch registrants for this event
+    // Fetch registrants for this event with user data
     const { data: registrants, error: registrantsError } = await supabase
       .from("registrants")
-      .select("*")
+      .select(`
+        *,
+        users (
+          first_name,
+          last_name,
+          email
+        )
+      `)
       .eq("event_id", event.event_id);
 
     console.log("Registrants query result:", { 

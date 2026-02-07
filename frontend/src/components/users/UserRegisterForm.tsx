@@ -5,7 +5,8 @@ import { Loader2, Eye, EyeOff } from "lucide-react";
 import { register } from "@/app/register/actions";
 
 export default function UserRegisterForm() {
-  const [fullName, setFullName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -22,7 +23,7 @@ export default function UserRegisterForm() {
     confirmPassword.length > 0 &&
     password !== confirmPassword;
 
-  const canGoNext = fullName.trim().length > 0 && email.trim().length > 0;
+  const canGoNext = firstName.trim().length > 0 && lastName.trim().length > 0 && email.trim().length > 0;
 
   return (
     <div
@@ -46,25 +47,59 @@ export default function UserRegisterForm() {
 
         {step === 1 && (
           <>
-            {/* full name */}
+            {/* first name */}
             <div className="space-y-2">
               <label className="text-[#9dd5d5] text-[11px] font-medium block">
-                Full name
+                First name
               </label>
               <input
-                name="fullName"
+                name="firstName"
                 type="text"
-                placeholder="Juan Dela Cruz"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                onFocus={() => setFocusedField("fullName")}
+                placeholder="Juan"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                onFocus={() => setFocusedField("firstName")}
                 onBlur={() => setFocusedField(null)}
                 disabled={isPending}
                 className={`
                   w-full
                   !bg-[rgba(15,30,30,0.9)]
                   border ${
-                    focusedField === "fullName"
+                    focusedField === "firstName"
+                      ? "!border-[#7dc5c5]"
+                      : "!border-[#5da5a5]"
+                  }
+                  rounded-xl
+                  px-4 py-3
+                  !text-[#d5e5e5] text-sm
+                  !placeholder:text-[rgba(197,213,213,0.5)]
+                  outline-none
+                  transition-all duration-200
+                  focus:!border-[#7dc5c5]
+                  disabled:opacity-50 disabled:cursor-not-allowed
+                `}
+              />
+            </div>
+
+            {/* last name */}
+            <div className="space-y-2">
+              <label className="text-[#9dd5d5] text-[11px] font-medium block">
+                Last name
+              </label>
+              <input
+                name="lastName"
+                type="text"
+                placeholder="Dela Cruz"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                onFocus={() => setFocusedField("lastName")}
+                onBlur={() => setFocusedField(null)}
+                disabled={isPending}
+                className={`
+                  w-full
+                  !bg-[rgba(15,30,30,0.9)]
+                  border ${
+                    focusedField === "lastName"
                       ? "!border-[#7dc5c5]"
                       : "!border-[#5da5a5]"
                   }
@@ -142,7 +177,8 @@ export default function UserRegisterForm() {
         {step === 2 && (
           <>
             {/* keep previous step values in the form */}
-            <input type="hidden" name="fullName" value={fullName} />
+            <input type="hidden" name="firstName" value={firstName} />
+            <input type="hidden" name="lastName" value={lastName} />
             <input type="hidden" name="email" value={email} />
 
             {/* password */}
