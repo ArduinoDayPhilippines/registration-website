@@ -26,6 +26,8 @@ export async function register(prevState: RegisterResult | null, formData: FormD
       data: {
         first_name: firstName,
         last_name: lastName,
+        full_name: `${firstName} ${lastName}`.trim() || null,
+        role: "user",
       },
     },
   });
