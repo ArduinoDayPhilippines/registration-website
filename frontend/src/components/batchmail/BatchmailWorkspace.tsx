@@ -1,16 +1,14 @@
 "use client";
 
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import { driver } from "driver.js";
 import type { DriveStep } from "driver.js";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import CsvUploader, { CsvMapping, ParsedCsv } from "@/components/ui/CsvUploader";
-import TemplateLibrary from "@/components/ui/TemplateLibrary";
+import type { CsvMapping, ParsedCsv } from "@/components/ui/CsvUploader";
 import PreviewPane from "@/components/ui/PreviewPane";
-import CsvTable from "@/components/ui/CsvTable";
-import AttachmentsUploader, { type AttachIndex } from "@/components/ui/AttachmentsUploader";
 import Tabs from "@/components/ui/Tabs";
 import Docs from "@/components/sections/Docs";
+import type { Guest } from "@/types/guest";
 
 type RenderedEmail = {
   to: string;
@@ -19,7 +17,7 @@ type RenderedEmail = {
   html: string;
 };
 
-type TabId = "csv" | "template" | "preview" | "docs";
+type TabId = "guests" | "preview" | "docs";
 
 type StepConfig = {
   selector: string;
@@ -33,71 +31,20 @@ const tabSelector = (id: string) =>
   `[role="tab"][aria-controls="panel-${id}"]`;
 
 const TAB_TUTORIALS: Record<TabId, StepConfig[]> = {
-  csv: [
+  guests: [
     {
-      selector: tabSelector("csv"),
-      title: "CSV Workspace",
-      description: "Start here to upload your spreadsheet and configure mappings.",
+      selector: tabSelector("guests"),
+      title: "Recipients",
+      description: "Batchmail now pulls directly from your guest list for this event.",
       side: "bottom",
       align: "start",
     },
     {
-      selector: "#tutorial-csv-uploader",
-      title: "Upload CSV",
-      description: "Drop your file or choose from disk. Columns auto-detect for quicker mapping.",
-      side: "right",
-      align: "start",
-    },
-    {
-      selector: "#tutorial-attachments",
-      title: "Match Attachments",
-      description: "Optional: associate files per recipient. Diacritic-safe matching is built in.",
+      selector: "#tutorial-guest-table",
+      title: "Guest Snapshot",
+      description: "Review the recipients pulled from the Guests tab before templating your message.",
       side: "right",
       align: "center",
-    },
-    {
-      selector: "#tutorial-csv-table",
-      title: "Review Rows",
-      description: "Spot check your data, remap columns, and edit values directly.",
-      side: "top",
-      align: "start",
-    },
-  ],
-  template: [
-    {
-      selector: tabSelector("template"),
-      title: "Template Tab",
-      description: "Switch here to browse saved HTML templates, upload new ones, or edit from scratch.",
-      side: "bottom",
-      align: "center",
-    },
-    {
-      selector: "#tutorial-template-library",
-      title: "Template Library",
-      description: "Use raw or visual modes, adjust formatting, and click \"Use this template\" once satisfied.",
-      side: "right",
-      align: "start",
-    },
-    {
-      selector: "#tutorial-upload-html",
-      title: "Upload or Replace HTML",
-      description: "Need to tweak an existing file? Upload a fresh HTML export or edit the template inline as needed.",
-      side: "right",
-      align: "start",
-    },
-    {
-      selector: "#tutorial-email-message",
-      title: "Email Message Editor",
-      description: "Craft the body, toggle HTML mode, and preview the final email layout inside this surface.",
-      side: "left",
-      align: "start",
-    },
-    {
-      selector: "#tutorial-insert-variable",
-      title: "Insert Variables",
-      description: "Drop recipient data wherever you need it—click here to insert placeholders like {{ name }}.",
-      side: "bottom",
-      align: "end",
     },
   ],
   preview: [
@@ -139,7 +86,7 @@ const TAB_TUTORIALS: Record<TabId, StepConfig[]> = {
     {
       selector: "#tutorial-batch-preview",
       title: "Batch Planner",
-      description: "Batch size adapts automatically—attachments force smaller batches (1 or 3) to respect limits.",
+      description: "Batch size adapts automatically so you can pace sends and review recipient grouping.",
       side: "top",
       align: "start",
     },
@@ -178,24 +125,48 @@ const buildSteps = (configs: StepConfig[]): DriveStep[] =>
     return acc;
   }, []);
 
-export default function BatchmailWorkspace() {
+type BatchmailWorkspaceProps = {
+  guests: Guest[];
+};
+
+const buildGuestCsv = (guests: Guest[]): ParsedCsv | null => {
+  if (!guests || guests.length === 0) return null;
+  const headers = [
+    "registrant_id",
+    "event_id",
+    "email",
+    "first_name",
+    "last_name",
+    "name",
+    "terms_approval",
+    "is_registered",
+  ];
+  const rows = guests.map((guest) => ({
+    registrant_id: guest.registrant_id,
+    event_id: guest.event_id,
+    email: guest.email,
+    first_name: guest.first_name,
+    last_name: guest.last_name,
+    name: `${guest.first_name} ${guest.last_name}`.trim(),
+    terms_approval: guest.terms_approval ? "true" : "false",
+    is_registered: guest.is_registered ? "true" : "false",
+  }));
+  return { headers, rows, rowCount: rows.length };
+};
+
+export default function BatchmailWorkspace({ guests }: BatchmailWorkspaceProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
-  const [csv, setCsv] = useState<ParsedCsv | null>(null);
-  const [mapping, setMapping] = useState<CsvMapping | null>(null);
-  const [template, setTemplate] = useState<string>("<html>\n  <body>\n    <p>Hello {{ name }},</p>\n    <p>This is a sample template. Replace me!</p>\n  </body>\n</html>");
+  const csv = useMemo(() => buildGuestCsv(guests), [guests]);
+  const mapping = useMemo<CsvMapping | null>(() => {
+    if (!csv) return null;
+    return { recipient: "email", name: "name", subject: null };
+  }, [csv]);
+  const [template, setTemplate] = useState<string>("");
   const [subjectTemplate, setSubjectTemplate] = useState<string>("{{ subject }}");
-  const [attachmentsByName, setAttachmentsByName] = useState<AttachIndex>({});
-  const [hasSelectedTemplate, setHasSelectedTemplate] = useState<boolean>(false);
   const totalCount = useMemo(() => (csv?.rowCount ?? 0), [csv]);
-
-  const availableVars = useMemo(() => {
-    const s = new Set<string>();
-    if (csv?.headers) csv.headers.forEach(h => s.add(h));
-    if (mapping) { s.add("name"); s.add("recipient"); }
-    return Array.from(s);
-  }, [csv, mapping]);
+  const templateReady = template.trim().length > 0;
 
   const startTabTutorial = useCallback((tabId: TabId) => {
     if (typeof window === "undefined") return;
@@ -216,6 +187,23 @@ export default function BatchmailWorkspace() {
         steps,
       }).drive();
     });
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    fetch("/email-template/adph.html")
+      .then((res) => res.text())
+      .then((html) => {
+        if (!active) return;
+        setTemplate(html);
+      })
+      .catch(() => {
+        if (!active) return;
+        setTemplate("");
+      });
+    return () => {
+      active = false;
+    };
   }, []);
 
   const onExportJson = async (htmlRender: (row: Record<string, string>) => string) => {
@@ -251,7 +239,7 @@ export default function BatchmailWorkspace() {
           </span>
         </h1>
         <p className="text-sm text-secondary">
-          Upload CSV, edit/upload Jinja-style HTML template, preview, and export. {totalCount ? `(${totalCount} rows)` : ""}
+          Use the Guests tab list with the ADPH template, preview, and export. {totalCount ? `(${totalCount} recipients)` : ""}
         </p>
       </header>
 
@@ -259,67 +247,47 @@ export default function BatchmailWorkspace() {
         <Tabs
           items={[
             {
-              id: "csv",
-              label: "CSV",
+              id: "guests",
+              label: "Guests",
               content: (
-                <div className="space-y-4" id="tutorial-csv-stack">
-                  <div className="flex justify-end">
-                    <button
-                      type="button"
-                      onClick={() => startTabTutorial("csv")}
-                      className="text-xs font-semibold rounded-full border border-primary/30 bg-primary/5 px-3 py-1 text-primary hover:bg-primary/10"
-                    >
-                      CSV Tutorial
-                    </button>
-                  </div>
-                  <section id="tutorial-csv-uploader">
-                    <CsvUploader
-                      onParsed={(data: { csv: ParsedCsv; mapping: CsvMapping }) => {
-                        setCsv(data.csv);
-                        setMapping(data.mapping);
-                        setHasSelectedTemplate(false);
-                      }}
-                      currentMapping={mapping ?? undefined}
-                    />
+                <div className="space-y-4" id="tutorial-guests-stack">
+                  <section className="rounded-lg border border-primary/20 bg-white p-4" id="tutorial-guest-summary">
+                    <h2 className="text-lg font-semibold text-primary">Recipients</h2>
+                    <p className="text-sm text-secondary">
+                      This list is pulled directly from the Guests tab for the current event. Update guests there, then return here to send.
+                    </p>
+                    <div className="text-xs text-secondary mt-2">Total recipients: {totalCount}</div>
                   </section>
-                  <section id="tutorial-attachments">
-                    <AttachmentsUploader
-                      csv={csv}
-                      mapping={mapping}
-                      value={attachmentsByName}
-                      onChange={setAttachmentsByName}
-                    />
+                  <section className="rounded-lg border border-primary/20 bg-white overflow-hidden" id="tutorial-guest-table">
+                    {guests.length === 0 ? (
+                      <div className="p-6 text-sm text-secondary">No guests yet. Add or import guests in the Guests tab to enable batch mail.</div>
+                    ) : (
+                      <div className="max-h-[380px] overflow-auto">
+                        <table className="min-w-full text-sm">
+                          <thead className="sticky top-0 bg-white-100">
+                            <tr>
+                              <th className="px-4 py-2 text-left font-semibold text-primary">Name</th>
+                              <th className="px-4 py-2 text-left font-semibold text-primary">Email</th>
+                              <th className="px-4 py-2 text-left font-semibold text-primary">Status</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {guests.map((guest) => (
+                              <tr key={guest.registrant_id} className="border-t border-primary/10">
+                                <td className="px-4 py-2 text-secondary">
+                                  {guest.first_name} {guest.last_name}
+                                </td>
+                                <td className="px-4 py-2 text-secondary">{guest.email}</td>
+                                <td className="px-4 py-2 text-secondary">
+                                  {guest.is_registered ? "Registered" : "Pending"}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
                   </section>
-                  <section id="tutorial-csv-table">
-                    <CsvTable
-                      csv={csv}
-                      mapping={mapping}
-                      onMappingChange={setMapping}
-                      onChange={setCsv}
-                    />
-                  </section>
-                </div>
-              ),
-            },
-            {
-              id: "template",
-              label: "Template",
-              content: (
-                <div id="tutorial-template-library">
-                  <div className="flex justify-end pb-3">
-                    <button
-                      type="button"
-                      onClick={() => startTabTutorial("template")}
-                      className="text-xs font-semibold rounded-full border border-primary/30 bg-primary/5 px-3 py-1 text-primary hover:bg-primary/10"
-                    >
-                      Template Tutorial
-                    </button>
-                  </div>
-                  <TemplateLibrary
-                    availableVars={availableVars}
-                    initialHtml={template}
-                    onUseTemplate={({ html }) => { setTemplate(html); setHasSelectedTemplate(true); }}
-                  />
                 </div>
               ),
             },
@@ -344,7 +312,6 @@ export default function BatchmailWorkspace() {
                     onExportJson={onExportJson}
                     subjectTemplate={subjectTemplate}
                     onSubjectChange={setSubjectTemplate}
-                    attachmentsByName={attachmentsByName}
                   />
                 </div>
               ),
@@ -368,20 +335,22 @@ export default function BatchmailWorkspace() {
               ),
             },
           ]}
-          initialId={(searchParams.get("tab") as string) || "csv"}
+          initialId={(() => {
+            const raw = searchParams.get("tab") || "guests";
+            if (raw === "csv") return "guests";
+            if (raw === "template") return "preview";
+            if (raw === "preview" || raw === "docs" || raw === "guests") return raw;
+            return "guests";
+          })()}
           isDisabled={(id) => {
-            if (id === "template") {
-              return !csv;
-            }
             if (id === "preview") {
-              return !csv || !mapping || !hasSelectedTemplate;
+              return !csv || !mapping || !templateReady;
             }
             return false;
           }}
           getDisabledTitle={(id) => {
-            if (id === "template" && !csv) return "Upload a CSV first to configure the template.";
-            if (id === "preview" && (!csv || !mapping)) return "Upload CSV and set column mapping first.";
-            if (id === "preview" && !hasSelectedTemplate) return "Choose a template and click \"Use this template\" first.";
+            if (id === "preview" && (!csv || !mapping)) return "Add guests first to preview or send.";
+            if (id === "preview" && !templateReady) return "Loading the ADPH template.";
             return undefined;
           }}
           onChange={(id) => {

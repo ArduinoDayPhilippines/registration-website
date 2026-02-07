@@ -137,7 +137,7 @@ export default function ManageEventPage() {
 
         {/* Batchmail Tab Content */}
         <div className={activeTab === "batchmail" ? "" : "hidden"}>
-          <BatchmailWorkspace />
+          <BatchmailWorkspace guests={guests} />
         </div>
       </main>
 

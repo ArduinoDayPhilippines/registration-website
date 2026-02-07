@@ -3,7 +3,7 @@ import Link from "next/link";
 import AdminLoginBackground from "@/components/admin/AdminLoginBackground";
 import UserRegisterForm from "@/components/users/UserRegisterForm";
 
-export default function UserRegisterPage() {
+export default function RegisterPage() {
   return (
     <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-4">
       {/* Background Layers (reuse admin login background) */}
@@ -37,10 +37,10 @@ export default function UserRegisterPage() {
         <p className="mt-4 text-center text-[11px] text-[rgba(200,230,230,0.75)]">
           Already have an account?{" "}
           <Link
-            href="/users/login"
+            href="/"
             className="text-[#6dd8d8] hover:text-[#8de5e5] underline-offset-4 hover:underline font-medium"
           >
-            Sign in
+            Login
           </Link>
         </p>
 
