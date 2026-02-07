@@ -9,26 +9,23 @@ export type RegisterResult = { error?: string };
 export async function register(prevState: RegisterResult | null, formData: FormData): Promise<RegisterResult> {
   const supabase = await createClient();
 
-  const fullName = (formData.get("fullName") as string)?.trim() ?? "";
+  const firstName = (formData.get("firstName") as string)?.trim() ?? "";
+  const lastName = (formData.get("lastName") as string)?.trim() ?? "";
   const email = (formData.get("email") as string)?.trim() ?? "";
   const password = formData.get("password") as string ?? "";
 
-  if (!email || !password) {
-    return { error: "Email and password are required." };
+  if (!email || !password || !firstName || !lastName) {
+    return { error: "All fields are required." };
   }
 
-  const nameParts = fullName.split(/\s+/).filter(Boolean);
-  const first_name = nameParts[0] ?? "";
-  const last_name = nameParts.slice(1).join(" ") ?? null;
-
+  // First, sign up the user in auth
   const { data, error: signUpError } = await supabase.auth.signUp({
     email,
     password,
     options: {
       data: {
-        first_name: first_name || null,
-        last_name: last_name || null,
-        full_name: fullName || null,
+        first_name: firstName,
+        last_name: lastName,
       },
     },
   });
@@ -38,6 +35,21 @@ export async function register(prevState: RegisterResult | null, formData: FormD
   }
 
   if (data?.user) {
+    // Insert user data into the users table
+    const { error: insertError } = await supabase
+      .from("users")
+      .insert({
+        users_id: data.user.id,
+        email: email,
+        first_name: firstName,
+        last_name: lastName,
+      });
+
+    if (insertError) {
+      console.error("Error inserting user data:", insertError);
+      return { error: "Failed to create user profile." };
+    }
+
     revalidatePath("/", "layout");
     redirect("/?registered=1");
   }
