@@ -89,11 +89,16 @@ export function GuestListSection({
 
   const handleGenerateQR = async (guest: Guest) => {
     try {
+      // Check if users data exists
+      if (!guest.users) {
+        throw new Error('User data not available');
+      }
+
       // Create QR code data - can include registrant_id and other info
       const qrData = JSON.stringify({
         registrant_id: guest.registrant_id,
-        email: guest.email,
-        name: `${guest.first_name} ${guest.last_name}`,
+        email: guest.users.email,
+        name: `${guest.users.first_name || ''} ${guest.users.last_name || ''}`.trim(),
         event_slug: slug,
       });
 
@@ -111,7 +116,7 @@ export function GuestListSection({
       // Create a download link
       const link = document.createElement('a');
       link.href = qrCodeDataUrl;
-      link.download = `ticket-${guest.first_name}-${guest.last_name}-${guest.registrant_id.slice(0, 8)}.png`;
+      link.download = `ticket-${guest.users.first_name || 'guest'}-${guest.users.last_name || ''}-${guest.registrant_id.slice(0, 8)}.png`;
       link.click();
     } catch (error) {
       console.error('Error generating QR code:', error);
@@ -121,10 +126,13 @@ export function GuestListSection({
 
   // Filter guests
   const filteredGuests = guests.filter((guest) => {
+    // Check if users data exists
+    if (!guest.users) return false;
+
     const matchesSearch =
-      guest.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      guest.last_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      guest.email.toLowerCase().includes(searchQuery.toLowerCase());
+      guest.users.first_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      guest.users.last_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      guest.users.email?.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesStatus =
       statusFilter === "all" || 
@@ -247,15 +255,15 @@ export function GuestListSection({
                     <td className="font-urbanist text-white text-sm py-4 px-2">
                       <div>
                         <p className="font-medium">
-                          {guest.first_name} {guest.last_name}
+                          {guest.users?.first_name || 'N/A'} {guest.users?.last_name || ''}
                         </p>
                         <p className="text-xs text-white/60 md:hidden">
-                          {guest.email}
+                          {guest.users?.email || 'No email'}
                         </p>
                       </div>
                     </td>
                     <td className="font-urbanist text-white/80 text-sm py-4 px-2 hidden md:table-cell">
-                      {guest.email}
+                      {guest.users?.email || 'No email'}
                     </td>
                     <td className="font-urbanist text-white/80 text-sm py-4 px-2 hidden lg:table-cell">
                       {guest.terms_approval ? (

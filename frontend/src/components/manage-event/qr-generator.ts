@@ -2,11 +2,16 @@ import { Guest } from "@/types/guest";
 
 export async function generateQRCodeTicket(guest: Guest, slug: string): Promise<void> {
   try {
+    // Check if users data exists
+    if (!guest.users) {
+      throw new Error('User data not available');
+    }
+
     // Create QR code data - can include registrant_id and other info
     const qrData = JSON.stringify({
       registrant_id: guest.registrant_id,
-      email: guest.email,
-      name: `${guest.first_name} ${guest.last_name}`,
+      email: guest.users.email,
+      name: `${guest.users.first_name || ''} ${guest.users.last_name || ''}`.trim(),
       event_slug: slug,
     });
 
@@ -24,7 +29,7 @@ export async function generateQRCodeTicket(guest: Guest, slug: string): Promise<
     // Create a download link
     const link = document.createElement('a');
     link.href = qrCodeDataUrl;
-    link.download = `ticket-${guest.first_name}-${guest.last_name}-${guest.registrant_id.slice(0, 8)}.png`;
+    link.download = `ticket-${guest.users.first_name || 'guest'}-${guest.users.last_name || ''}-${guest.registrant_id.slice(0, 8)}.png`;
     link.click();
   } catch (error) {
     console.error('Error generating QR code:', error);
