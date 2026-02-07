@@ -10,6 +10,7 @@ export async function generateQRCodeTicket(guest: Guest, slug: string): Promise<
     // Create QR code data - can include registrant_id and other info
     const qrData = JSON.stringify({
       registrant_id: guest.registrant_id,
+      event_id: guest.event_id,
       email: guest.users.email,
       name: `${guest.users.first_name || ''} ${guest.users.last_name || ''}`.trim(),
       event_slug: slug,
