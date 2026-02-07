@@ -10,6 +10,7 @@ import { GuestListSearchFilter } from "./GuestListSearchFilter";
 import { GuestTableHeader } from "./GuestTableHeader";
 import { GuestTableRow } from "./GuestTableRow";
 import { GuestListEmpty } from "./GuestListEmpty";
+import { createClient } from "@/lib/supabase/client";
 
 interface GuestListSectionProps {
   guests: Guest[];
@@ -77,6 +78,16 @@ export function GuestListSection({
 
   const handleGenerateQR = async (guest: Guest) => {
     try {
+      // Debug: Check authentication
+      const supabase = createClient();
+      const { data: sessionData } = await supabase.auth.getSession();
+      console.log('Current session:', sessionData);
+      
+      if (!sessionData.session) {
+        alert('You must be logged in to generate QR codes');
+        return;
+      }
+      
       // Check if users data exists
       if (!guest.users) {
         throw new Error('User data not available');
@@ -90,25 +101,52 @@ export function GuestListSection({
         event_id: guest.event_id
       });
 
-      // Use QRCode library to generate QR code
-      const QRCode = (await import('qrcode')).default;
-      const qrCodeDataUrl = await QRCode.toDataURL(qrData, {
+      // Create a temporary canvas element
+      const canvas = document.createElement('canvas');
+      const QRCode = await import('qrcode.react');
+      
+      // Generate QR code using qrcode library (not qrcode.react for canvas generation)
+      const qrcode = await import('qrcode');
+      await qrcode.toCanvas(canvas, qrData, {
         width: 400,
         margin: 2,
         color: {
           dark: '#000000',
-          light: '#ffffff',
+          light: '#FFFFFF',
         },
       });
 
-      // Create a download link
-      const link = document.createElement('a');
-      link.href = qrCodeDataUrl;
-      link.download = `ticket-${guest.users.first_name || 'guest'}-${guest.users.last_name || ''}-${guest.registrant_id.slice(0, 8)}.png`;
-      link.click();
+      // Convert canvas to blob
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob((blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error('Failed to create blob'));
+        }, 'image/png');
+      });
+
+      // Upload to Supabase storage
+      const fileName = `ticket-${guest.users.first_name || 'guest'}-${guest.users.last_name || ''}-${guest.registrant_id.slice(0, 8)}.png`;
+      
+      const { data, error } = await supabase.storage
+        .from('ticket')
+        .upload(fileName, blob, {
+          contentType: 'image/png',
+          upsert: true
+        });
+
+      if (error) {
+        throw error;
+      }
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('ticket')
+        .getPublicUrl(fileName);
+
+      alert(`QR code uploaded successfully!\nURL: ${urlData.publicUrl}`);
     } catch (error) {
       console.error('Error generating QR code:', error);
-      alert('Failed to generate QR code');
+      alert(`Failed to generate QR code: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -121,7 +159,9 @@ export function GuestListSection({
         return;
       }
 
-      const QRCode = (await import('qrcode')).default;
+      const qrcode = await import('qrcode');
+      const supabase = createClient();
+      let uploadedCount = 0;
       
       // Generate QR codes for all selected guests
       for (const guest of selectedGuests) {
@@ -136,29 +176,49 @@ export function GuestListSection({
           event_slug: slug,
         });
 
-        const qrCodeDataUrl = await QRCode.toDataURL(qrData, {
+        // Create a temporary canvas element
+        const canvas = document.createElement('canvas');
+        await qrcode.toCanvas(canvas, qrData, {
           width: 400,
           margin: 2,
           color: {
             dark: '#000000',
-            light: '#ffffff',
+            light: '#FFFFFF',
           },
         });
 
-        // Create a download link for each QR code
-        const link = document.createElement('a');
-        link.href = qrCodeDataUrl;
-        link.download = `ticket-${guest.users.first_name || 'guest'}-${guest.users.last_name || ''}-${guest.registrant_id.slice(0, 8)}.png`;
-        link.click();
+        // Convert canvas to blob
+        const blob = await new Promise<Blob>((resolve, reject) => {
+          canvas.toBlob((blob) => {
+            if (blob) resolve(blob);
+            else reject(new Error('Failed to create blob'));
+          }, 'image/png');
+        });
+
+        // Upload to Supabase storage
+        const fileName = `ticket-${guest.users.first_name || 'guest'}-${guest.users.last_name || ''}-${guest.registrant_id.slice(0, 8)}.png`;
         
-        // Small delay between downloads to prevent browser blocking
+        const { error } = await supabase.storage
+          .from('ticket')
+          .upload(fileName, blob, {
+            contentType: 'image/png',
+            upsert: true
+          });
+
+        if (!error) {
+          uploadedCount++;
+        } else {
+          console.error(`Failed to upload ${fileName}:`, error);
+        }
+        
+        // Small delay between uploads
         await new Promise(resolve => setTimeout(resolve, 300));
       }
 
-      alert(`Generated ${selectedGuests.length} QR code${selectedGuests.length > 1 ? 's' : ''} successfully!`);
+      alert(`Uploaded ${uploadedCount} QR code${uploadedCount > 1 ? 's' : ''} successfully to ticket bucket!`);
     } catch (error) {
       console.error('Error generating bulk QR codes:', error);
-      alert('Failed to generate QR codes');
+      alert(`Failed to generate QR codes: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
