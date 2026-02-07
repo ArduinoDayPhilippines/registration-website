@@ -171,12 +171,22 @@ export default function BatchmailWorkspace({ guests }: BatchmailWorkspaceProps) 
     return { recipient: "email", name: "name", subject: null };
   }, [csv]);
   const [template, setTemplate] = useState<string>("");
-  const [subjectTemplate, setSubjectTemplate] = useState<string>("{{ subject }}");
-  const [headerContent, setHeaderContent] = useState<string>("Hi {{ recipient }},");
-  const [messageContent, setMessageContent] = useState<string>("");
+  const [subjectDraft, setSubjectDraft] = useState<string>("{{ subject }}");
+  const [headerDraft, setHeaderDraft] = useState<string>("Hi {{ recipient }},");
+  const [messageDraft, setMessageDraft] = useState<string>("");
+  const [subjectConfirmed, setSubjectConfirmed] = useState<string>("{{ subject }}");
+  const [headerConfirmed, setHeaderConfirmed] = useState<string>("Hi {{ recipient }},");
+  const [messageConfirmed, setMessageConfirmed] = useState<string>("");
+  const hasUnconfirmedChanges = useMemo(
+    () =>
+      subjectDraft !== subjectConfirmed ||
+      headerDraft !== headerConfirmed ||
+      messageDraft !== messageConfirmed,
+    [subjectDraft, subjectConfirmed, headerDraft, headerConfirmed, messageDraft, messageConfirmed]
+  );
   const messageContentHtml = useMemo(
-    () => messageContent.replace(/\n/g, "<br />"),
-    [messageContent]
+    () => messageConfirmed.replace(/\n/g, "<br />"),
+    [messageConfirmed]
   );
   const totalCount = useMemo(() => (csv?.rowCount ?? 0), [csv]);
   const templateReady = template.trim().length > 0;
@@ -227,11 +237,11 @@ export default function BatchmailWorkspace({ guests }: BatchmailWorkspaceProps) 
       .map((r: Record<string, string>) => ({
         to: String(r[mapping.recipient]),
         name: r[mapping.name] ? String(r[mapping.name]) : undefined,
-        subject: subjectTemplate?.trim()
-          ? nunjucks.renderString(subjectTemplate, {
+        subject: subjectConfirmed?.trim()
+          ? nunjucks.renderString(subjectConfirmed, {
               ...r,
               content: messageContentHtml,
-              header: headerContent,
+              header: headerConfirmed,
               name: r[mapping.name],
               recipient: r[mapping.recipient],
             })
@@ -356,8 +366,8 @@ export default function BatchmailWorkspace({ guests }: BatchmailWorkspaceProps) 
                     </p>
                     <input
                       type="text"
-                      value={subjectTemplate}
-                      onChange={(event) => setSubjectTemplate(event.target.value)}
+                      value={subjectDraft}
+                      onChange={(event) => setSubjectDraft(event.target.value)}
                       placeholder="Enter subject line"
                       className="w-full rounded border border-primary/20 px-3 py-2 text-sm text-primary"
                     />
@@ -371,8 +381,8 @@ export default function BatchmailWorkspace({ guests }: BatchmailWorkspaceProps) 
                     </p>
                     <input
                       type="text"
-                      value={headerContent}
-                      onChange={(event) => setHeaderContent(event.target.value)}
+                      value={headerDraft}
+                      onChange={(event) => setHeaderDraft(event.target.value)}
                       placeholder="Hi {{ recipient }},"
                       className="w-full rounded border border-primary/20 px-3 py-2 text-sm text-primary"
                     />
@@ -384,12 +394,40 @@ export default function BatchmailWorkspace({ guests }: BatchmailWorkspaceProps) 
                       The message is injected into the ADPH template. New lines are preserved.
                     </p>
                     <textarea
-                      value={messageContent}
-                      onChange={(event) => setMessageContent(event.target.value)}
+                      value={messageDraft}
+                      onChange={(event) => setMessageDraft(event.target.value)}
                       placeholder="Write the email content here."
                       rows={8}
                       className="w-full rounded border border-primary/20 px-3 py-2 text-sm text-primary"
                     />
+                  </section>
+
+                  <section className="rounded-lg border border-primary/20 bg-white p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <h2 className="text-lg font-semibold text-primary">Confirm Message</h2>
+                        <p className="text-xs text-secondary">
+                          Preview & Export uses the last confirmed subject, header, and message.
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSubjectConfirmed(subjectDraft);
+                          setHeaderConfirmed(headerDraft);
+                          setMessageConfirmed(messageDraft);
+                        }}
+                        disabled={!hasUnconfirmedChanges}
+                        className="rounded-full border border-primary/30 bg-primary/5 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-primary transition hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        Confirm Subject, Header, and Message
+                      </button>
+                    </div>
+                    {!hasUnconfirmedChanges && (
+                      <div className="mt-2 text-xs text-secondary">
+                        No unconfirmed changes.
+                      </div>
+                    )}
                   </section>
 
                 </div>
@@ -414,9 +452,8 @@ export default function BatchmailWorkspace({ guests }: BatchmailWorkspaceProps) 
                     mapping={mapping}
                     template={template}
                     onExportJson={onExportJson}
-                    subjectTemplate={subjectTemplate}
-                    onSubjectChange={setSubjectTemplate}
-                    extraContext={{ content: messageContentHtml, header: headerContent }}
+                    subjectTemplate={subjectConfirmed}
+                    extraContext={{ content: messageContentHtml, header: headerConfirmed }}
                     showSubjectEditor={false}
                   />
                 </div>

@@ -729,30 +729,30 @@ export default function PreviewPane({
       </div>
       {/* Streaming progress UI removed */}
       {showSendModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white w-full max-w-3xl rounded shadow-lg">
-            <div className="px-4 py-3 border-b flex items-center justify-between">
-              <div className="text-sm font-medium">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-slate-950/80 w-full max-w-3xl rounded-xl border border-primary/20 shadow-lg">
+            <div className="px-4 py-3 border-b border-primary/15 flex items-center justify-between">
+              <div className="text-sm font-semibold text-primary">
                 {isSending ? "Sending… Live Log" : "Send Summary"}
               </div>
               <button
-                className="text-xs px-2 py-1 border rounded"
+                className="text-xs px-2 py-1 border border-primary/30 rounded text-primary bg-primary/5 hover:bg-primary/10"
                 onClick={() => setShowSendModal(false)}
               >
                 Close
               </button>
             </div>
             <div className="p-4 space-y-3">
-              <div className="text-xs flex gap-4 items-center">
+              <div className="text-xs flex gap-4 items-center text-secondary">
                 <span>
-                  <strong>Sent:</strong> {sendModalSummary.sent}
+                  <strong className="text-primary">Sent:</strong> {sendModalSummary.sent}
                 </span>
                 <span>
-                  <strong>Failed:</strong> {sendModalSummary.failed}
+                  <strong className="text-primary">Failed:</strong> {sendModalSummary.failed}
                 </span>
                 {typeof sendModalTotal === "number" && (
                   <span>
-                    <strong>Remaining:</strong>{" "}
+                    <strong className="text-primary">Remaining:</strong>{" "}
                     {Math.max(
                       0,
                       sendModalTotal -
@@ -765,9 +765,9 @@ export default function PreviewPane({
                 )}
               </div>
               {typeof sendModalTotal === "number" && (
-                <div className="w-full h-2 bg-gray-200 rounded">
+                <div className="w-full h-2 bg-primary/10 rounded">
                   <div
-                    className="h-2 bg-green-600 rounded"
+                    className="h-2 bg-primary rounded"
                     style={{
                       width: `${Math.min(
                         100,
@@ -783,14 +783,14 @@ export default function PreviewPane({
               )}
               {/* Batch overview */}
               {batchAssignments.length > 0 && (
-                <div className="border rounded p-2 bg-gray-50 text-xs">
-                  <div className="mb-1 font-medium">Batches</div>
+                <div className="border border-primary/20 rounded p-2 bg-primary/5 text-xs">
+                  <div className="mb-1 font-semibold text-primary">Batches</div>
                   <div className="flex flex-col gap-1 max-h-32 overflow-auto">
                     {batchAssignments.map((b, idx) => (
                       <div
                         key={idx}
                         className={`flex gap-2 items-start ${
-                          idx === currentBatchIndex ? "text-green-700" : ""
+                          idx === currentBatchIndex ? "text-emerald-400" : "text-secondary"
                         }`}
                       >
                         <span className="min-w-[60px] inline-block">
@@ -805,58 +805,58 @@ export default function PreviewPane({
                 </div>
               )}
               {isSending && (
-                <div className="text-xs text-gray-600 bg-yellow-50 border border-yellow-200 rounded p-2">
+                <div className="text-xs text-secondary bg-primary/10 border border-primary/20 rounded p-2">
                   Sending is paced with a ~2 second delay per email to reduce
                   the risk of provider throttling, rate limits, or spam
                   detection. This helps keep delivery reliable when sending to
                   many recipients.
                 </div>
               )}
-              <div className="max-h-72 overflow-auto border rounded text-xs font-mono bg-white">
+              <div className="max-h-72 overflow-auto border border-primary/20 rounded text-xs font-mono bg-slate-950/70">
                 <table className="min-w-full text-xs">
-                  <thead className="sticky top-0 bg-gray-50">
+                  <thead className="sticky top-0 bg-primary/10">
                     <tr>
-                      <th className="text-left px-2 py-1 border">Recipient</th>
-                      <th className="text-left px-2 py-1 border">Status</th>
-                      <th className="text-left px-2 py-1 border">Time</th>
-                      <th className="text-left px-2 py-1 border">Subject</th>
-                      <th className="text-left px-2 py-1 border">
+                      <th className="text-left px-2 py-1 border border-primary/20 text-primary">Recipient</th>
+                      <th className="text-left px-2 py-1 border border-primary/20 text-primary">Status</th>
+                      <th className="text-left px-2 py-1 border border-primary/20 text-primary">Time</th>
+                      <th className="text-left px-2 py-1 border border-primary/20 text-primary">Subject</th>
+                      <th className="text-left px-2 py-1 border border-primary/20 text-primary">
                         Attachments
                       </th>
-                      <th className="text-left px-2 py-1 border">
+                      <th className="text-left px-2 py-1 border border-primary/20 text-primary">
                         Message / Error
                       </th>
                     </tr>
                   </thead>
                   <tbody>
                     {sendModalLogs.map((l, i) => (
-                      <tr key={i} className="odd:bg-white even:bg-gray-50">
-                        <td className="px-2 py-1 border whitespace-pre-wrap wrap-break-word">
+                      <tr key={i} className="odd:bg-slate-950/70 even:bg-primary/5">
+                        <td className="px-2 py-1 border border-primary/20 whitespace-pre-wrap wrap-break-word text-secondary">
                           {l.to}
                         </td>
                         <td
-                          className={`px-2 py-1 border ${
+                          className={`px-2 py-1 border border-primary/20 ${
                             l.status === "sent"
-                              ? "text-green-700"
-                              : "text-red-700"
+                              ? "text-emerald-400"
+                              : "text-rose-400"
                           }`}
                         >
                           {l.status}
                         </td>
-                        <td className="px-2 py-1 border whitespace-pre-wrap wrap-break-word">
+                        <td className="px-2 py-1 border border-primary/20 whitespace-pre-wrap wrap-break-word text-secondary">
                           {l.timestamp
                             ? new Date(l.timestamp).toLocaleTimeString()
                             : ""}
                         </td>
-                        <td className="px-2 py-1 border whitespace-pre-wrap wrap-break-word">
+                        <td className="px-2 py-1 border border-primary/20 whitespace-pre-wrap wrap-break-word text-secondary">
                           {l.subject || ""}
                         </td>
-                        <td className="px-2 py-1 border">
+                        <td className="px-2 py-1 border border-primary/20 text-secondary">
                           {typeof l.attachments === "number"
                             ? l.attachments
                             : ""}
                         </td>
-                        <td className="px-2 py-1 border whitespace-pre-wrap wrap-break-word">
+                        <td className="px-2 py-1 border border-primary/20 whitespace-pre-wrap wrap-break-word text-secondary">
                           {l.error || l.messageId || ""}
                         </td>
                       </tr>
@@ -864,8 +864,8 @@ export default function PreviewPane({
                     {isSending && sendModalLogs.length === 0 && (
                       <tr>
                         <td
-                          colSpan={5}
-                          className="px-2 py-4 text-center text-gray-500"
+                          colSpan={6}
+                          className="px-2 py-4 text-center text-secondary"
                         >
                           Starting…
                         </td>
