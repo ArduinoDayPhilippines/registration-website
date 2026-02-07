@@ -146,5 +146,53 @@ export async function eventManage(formData: FormData) {
     if (updateQuestionsError) {
       console.error("Error updating form questions:", updateQuestionsError);
     }
+  } else if (operation === "updateGuestStatus") {
+    const guestId = formData.get("guestId") as string | null;
+    const isRegisteredRaw = formData.get("isRegistered") as string | null;
+
+    if (!guestId || isRegisteredRaw === null) {
+      console.error("Missing guestId or isRegistered in updateGuestStatus");
+      return { success: false, error: "Missing required parameters" };
+    }
+
+    const isRegistered = isRegisteredRaw === "true";
+
+    console.log("Updating guest status:", { guestId, isRegistered });
+
+    const { data, error } = await supabase
+      .from("registrants")
+      .update({
+        is_registered: isRegistered,
+      })
+      .eq("registrant_id", guestId)
+      .select();
+
+    console.log("Update result:", { data, error });
+
+    if (error) {
+      console.error("Error updating guest status:", error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } else if (operation === "deleteGuest") {
+    const guestId = formData.get("guestId") as string | null;
+
+    if (!guestId) {
+      console.error("Missing guestId in deleteGuest");
+      return { success: false, error: "Missing guestId" };
+    }
+
+    const { error } = await supabase
+      .from("registrants")
+      .delete()
+      .eq("registrant_id", guestId);
+
+    if (error) {
+      console.error("Error deleting guest:", error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
   }
 }
