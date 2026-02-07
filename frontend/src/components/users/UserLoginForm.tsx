@@ -1,9 +1,11 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { login } from "@/app/auth/actions";
+import { getLastViewedEventSlug } from "@/lib/last-viewed-event";
 
 type UserLoginFormProps = { showRegisteredMessage?: boolean };
 
@@ -14,9 +16,31 @@ export default function UserLoginForm({
   const [password, setPassword] = useState("");
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const router = useRouter();
+  const redirectDone = useRef(false);
 
   const [state, formAction, isPending] = useActionState(login, null);
   const error = state?.error ?? "";
+
+  useEffect(() => {
+    if (!state?.success || redirectDone.current) return;
+    redirectDone.current = true;
+    let cancelled = false;
+    (async () => {
+      const res = await fetch("/api/auth/role");
+      if (cancelled) return;
+      const data = await res.json().catch(() => ({}));
+      if (data?.role === "admin") {
+        router.replace("/dashboard");
+        return;
+      }
+      const lastSlug = getLastViewedEventSlug();
+      router.replace(lastSlug ? `/event/${lastSlug}` : "/");
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [state?.success, router]);
 
   return (
     <div

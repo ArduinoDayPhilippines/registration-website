@@ -7,7 +7,13 @@ const REQUIRED = [
   "ARDUINODAYPH_SENDER_NAME",
 ] as const;
 
-type RequiredKey = typeof REQUIRED[number];
+type RequiredKey = (typeof REQUIRED)[number];
+
+const KEY_TO_SENDER: Record<RequiredKey, keyof ReturnType<typeof getActiveEnv>> = {
+  ARDUINODAYPH_SENDER_EMAIL: "SENDER_EMAIL",
+  ARDUINODAYPH_SENDER_PASSWORD: "SENDER_APP_PASSWORD",
+  ARDUINODAYPH_SENDER_NAME: "SENDER_NAME",
+};
 
 export async function GET() {
   const override = getActiveEnv();
@@ -21,7 +27,9 @@ export async function GET() {
     ok: missing.length === 0,
     present,
     missing,
-    source: Object.fromEntries(REQUIRED.map((k) => [k, override[k] ? "env" : "missing"])),
+    source: Object.fromEntries(
+      REQUIRED.map((k) => [k, override[KEY_TO_SENDER[k]] ? "env" : "missing"])
+    ),
     activeProfile: getActiveProfileName(),
     profiles: listProfiles(),
     systemVariant: getSystemVariant(),

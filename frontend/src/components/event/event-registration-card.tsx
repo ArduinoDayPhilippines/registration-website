@@ -1,6 +1,6 @@
-import React from 'react';
-import { CheckCircle, Users, Ticket } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import React from "react";
+import { CheckCircle, Users, Ticket } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface EventRegistrationCardProps {
   requireApproval: boolean;
@@ -19,7 +19,8 @@ export function EventRegistrationCard({
 }: EventRegistrationCardProps) {
   const capacityNum = parseInt(capacity) || 0;
   const slotsAvailable = capacityNum - registeredCount;
-  const isAlmostFull = capacityNum > 0 && slotsAvailable <= Math.max(10, capacityNum * 0.1);
+  const isAlmostFull =
+    capacityNum > 0 && slotsAvailable <= Math.max(10, capacityNum * 0.1);
   const isFull = capacityNum > 0 && slotsAvailable <= 0;
 
   return (
@@ -48,7 +49,7 @@ export function EventRegistrationCard({
         disabled={isFull}
         className="text-sm font-bold tracking-wide shadow-[0_0_30px_rgba(0,128,128,0.4)] hover:shadow-[0_0_40px_rgba(0,128,128,0.6)] disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {isFull ? 'EVENT FULL' : 'RSVP'}
+        {isFull ? "EVENT FULL" : "RSVP"}
       </Button>
 
       {/* Event Details - Price & Capacity Info */}
@@ -69,11 +70,14 @@ export function EventRegistrationCard({
             <div className="flex-1">
               <p className="text-xs text-white/50 mb-0.5">Capacity</p>
               {slotsAvailable > 0 && (
-                <p className={`text-sm font-semibold ${
-                  isAlmostFull ? 'text-yellow-400' : 'text-white'
-                }`}>
-                  {slotsAvailable} {slotsAvailable === 1 ? 'slot' : 'slots'} available
-                  {isAlmostFull && ' ⚠️'}
+                <p
+                  className={`text-sm font-semibold ${
+                    isAlmostFull ? "text-yellow-400" : "text-white"
+                  }`}
+                >
+                  {slotsAvailable} {slotsAvailable === 1 ? "slot" : "slots"}{" "}
+                  available
+                  {isAlmostFull && " ⚠️"}
                 </p>
               )}
               {isFull && (

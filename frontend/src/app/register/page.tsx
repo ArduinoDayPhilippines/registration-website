@@ -3,7 +3,13 @@ import Link from "next/link";
 import AdminLoginBackground from "@/components/admin/AdminLoginBackground";
 import UserRegisterForm from "@/components/users/UserRegisterForm";
 
-export default function RegisterPage() {
+export default async function RegisterPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
+  const { next } = await searchParams;
+  const nextUrl = typeof next === "string" ? next : undefined;
   return (
     <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-4">
       {/* Background Layers (reuse admin login background) */}
@@ -31,7 +37,7 @@ export default function RegisterPage() {
         </div>
 
         {/* Register Card */}
-        <UserRegisterForm />
+        <UserRegisterForm nextUrl={nextUrl} />
 
         {/* Sign in link */}
         <p className="mt-4 text-center text-[11px] text-[rgba(200,230,230,0.75)]">

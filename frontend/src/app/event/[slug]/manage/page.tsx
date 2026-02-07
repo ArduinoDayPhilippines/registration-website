@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowUpRight } from "lucide-react";
 import { AdminNavbar } from "@/components/admin/admin-navbar";
@@ -10,6 +10,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { ErrorState } from "@/components/ui/error-state";
 import { useEvent } from "@/hooks/event/use-event";
 import { useGuests } from "@/hooks/guest/use-guests";
+import { useUserRole } from "@/hooks/use-user-role";
 import {
   GuestStatistics,
   QuickActions,
@@ -27,10 +28,23 @@ export default function ManageEventPage() {
   const slug = params.slug as string;
   const { event, loading, error, refetch } = useEvent(slug);
   const { guests, stats, refetch: refetchGuests } = useGuests(slug);
+  const { role, userId, loading: roleLoading } = useUserRole();
   const [activeTab, setActiveTab] = useState("overview");
   const [showCoverImageModal, setShowCoverImageModal] = useState(false);
 
-  if (loading) {
+  const canManage =
+    !roleLoading &&
+    event &&
+    (role === "admin" || (userId != null && userId === event.organizerId));
+
+  useEffect(() => {
+    if (roleLoading || loading || !event) return;
+    if (!canManage) {
+      router.replace(`/event/${slug}`);
+    }
+  }, [canManage, roleLoading, loading, event, slug, router]);
+
+  if (loading || roleLoading) {
     return <LoadingSpinner message="Loading event management..." />;
   }
 
@@ -42,6 +56,10 @@ export default function ManageEventPage() {
         onAction={() => router.push("/")}
       />
     );
+  }
+
+  if (!canManage) {
+    return <LoadingSpinner message="Redirecting..." />;
   }
 
   const eventUrl = `${window.location.origin}/event/${slug}`;

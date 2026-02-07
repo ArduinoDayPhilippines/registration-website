@@ -2,9 +2,8 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 
-export type LoginResult = { error?: string };
+export type LoginResult = { error?: string; success?: boolean };
 
 export async function login(prevState: LoginResult | null, formData: FormData): Promise<LoginResult> {
   const supabase = await createClient();
@@ -25,5 +24,5 @@ export async function login(prevState: LoginResult | null, formData: FormData): 
     return { error: loginError.message };
   }
   revalidatePath("/", "layout");
-  redirect("/dashboard");
+  return { success: true };
 }
