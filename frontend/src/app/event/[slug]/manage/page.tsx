@@ -21,6 +21,7 @@ import {
   EventManagementForm,
 } from "@/components/manage-event";
 import BatchmailWorkspace from "@/components/batchmail/BatchmailWorkspace";
+import SurveyBuilder from "@/components/manage-event/survey/SurveyBuilder";
 
 export default function ManageEventPage() {
   const params = useParams();
@@ -95,7 +96,7 @@ export default function ManageEventPage() {
 
         {/* Tab Navigation */}
         <div className="flex gap-4 md:gap-6 border-b border-white/10 mb-6 md:mb-8 overflow-x-auto -mx-3 md:mx-0 px-3 md:px-0">
-          {["Overview", "Guests", "Batchmail"].map((tab) => (
+          {["Overview", "Guests", "Batchmail", "Survey"].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab.toLowerCase())}
@@ -156,6 +157,11 @@ export default function ManageEventPage() {
         {/* Batchmail Tab Content */}
         <div className={activeTab === "batchmail" ? "" : "hidden"}>
           <BatchmailWorkspace guests={guests} />
+        </div>
+
+        {/* Survey Tab Content */}
+        <div className={activeTab === "survey" ? "" : "hidden"}>
+          <SurveyBuilder slug={slug} initialConfig={event.postEventSurvey} />
         </div>
       </main>
 

@@ -1,3 +1,5 @@
+import { SurveyConfig } from "./survey";
+
 export interface Question {
   id: number;
   text: string;
@@ -23,6 +25,7 @@ export interface EventData {
   theme: string;
   questions: Question[];
   createdAt: string;
+  postEventSurvey?: SurveyConfig;
 }
 
 export interface EventFormData {
