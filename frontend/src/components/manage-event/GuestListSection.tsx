@@ -1,18 +1,16 @@
 "use client";
 
 import React, { useState, useTransition } from "react";
-import {
-  Users,
-  Download,
-  Eye,
-  Trash2,
-  QrCode,
-} from "lucide-react";
 import { Guest } from "@/types/guest";
 import { EventData } from "@/types/event";
 import { updateGuestStatus, deleteGuest, exportGuestsToCSV } from "./guest-actions";
-import { generateQRCodeTicket } from "./qr-generator";
 import { GuestAnswersModal } from "./GuestAnswersModal";
+import { GuestListHeader } from "./GuestListHeader";
+import { GuestListSearchFilter } from "./GuestListSearchFilter";
+import { GuestTableHeader } from "./GuestTableHeader";
+import { GuestTableRow } from "./GuestTableRow";
+import { GuestListEmpty } from "./GuestListEmpty";
+import { createClient } from "@/lib/supabase/client";
 
 interface GuestListSectionProps {
   guests: Guest[];
@@ -32,17 +30,8 @@ export function GuestListSection({
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedGuest, setSelectedGuest] = useState<Guest | null>(null);
   const [showAnswersModal, setShowAnswersModal] = useState(false);
-  const getQuestionText = (answerKey: string): string => {
-    const match = answerKey.match(/\d+$/);
-    if (match && event.questions && Array.isArray(event.questions)) {
-      const index = parseInt(match[0]) - 1; // Convert 1-based to 0-based index
-      if (index >= 0 && index < event.questions.length) {
-        return event.questions[index].text;
-      }
-    }
-    return answerKey; 
-  };
-
+  const [selectedGuestIds, setSelectedGuestIds] = useState<Set<string>>(new Set());
+  const [showSelectMenu, setShowSelectMenu] = useState(false);
   const handleDeleteGuest = (guestId: string) => {
     if (!confirm("Are you sure you want to remove this guest?")) return;
 
@@ -89,38 +78,147 @@ export function GuestListSection({
 
   const handleGenerateQR = async (guest: Guest) => {
     try {
+      // Debug: Check authentication
+      const supabase = createClient();
+      const { data: sessionData } = await supabase.auth.getSession();
+      console.log('Current session:', sessionData);
+      
+      if (!sessionData.session) {
+        alert('You must be logged in to generate QR codes');
+        return;
+      }
+      
       // Check if users data exists
       if (!guest.users) {
         throw new Error('User data not available');
       }
 
-      // Create QR code data - can include registrant_id and other info
+      // Create QR code data
       const qrData = JSON.stringify({
-        registrant_id: guest.registrant_id,
-        email: guest.users.email,
         name: `${guest.users.first_name || ''} ${guest.users.last_name || ''}`.trim(),
-        event_slug: slug,
+        email: guest.users.email,
+        registrant_id: guest.registrant_id,
+        event_id: guest.event_id
       });
 
-      // Use QRCode library to generate QR code
-      const QRCode = (await import('qrcode')).default;
-      const qrCodeDataUrl = await QRCode.toDataURL(qrData, {
+      // Create a temporary canvas element
+      const canvas = document.createElement('canvas');
+      const QRCode = await import('qrcode.react');
+      
+      // Generate QR code using qrcode library (not qrcode.react for canvas generation)
+      const qrcode = await import('qrcode');
+      await qrcode.toCanvas(canvas, qrData, {
         width: 400,
         margin: 2,
         color: {
           dark: '#000000',
-          light: '#ffffff',
+          light: '#FFFFFF',
         },
       });
 
-      // Create a download link
-      const link = document.createElement('a');
-      link.href = qrCodeDataUrl;
-      link.download = `ticket-${guest.users.first_name || 'guest'}-${guest.users.last_name || ''}-${guest.registrant_id.slice(0, 8)}.png`;
-      link.click();
+      // Convert canvas to blob
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob((blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error('Failed to create blob'));
+        }, 'image/png');
+      });
+
+      // Upload to Supabase storage
+      const fileName = `ticket-${guest.users.first_name || 'guest'}-${guest.users.last_name || ''}-${guest.registrant_id.slice(0, 8)}.png`;
+      
+      const { data, error } = await supabase.storage
+        .from('ticket')
+        .upload(fileName, blob, {
+          contentType: 'image/png',
+          upsert: true
+        });
+
+      if (error) {
+        throw error;
+      }
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('ticket')
+        .getPublicUrl(fileName);
+
+      alert(`QR code uploaded successfully!\nURL: ${urlData.publicUrl}`);
     } catch (error) {
       console.error('Error generating QR code:', error);
-      alert('Failed to generate QR code');
+      alert(`Failed to generate QR code: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
+
+  const handleBulkGenerateQR = async () => {
+    try {
+      const selectedGuests = guests.filter(g => selectedGuestIds.has(g.registrant_id));
+      
+      if (selectedGuests.length === 0) {
+        alert('No guests selected');
+        return;
+      }
+
+      const qrcode = await import('qrcode');
+      const supabase = createClient();
+      let uploadedCount = 0;
+      
+      // Generate QR codes for all selected guests
+      for (const guest of selectedGuests) {
+        if (!guest.users) continue;
+
+        // Create unique QR code data based on registrant_id and event_id
+        const qrData = JSON.stringify({
+          registrant_id: guest.registrant_id,
+          event_id: guest.event_id,
+          email: guest.users.email,
+          name: `${guest.users.first_name || ''} ${guest.users.last_name || ''}`.trim(),
+          event_slug: slug,
+        });
+
+        // Create a temporary canvas element
+        const canvas = document.createElement('canvas');
+        await qrcode.toCanvas(canvas, qrData, {
+          width: 400,
+          margin: 2,
+          color: {
+            dark: '#000000',
+            light: '#FFFFFF',
+          },
+        });
+
+        // Convert canvas to blob
+        const blob = await new Promise<Blob>((resolve, reject) => {
+          canvas.toBlob((blob) => {
+            if (blob) resolve(blob);
+            else reject(new Error('Failed to create blob'));
+          }, 'image/png');
+        });
+
+        // Upload to Supabase storage
+        const fileName = `ticket-${guest.users.first_name || 'guest'}-${guest.users.last_name || ''}-${guest.registrant_id.slice(0, 8)}.png`;
+        
+        const { error } = await supabase.storage
+          .from('ticket')
+          .upload(fileName, blob, {
+            contentType: 'image/png',
+            upsert: true
+          });
+
+        if (!error) {
+          uploadedCount++;
+        } else {
+          console.error(`Failed to upload ${fileName}:`, error);
+        }
+        
+        // Small delay between uploads
+        await new Promise(resolve => setTimeout(resolve, 300));
+      }
+
+      alert(`Uploaded ${uploadedCount} QR code${uploadedCount > 1 ? 's' : ''} successfully to ticket bucket!`);
+    } catch (error) {
+      console.error('Error generating bulk QR codes:', error);
+      alert(`Failed to generate QR codes: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -141,6 +239,51 @@ export function GuestListSection({
 
     return matchesSearch && matchesStatus;
   });
+
+  // Handle select all
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      const allIds = new Set(filteredGuests.map(g => g.registrant_id));
+      setSelectedGuestIds(allIds);
+    } else {
+      setSelectedGuestIds(new Set());
+    }
+  };
+
+  // Handle select by status
+  const handleSelectByStatus = (status: 'all' | 'registered' | 'pending') => {
+    let guestsToSelect: Guest[] = [];
+    
+    if (status === 'all') {
+      guestsToSelect = filteredGuests;
+    } else if (status === 'registered') {
+      guestsToSelect = filteredGuests.filter(g => g.is_registered);
+    } else if (status === 'pending') {
+      guestsToSelect = filteredGuests.filter(g => !g.is_registered);
+    }
+    
+    const selectedIds = new Set(guestsToSelect.map(g => g.registrant_id));
+    setSelectedGuestIds(selectedIds);
+    setShowSelectMenu(false);
+  };
+
+  // Handle individual selection
+  const handleSelectGuest = (guestId: string, checked: boolean) => {
+    const newSelected = new Set(selectedGuestIds);
+    if (checked) {
+      newSelected.add(guestId);
+    } else {
+      newSelected.delete(guestId);
+    }
+    setSelectedGuestIds(newSelected);
+  };
+
+  // Check if all filtered guests are selected
+  const allSelected = filteredGuests.length > 0 && 
+    filteredGuests.every(g => selectedGuestIds.has(g.registrant_id));
+  
+  const someSelected = selectedGuestIds.size > 0 && !allSelected;
+
   return (
     <>
       {/* Answers Modal */}
@@ -156,180 +299,70 @@ export function GuestListSection({
       )}
 
       <div className="bg-white/5 backdrop-blur-md rounded-xl border border-white/10 overflow-hidden">
-      {/* Header */}
-      <div className="p-4 md:p-6 border-b border-white/10">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
-          <h2 className="font-urbanist text-lg md:text-xl font-bold text-white">
-            Guest List
-          </h2>
-          <div className="flex gap-2">
-            <button
-              onClick={handleExport}
-              disabled={guests.length === 0}
-              className="font-urbanist px-4 py-2 bg-cyan-600 hover:bg-cyan-700 disabled:bg-cyan-600/50 disabled:cursor-not-allowed rounded-lg text-white text-sm font-medium transition-colors flex items-center gap-2 whitespace-nowrap"
-            >
-              <Download size={16} />
-              Export
-            </button>
-          </div>
+        {/* Header */}
+        <div className="p-4 md:p-6 border-b border-white/10">
+          <GuestListHeader 
+            guestCount={guests.length}
+            onExport={handleExport}
+          />
+
+          {/* Search and Filter Bar */}
+          <GuestListSearchFilter
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            statusFilter={statusFilter}
+            onStatusFilterChange={setStatusFilter}
+            onExport={handleExport}
+            isPending={isPending}
+            guestCount={guests.length}
+          />
         </div>
 
-        {/* Search and Filter Bar */}
-        <div className="flex flex-col md:flex-row gap-3">
-          <div className="flex-1">
-            <input
-              type="text"
-              placeholder="Search guests by name or email..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="font-urbanist w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-white/40 focus:outline-none focus:border-cyan-500 transition-colors"
-            />
-          </div>
-          <div className="flex gap-2">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="font-urbanist px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-cyan-500 transition-colors"
-            >
-              <option value="all" style={{ backgroundColor: '#0a1520', color: '#ffffff' }}>All Status</option>
-              <option value="registered" style={{ backgroundColor: '#0a1520', color: '#ffffff' }}>Registered</option>
-              <option value="pending" style={{ backgroundColor: '#0a1520', color: '#ffffff' }}>Pending</option>
-            </select>
-            <button
-              onClick={handleExport}
-              disabled={isPending || guests.length === 0}
-              className="p-2.5 bg-white/5 hover:bg-white/10 rounded-lg border border-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Download size={18} className="text-white/60" />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Guest List Content */}
-      <div className="p-4 md:p-6">
-        {filteredGuests.length === 0 ? (
-          /* Empty State */
-          <div className="flex flex-col items-center justify-center py-8 md:py-12 text-center">
-            <div className="w-12 h-12 md:w-16 md:h-16 bg-white/5 rounded-full flex items-center justify-center mb-4">
-              <Users size={24} className="text-white/40 md:w-8 md:h-8" />
+        {/* Guest List Content */}
+        <div className="p-4 md:p-6">
+          {filteredGuests.length === 0 ? (
+            <GuestListEmpty hasGuests={guests.length > 0} />
+          ) : (
+            /* Guest Table */
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <GuestTableHeader
+                  allSelected={allSelected}
+                  someSelected={someSelected}
+                  onSelectAll={handleSelectAll}
+                  showSelectMenu={showSelectMenu}
+                  onToggleSelectMenu={() => setShowSelectMenu(!showSelectMenu)}
+                  onSelectByStatus={handleSelectByStatus}
+                  onDeselectAll={() => {
+                    setSelectedGuestIds(new Set());
+                    setShowSelectMenu(false);
+                  }}
+                  selectedCount={selectedGuestIds.size}
+                  onBulkGenerateQR={handleBulkGenerateQR}
+                />
+                <tbody>
+                  {filteredGuests.map((guest) => (
+                    <GuestTableRow
+                      key={guest.registrant_id}
+                      guest={guest}
+                      isSelected={selectedGuestIds.has(guest.registrant_id)}
+                      isPending={isPending}
+                      onSelectGuest={handleSelectGuest}
+                      onStatusChange={handleStatusChange}
+                      onViewAnswers={(g) => {
+                        setSelectedGuest(g);
+                        setShowAnswersModal(true);
+                      }}
+                      onGenerateQR={handleGenerateQR}
+                      onDelete={handleDeleteGuest}
+                    />
+                  ))}
+                </tbody>
+              </table>
             </div>
-            <h3 className="font-urbanist text-sm md:text-base font-medium text-white mb-2">
-              {guests.length === 0 ? "No Guests Yet" : "No Matching Guests"}
-            </h3>
-            <p className="font-urbanist text-white/60 text-xs md:text-sm max-w-md mb-4 px-4">
-              {guests.length === 0
-                ? "Share the event or invite people to get started!"
-                : "Try adjusting your search or filters"}
-            </p>
-          </div>
-        ) : (
-          /* Guest Table */
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-white/10">
-                  <th className="font-urbanist text-left text-xs md:text-sm font-medium text-white/60 pb-3 px-2">
-                    Name
-                  </th>
-                  <th className="font-urbanist text-left text-xs md:text-sm font-medium text-white/60 pb-3 px-2 hidden md:table-cell">
-                    Email
-                  </th>
-                  <th className="font-urbanist text-left text-xs md:text-sm font-medium text-white/60 pb-3 px-2 hidden lg:table-cell">
-                    Terms Accepted
-                  </th>
-                  <th className="font-urbanist text-left text-xs md:text-sm font-medium text-white/60 pb-3 px-2">
-                    Status
-                  </th>
-                  <th className="font-urbanist text-right text-xs md:text-sm font-medium text-white/60 pb-3 px-2">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredGuests.map((guest) => (
-                  <tr
-                    key={guest.registrant_id}
-                    className="border-b border-white/5 hover:bg-white/5 transition-colors"
-                  >
-                    <td className="font-urbanist text-white text-sm py-4 px-2">
-                      <div>
-                        <p className="font-medium">
-                          {guest.users?.first_name || 'N/A'} {guest.users?.last_name || ''}
-                        </p>
-                        <p className="text-xs text-white/60 md:hidden">
-                          {guest.users?.email || 'No email'}
-                        </p>
-                      </div>
-                    </td>
-                    <td className="font-urbanist text-white/80 text-sm py-4 px-2 hidden md:table-cell">
-                      {guest.users?.email || 'No email'}
-                    </td>
-                    <td className="font-urbanist text-white/80 text-sm py-4 px-2 hidden lg:table-cell">
-                      {guest.terms_approval ? (
-                        <span className="text-green-400">Yes</span>
-                      ) : (
-                        <span className="text-red-400">No</span>
-                      )}
-                    </td>
-                    <td className="py-4 px-2">
-                      <select
-                        value={guest.is_registered ? "registered" : "pending"}
-                        onChange={(e) => handleStatusChange(guest.registrant_id, e.target.value)}
-                        disabled={isPending}
-                        className={`font-urbanist px-3 py-1.5 rounded-lg text-xs font-medium border transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-cyan-500/50 ${
-                          guest.is_registered
-                            ? "bg-green-500/20 text-green-400 border-green-500/30 hover:bg-green-500/30"
-                            : "bg-yellow-500/20 text-yellow-400 border-yellow-500/30 hover:bg-yellow-500/30"
-                        }`}
-                      >
-                        <option value="registered" className="bg-[#0a1520] text-green-400">
-                          Registered
-                        </option>
-                        <option value="pending" className="bg-[#0a1520] text-yellow-400">
-                          Pending
-                        </option>
-                      </select>
-                    </td>
-                    <td className="py-4 px-2">
-                      <div className="flex justify-end gap-2">
-                        <button
-                          onClick={() => {
-                            setSelectedGuest(guest);
-                            setShowAnswersModal(true);
-                          }}
-                          disabled={isPending}
-                          className="p-1.5 hover:bg-cyan-500/20 rounded text-cyan-400 transition-colors disabled:opacity-50"
-                          title="View Answers"
-                        >
-                          <Eye size={16} />
-                        </button>
-                        <button
-                          onClick={() => handleGenerateQR(guest)}
-                          disabled={isPending}
-                          className="p-1.5 hover:bg-purple-500/20 rounded text-purple-400 transition-colors disabled:opacity-50"
-                          title="Generate QR Code Ticket"
-                        >
-                          <QrCode size={16} />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteGuest(guest.registrant_id)}
-                          disabled={isPending}
-                          className="p-1.5 hover:bg-red-500/20 rounded text-red-400 transition-colors disabled:opacity-50"
-                          title="Delete"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+          )}
+        </div>
       </div>
-    </div>
     </>
   );
 }
