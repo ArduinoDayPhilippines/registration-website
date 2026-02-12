@@ -22,7 +22,7 @@ export interface SurveyConfig {
 export interface SurveyResponse {
   id: string;
   eventId: string;
-  attendeeEmail: string; // Required for sending certificates
+  userId: string; // Replaces attendeeEmail
   answers: Record<string, string | number | boolean>; // Key is questionId, value is the answer
   createdAt: string;
 }
