@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { Guest } from "@/types/guest";
 
 export async function getRegistrantByUserAndEvent(userId: string, eventId: string) {
   const supabase = await createClient();
@@ -59,4 +60,29 @@ export async function deleteGuest(guestId: string) {
   if (error) throw new Error(`Failed to delete guest: ${error.message}`);
 }
 
-// Implement other registrant-related repository functions here, such as getRegistrant, updateRegistrant, deleteRegistrant, listRegistrantsByEvent, etc, if there is
+export async function getRegistrantsByEvent(eventId: string): Promise<Guest[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("registrants")
+    .select(`
+      registrant_id,
+      event_id,
+      users_id,
+      terms_approval,
+      form_answers,
+      is_registered,
+      qr_url,
+      users!users_id (
+        first_name,
+        last_name,
+        email
+      )
+    `)
+    .eq("event_id", eventId);
+
+  if (error) {
+    throw new Error(`Failed to fetch registrants: ${error.message}`);
+  }
+
+  return (data || []) as unknown as Guest[];
+}

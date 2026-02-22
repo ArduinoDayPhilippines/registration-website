@@ -1,7 +1,18 @@
 "use server";
 
-import { CreateRegistrantSchema } from "@/validators/registrantValidators";
-import { registerForEvent } from "@/services/registrantService";
+import { revalidatePath } from "next/cache";
+import { 
+  CreateRegistrantSchema, 
+  UpdateGuestStatusSchema, 
+  DeleteGuestSchema 
+} from "@/validators/registrantValidators";
+import { 
+  registerForEvent, 
+  updateGuestStatus, 
+  deleteGuest 
+} from "@/services/registrantService";
+import { canManageEvent } from "@/services/authService";
+import { logger } from "@/utils/logger";
 
 export async function createRegistrantAction(data: {
   event_id: string;
@@ -19,12 +30,6 @@ export async function createRegistrantAction(data: {
     return { success: false, error: error.message || "Failed to create registration" };
   }
 }
-
-import { logger } from "@/utils/logger";
-import { canManageEvent } from "@/services/authService";
-import { revalidatePath } from "next/cache";
-import { UpdateGuestStatusSchema, DeleteGuestSchema } from "@/validators/registrantValidators";
-import { updateGuestStatus, deleteGuest } from "@/services/registrantService";
 
 export async function updateGuestStatusAction(data: any, slug: string) {
   try {
@@ -61,5 +66,26 @@ export async function deleteGuestAction(data: any, slug: string) {
   } catch (error: any) {
     logger.error("Failed to delete guest", error);
     return { success: false, error: error.message || "Failed to delete guest" };
+  }
+}
+
+export async function exportGuestsAction(slug: string) {
+  try {
+    if (!(await canManageEvent(slug))) {
+      logger.warn(`Unauthorized guest export attempt for event ${slug}`);
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const { exportGuestsToCSV } = await import("@/services/guestService");
+    const result = await exportGuestsToCSV(slug);
+    
+    if (result.success) {
+      logger.info(`Successfully exported guests for event ${slug}`);
+    }
+    
+    return result;
+  } catch (error: any) {
+    logger.error("Failed to export guests", error);
+    return { success: false, error: error.message || "Failed to export guests" };
   }
 }

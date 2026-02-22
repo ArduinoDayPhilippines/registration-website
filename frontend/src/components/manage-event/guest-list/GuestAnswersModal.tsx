@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { Eye, XCircle } from "lucide-react";
 import { Guest } from "@/types/guest";
 import { EventData } from "@/types/event";

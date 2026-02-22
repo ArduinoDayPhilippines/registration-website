@@ -54,4 +54,7 @@ export async function deleteGuest(guestId: string) {
   return await deleteGuest(guestId);
 }
 
-// Implement other registrant-related service functions here, such as getRegistrant, updateRegistrant, deleteRegistrant, listRegistrantsByEvent, etc, if there is
+export async function getEventRegistrants(eventId: string) {
+  const { getRegistrantsByEvent } = await import("@/repositories/registrantRepository");
+  return await getRegistrantsByEvent(eventId);
+}
