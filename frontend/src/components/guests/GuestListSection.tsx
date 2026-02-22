@@ -75,7 +75,7 @@ export function GuestListSection({
 
       <div className="bg-white/5 backdrop-blur-md rounded-xl border border-white/10 overflow-hidden">
         <div className="p-4 md:p-6 border-b border-white/10">
-          <GuestListHeader guestCount={guests.length} onExport={handleExport} />
+          <GuestListHeader guestCount={guests.length} />
 
           <GuestListSearchFilter
             searchQuery={searchQuery}
