@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 
 export async function submitSurveyResponse(
   slug: string,
-  answers: Record<string, any>,
+  answers: Record<string, unknown>,
 ) {
   const supabase = await createClient();
 
