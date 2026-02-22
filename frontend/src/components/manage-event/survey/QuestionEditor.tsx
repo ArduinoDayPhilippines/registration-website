@@ -1,7 +1,7 @@
 import { SurveyQuestion } from "@/types/survey";
 import { Trash2, GripVertical, Plus, Check } from "lucide-react";
 import { useState } from "react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils";
 
 interface QuestionEditorProps {
   question: SurveyQuestion;
