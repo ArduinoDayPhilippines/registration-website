@@ -4,7 +4,8 @@ import {
   EventSlugSchema, 
   UpdateEventDetailsSchema, 
   UpdateEventSettingsSchema, 
-  RegistrationQuestionSchema 
+  RegistrationQuestionSchema,
+  CreateEventSchema
 } from "@/validators/eventValidators";
 import { 
   getEventDetails, 
@@ -13,7 +14,8 @@ import {
   updateEventSettings, 
   addRegistrationQuestion, 
   updateRegistrationQuestion, 
-  removeRegistrationQuestion 
+  removeRegistrationQuestion,
+  createEvent
 } from "@/services/eventService";
 import { logger } from "@/utils/logger";
 import { canManageEvent } from "@/services/authService";
@@ -158,5 +160,28 @@ export async function removeRegistrationQuestionAction(data: any) {
   } catch (error: any) {
     logger.error("Failed to remove registration question", error);
     return { success: false, error: error.message || "Failed to remove question" };
+  }
+}
+
+export async function createEventAction(data: any) {
+  try {
+    const validatedData = CreateEventSchema.parse(data);
+    
+    const { getUserRoleAction } = await import("@/actions/authActions");
+    const roleResponse = await getUserRoleAction();
+    const userId = roleResponse.data?.userId;
+    
+    if (!userId) {
+       return { success: false, error: "Unauthorized" };
+    }
+
+    const newSlug = await createEvent(validatedData, userId);
+    
+    revalidatePath("/dashboard");
+    logger.info(`Created new event with slug: ${newSlug}`);
+    return { success: true, slug: newSlug };
+  } catch (error: any) {
+    logger.error("Failed to create event", error);
+    return { success: false, error: error.message || "Failed to create event" };
   }
 }
