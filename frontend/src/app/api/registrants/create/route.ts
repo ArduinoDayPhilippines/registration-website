@@ -1,23 +1,13 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { createHash } from "crypto";
-
-// Generate deterministic UUID from email
-function generateRegistrantId(email: string, eventId: string): string {
-  const hash = createHash('sha256')
-    .update(`${email}-${eventId}`)
-    .digest('hex');
-
-  return `${hash.slice(0, 8)}-${hash.slice(8, 12)}-${hash.slice(12, 16)}-${hash.slice(16, 20)}-${hash.slice(20, 32)}`;
-}
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { event_id, email, first_name, last_name, terms_approval, form_answers } = body;
+    const { event_id, user_id, terms_approval, form_answers } = body;
 
     // Validate required fields
-    if (!event_id || !email || !first_name || !last_name) {
+    if (!event_id || !user_id) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
@@ -51,14 +41,12 @@ export async function POST(request: Request) {
     // Determine is_registered based on require_approval
     const is_registered = !eventData.require_approval;
 
-    // Generate deterministic registrant_id from email and event_id
-    const registrant_id = generateRegistrantId(email, eventData.event_id);
-
     // Check if user already registered for this event
     const { data: existingRegistrant, error: checkError } = await supabase
       .from("registrants")
       .select("registrant_id")
-      .eq("registrant_id", registrant_id)
+      .eq("users_id", user_id)
+      .eq("event_id", eventData.event_id)
       .maybeSingle();
 
     if (checkError) {
@@ -80,12 +68,9 @@ export async function POST(request: Request) {
     const { data, error } = await supabase
       .from("registrants")
       .insert({
-        registrant_id,
         event_id: eventData.event_id,
-        email,
-        first_name,
-        last_name,
-        terms_approval: true, 
+        users_id: user_id,
+        terms_approval: terms_approval || true, 
         form_answers: form_answers || {},
         is_registered,
       })

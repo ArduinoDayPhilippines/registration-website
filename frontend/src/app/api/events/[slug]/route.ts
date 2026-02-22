@@ -13,9 +13,11 @@ type EventRow = {
   description: string | null;
   price: string | null;
   capacity: number | null;
+  registered: number | null;
   require_approval: boolean | null;
-  form_questions: any; 
+  form_questions: any;
   created_at: string | null;
+  post_event_survey: any;
 };
 
 function mapRowToEvent(row: EventRow): EventData {
@@ -27,12 +29,14 @@ function mapRowToEvent(row: EventRow): EventData {
   if (row.form_questions) {
     if (Array.isArray(row.form_questions)) {
       questions = row.form_questions;
-    } else if (typeof row.form_questions === 'object') {
-      questions = Object.entries(row.form_questions).map(([key, value], index) => ({
-        id: index + 1,
-        text: String(value),
-        required: true 
-      }));
+    } else if (typeof row.form_questions === "object") {
+      questions = Object.entries(row.form_questions).map(
+        ([key, value], index) => ({
+          id: index + 1,
+          text: String(value),
+          required: true,
+        }),
+      );
     }
   }
 
@@ -56,12 +60,13 @@ function mapRowToEvent(row: EventRow): EventData {
     theme: "Minimal Dark",
     questions,
     createdAt: row.created_at ?? new Date().toISOString(),
+    postEventSurvey: row.post_event_survey,
   };
 }
 
 export async function GET(
   _request: Request,
-  context: { params: Promise<{ slug: string }> }
+  context: { params: Promise<{ slug: string }> },
 ) {
   const { slug } = await context.params;
   if (!slug) {
@@ -82,10 +87,26 @@ export async function GET(
 
     return NextResponse.json(
       { error: error.message || "Failed to fetch event" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 
   const event = mapRowToEvent(data as EventRow);
+
+  // Use the registered column from the events table if available,
+  // otherwise fall back to counting from the guests table
+  if (data.registered !== null && data.registered !== undefined) {
+    event.registeredCount = data.registered;
+  } else {
+    // Fallback: Get registered guest count from guests table
+    const { count } = await supabase
+      .from("guests")
+      .select("*", { count: "exact", head: true })
+      .eq("event_slug", slug)
+      .in("status", ["approved", "pending"]);
+
+    event.registeredCount = count ?? 0;
+  }
+
   return NextResponse.json({ event });
 }

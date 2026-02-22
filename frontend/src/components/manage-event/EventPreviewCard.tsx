@@ -4,10 +4,6 @@ import {
   Clock,
   MapPin,
   ExternalLink,
-  Facebook,
-  Twitter,
-  Linkedin,
-  Link as LinkIcon,
 } from "lucide-react";
 import { EventData } from "@/types/event";
 
@@ -31,16 +27,19 @@ export function EventPreviewCard({
       <div className="p-4 md:p-6">
         <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-4 md:gap-6">
           {/* Cover Image */}
-          <div className="relative aspect-square md:aspect-auto md:h-[200px] rounded-lg overflow-hidden bg-black/20">
+          <div 
+            onClick={onChangePhoto}
+            className="relative aspect-square md:aspect-auto md:h-[200px] rounded-lg overflow-hidden bg-black/20 cursor-pointer hover:bg-black/30 transition-colors group"
+          >
             {event.coverImage ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={event.coverImage}
                 alt={event.title}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover group-hover:opacity-80 transition-opacity"
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-white/40">
+              <div className="w-full h-full flex items-center justify-center text-white/40 group-hover:text-white/60 transition-colors">
                 No Image
               </div>
             )}
@@ -64,7 +63,7 @@ export function EventPreviewCard({
               </div>
               <div className="flex items-center gap-2 text-sm text-white/70 mt-1">
                 <MapPin size={14} />
-                <span>{event.location}</span>
+                <span>{event.location || "Location not specified"}</span>
               </div>
             </div>
 
@@ -94,45 +93,6 @@ export function EventPreviewCard({
                 COPY
               </button>
             </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Bottom Actions */}
-      <div className="border-t border-white/10 p-4">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-white/60 hidden md:inline">
-              Share Event
-            </span>
-            <div className="flex gap-3">
-              <button className="text-white/40 hover:text-white transition-colors">
-                <Facebook size={18} />
-              </button>
-              <button className="text-white/40 hover:text-white transition-colors">
-                <Twitter size={18} />
-              </button>
-              <button className="text-white/40 hover:text-white transition-colors">
-                <Linkedin size={18} />
-              </button>
-              <button className="text-white/40 hover:text-white transition-colors">
-                <LinkIcon size={18} />
-              </button>
-            </div>
-          </div>
-          <div className="flex gap-2 flex-wrap">
-            <button
-              onClick={onEditEvent}
-              className="flex-1 md:flex-none px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-white text-sm font-medium transition-colors whitespace-nowrap"
-            >
-              Edit Event
-            </button>
-            <button
-              onClick={onChangePhoto}
-              className="flex-1 md:flex-none px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-white text-sm font-medium transition-colors whitespace-nowrap"
-            >
-              Change Photo
-            </button>
           </div>
         </div>
       </div>

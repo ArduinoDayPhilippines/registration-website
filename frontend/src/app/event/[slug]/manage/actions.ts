@@ -1,6 +1,7 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { getCanManageEvent } from "@/lib/auth/can-manage-event";
 
 type StoredQuestion = {
   id: number;
@@ -14,6 +15,12 @@ export async function eventManage(formData: FormData) {
 
   if (!slug) {
     console.error("eventManage called without a slug");
+    return;
+  }
+
+  const canManage = await getCanManageEvent(slug);
+  if (!canManage) {
+    console.error("eventManage: user is not admin or event organizer");
     return;
   }
 
@@ -32,7 +39,7 @@ export async function eventManage(formData: FormData) {
       ? requireApprovalRaw === "on"
       : Boolean(requireApprovalRaw);
 
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   if (operation === "updateEventDetails") {
     const startDateTime = new Date(`${startDate}T${startTime}`);
     const endDateTime = endTime ? new Date(`${startDate}T${endTime}`) : null;
@@ -146,5 +153,53 @@ export async function eventManage(formData: FormData) {
     if (updateQuestionsError) {
       console.error("Error updating form questions:", updateQuestionsError);
     }
+  } else if (operation === "updateGuestStatus") {
+    const guestId = formData.get("guestId") as string | null;
+    const isRegisteredRaw = formData.get("isRegistered") as string | null;
+
+    if (!guestId || isRegisteredRaw === null) {
+      console.error("Missing guestId or isRegistered in updateGuestStatus");
+      return { success: false, error: "Missing required parameters" };
+    }
+
+    const isRegistered = isRegisteredRaw === "true";
+
+    console.log("Updating guest status:", { guestId, isRegistered });
+
+    const { data, error } = await supabase
+      .from("registrants")
+      .update({
+        is_registered: isRegistered,
+      })
+      .eq("registrant_id", guestId)
+      .select();
+
+    console.log("Update result:", { data, error });
+
+    if (error) {
+      console.error("Error updating guest status:", error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } else if (operation === "deleteGuest") {
+    const guestId = formData.get("guestId") as string | null;
+
+    if (!guestId) {
+      console.error("Missing guestId in deleteGuest");
+      return { success: false, error: "Missing guestId" };
+    }
+
+    const { error } = await supabase
+      .from("registrants")
+      .delete()
+      .eq("registrant_id", guestId);
+
+    if (error) {
+      console.error("Error deleting guest:", error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
   }
 }

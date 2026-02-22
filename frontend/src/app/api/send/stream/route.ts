@@ -2,7 +2,7 @@ import { normalizeNameKey } from "@/lib/normalizeName";
 import { NextResponse } from "next/server";
 import nodemailer from "nodemailer";
 import nunjucks from "nunjucks";
-import { getActiveEnv, getSystemVariant } from "../../env/store";
+import { getActiveEnv } from "../../env/store";
 
 // Streams NDJSON lines: {type:"start", total}, {type:"item", index, to, status, error?}, {type:"done", sent, failed}
 
@@ -12,10 +12,12 @@ function renderTemplate(
   html: string,
   subject: string | undefined,
   row: Record<string, string>,
-  mapping: { recipient: string; name: string; subject?: string }
+  mapping: { recipient: string; name: string; subject?: string },
+  extraContext?: Record<string, string>
 ) {
   const ctx: Record<string, unknown> = {
     ...row,
+    ...(extraContext || {}),
     name: row[mapping.name],
     recipient: row[mapping.recipient],
   };
@@ -41,6 +43,7 @@ type Payload = {
   mapping: Mapping;
   template: string;
   subjectTemplate?: string;
+  extraContext?: Record<string, string>;
   // optional attachments keyed by normalized name
   attachmentsByName?: Record<
     string,
@@ -68,6 +71,7 @@ export async function POST(req: Request) {
     mapping,
     template,
     subjectTemplate,
+    extraContext,
     attachmentsByName,
     delayMs,
     jitterMs,
@@ -92,24 +96,10 @@ export async function POST(req: Request) {
     );
   }
 
-  const systemVariant = getSystemVariant();
-
-  const transporter = nodemailer.createTransport(
-    systemVariant === "cyberph"
-      ? {
-          host: override.HOST_DOMAIN,
-          port: Number(override.PORT),
-          secure: Number(override.PORT) === 465,
-          auth: {
-            user: SENDER_EMAIL,
-            pass: SENDER_APP_PASSWORD,
-          },
-        }
-      : {
-          service: "gmail",
-          auth: { user: SENDER_EMAIL, pass: SENDER_APP_PASSWORD },
-        }
-  );
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: { user: SENDER_EMAIL, pass: SENDER_APP_PASSWORD },
+  });
 
   const filtered = rows.filter(
     (r: Record<string, string>) => r[mapping.recipient]
@@ -134,7 +124,8 @@ export async function POST(req: Request) {
           template,
           subjectTemplate,
           r,
-          mapping
+          mapping,
+          extraContext
         );
         const nameKey = normalizeNameKey(r[mapping.name] || "");
         const atts =

@@ -1,16 +1,46 @@
 "use client";
 
+import { useActionState, useEffect, useRef } from "react";
 import { useState } from "react";
-import { login } from "@/app/auth/actions";
+import { useRouter } from "next/navigation";
 import { Loader2, Eye, EyeOff } from "lucide-react";
+import { login } from "@/app/auth/actions";
+import { getLastViewedEventSlug } from "@/lib/last-viewed-event";
 
-export default function AdminLoginForm() {
+type UserLoginFormProps = { showRegisteredMessage?: boolean };
+
+export default function UserLoginForm({
+  showRegisteredMessage,
+}: UserLoginFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error] = useState("");
-  const [isLoading] = useState(false);
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const router = useRouter();
+  const redirectDone = useRef(false);
+
+  const [state, formAction, isPending] = useActionState(login, null);
+  const error = state?.error ?? "";
+
+  useEffect(() => {
+    if (!state?.success || redirectDone.current) return;
+    redirectDone.current = true;
+    let cancelled = false;
+    (async () => {
+      const res = await fetch("/api/auth/role");
+      if (cancelled) return;
+      const data = await res.json().catch(() => ({}));
+      if (data?.role === "admin") {
+        router.replace("/dashboard");
+        return;
+      }
+      const lastSlug = getLastViewedEventSlug();
+      router.replace(lastSlug ? `/event/${lastSlug}` : "/");
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [state?.success, router]);
 
   return (
     <div
@@ -24,13 +54,21 @@ export default function AdminLoginForm() {
       shadow-[0_8px_32px_rgba(0,0,0,0.4)]
     "
     >
-      <form className="space-y-5">
+      {showRegisteredMessage && (
+        <div className="mb-4 rounded-xl bg-emerald-500/10 border border-emerald-400/30 px-4 py-3 text-center">
+          <p className="text-emerald-200 text-xs">
+            Account created. Login to continue.
+          </p>
+        </div>
+      )}
+      <form action={formAction} className="space-y-5">
         {/* error message */}
         {error && (
           <div className="bg-red-500/10 border border-red-400/30 rounded-xl px-4 py-3 mb-4">
             <p className="text-red-200 text-xs text-center">{error}</p>
           </div>
         )}
+
         {/* email input */}
         <div className="space-y-2">
           <label className="text-[#9dd5d5] text-[11px] font-medium block">
@@ -39,12 +77,12 @@ export default function AdminLoginForm() {
           <input
             name="email"
             type="email"
-            placeholder="admin@arduinodayphilippines.cc"
+            placeholder="you@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             onFocus={() => setFocusedField("email")}
             onBlur={() => setFocusedField(null)}
-            disabled={isLoading}
+            disabled={isPending}
             className={`
               w-full
               !bg-[rgba(15,30,30,0.9)]
@@ -64,6 +102,7 @@ export default function AdminLoginForm() {
             `}
           />
         </div>
+
         {/* password input */}
         <div className="space-y-2">
           <label className="text-[#9dd5d5] text-[11px] font-medium block">
@@ -78,7 +117,7 @@ export default function AdminLoginForm() {
               onChange={(e) => setPassword(e.target.value)}
               onFocus={() => setFocusedField("password")}
               onBlur={() => setFocusedField(null)}
-              disabled={isLoading}
+              disabled={isPending}
               className={`
                 w-full
                 !bg-[rgba(15,30,30,0.9)]
@@ -97,11 +136,12 @@ export default function AdminLoginForm() {
                 disabled:opacity-50 disabled:cursor-not-allowed
               `}
             />
+
             {/* show password toggle */}
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              disabled={isLoading}
+              disabled={isPending}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-[#7dc5c5] hover:text-[#9dd5d5] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
@@ -109,21 +149,11 @@ export default function AdminLoginForm() {
             </button>
           </div>
         </div>
-        {/* forgot password button */}
-        <div className="text-right pt-1">
-          <button
-            type="button"
-            className="text-[#6dd8d8] hover:text-[#8de5e5] text-[11px] font-medium transition-colors"
-            disabled={isLoading}
-          >
-            Forgot password?
-          </button>
-        </div>
+
         {/* submit button */}
         <button
           type="submit"
-          disabled={isLoading}
-          formAction={login}
+          disabled={isPending}
           className="
             w-full
             bg-[rgba(35,60,60,0.6)]
@@ -139,13 +169,13 @@ export default function AdminLoginForm() {
             disabled:cursor-not-allowed
           "
         >
-          {isLoading ? (
+          {isPending ? (
             <span className="flex items-center justify-center gap-2">
               <Loader2 className="w-4 h-4 animate-spin" />
               Logging in...
             </span>
           ) : (
-            "Login to Dashboard"
+            "Login"
           )}
         </button>
       </form>
@@ -153,7 +183,7 @@ export default function AdminLoginForm() {
       {/* Footer Text inside card */}
       <div className="mt-7 pt-6 border-t border-[rgba(139,197,197,0.15)]">
         <p className="text-[rgba(165,197,197,0.6)] text-[10px] text-center font-medium">
-          Authorized access only · Arduino Day PH Admin
+          Welcome back · Arduino Day Philippines
         </p>
       </div>
     </div>

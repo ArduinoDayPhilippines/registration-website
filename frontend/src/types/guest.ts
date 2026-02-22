@@ -1,21 +1,16 @@
 export interface Guest {
-  id: string;
-  eventId: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  age?: string;
-  mobileNumber?: string;
-  occupation?: string;
-  institution?: string;
-  isPartnered?: "Yes" | "No";
-  isOpenToScholarship?: "Yes" | "No";
-  resumeUrl?: string;
-  expectations?: string;
-  suggestions?: string;
-  status: "pending" | "approved" | "rejected" | "checked_in";
-  createdAt: string;
-  updatedAt?: string;
+  registrant_id: string;
+  event_id: string;
+  users_id: string;
+  terms_approval: boolean;
+  form_answers: Record<string, string> | null;
+  is_registered: boolean;
+  qr_url: string | null;
+  users: {
+    first_name: string;
+    last_name: string;
+    email: string;
+  } | null;
 }
 
 export interface GuestStats {

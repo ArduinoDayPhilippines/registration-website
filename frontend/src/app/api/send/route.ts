@@ -2,7 +2,7 @@ import { normalizeNameKey } from "@/lib/normalizeName";
 import { NextResponse } from "next/server";
 import nodemailer from "nodemailer";
 import nunjucks from "nunjucks";
-import { getActiveEnv, getSystemVariant } from "../env/store";
+import { getActiveEnv } from "../env/store";
 
 type Mapping = { recipient: string; name: string; subject?: string };
 type Row = Record<string, string>;
@@ -12,6 +12,7 @@ type Payload = {
   template: string;
   subjectTemplate?: string;
   dryRun?: boolean;
+  extraContext?: Record<string, string>;
   attachmentsByName?: Record<
     string,
     Array<{ filename: string; contentBase64: string; contentType?: string }>
@@ -52,6 +53,7 @@ export async function POST(req: Request) {
     template,
     subjectTemplate,
     dryRun,
+    extraContext,
     attachmentsByName,
   } = (payload || {}) as Payload;
   if (!rows || !Array.isArray(rows) || !mapping || !template) {
@@ -75,28 +77,14 @@ export async function POST(req: Request) {
     );
   }
 
-  const systemVariant = getSystemVariant();
-
   // Configure transporter
-  const transporter = nodemailer.createTransport(
-    systemVariant === "cyberph"
-      ? {
-          host: override.HOST_DOMAIN,
-          port: Number(override.PORT),
-          secure: Number(override.PORT) === 465, // Use true for 465, false for other ports
-          auth: {
-            user: SENDER_EMAIL,
-            pass: SENDER_APP_PASSWORD,
-          },
-        }
-      : {
-          service: "gmail",
-          auth: {
-            user: SENDER_EMAIL,
-            pass: SENDER_APP_PASSWORD,
-          },
-        }
-  );
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: SENDER_EMAIL,
+      pass: SENDER_APP_PASSWORD,
+    },
+  });
 
   const successes: Success[] = [];
   const failures: Failure[] = [];
@@ -106,6 +94,7 @@ export async function POST(req: Request) {
     if (!to) continue;
     const ctx: Record<string, unknown> = {
       ...r,
+      ...(extraContext || {}),
       name: r[mapping.name],
       recipient: r[mapping.recipient],
     };

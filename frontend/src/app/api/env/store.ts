@@ -12,8 +12,8 @@ export type SenderEnv = {
 // In-memory multi-profile store
 let profiles: Record<string, SenderEnv> = {};
 let activeProfile: string | null = null;
-type SystemVariant = "default" | "icpep" | "cisco" | "cyberph";
-let systemVariant: SystemVariant = "default";
+type SystemVariant = "arduino";
+let systemVariant: SystemVariant = "arduino";
 
 export function setProfile(name: string, values: SenderEnv) {
   const clean = name.trim();
@@ -54,36 +54,12 @@ export function getActiveEnv(): SenderEnv {
   if (activeProfile && profiles[activeProfile]) {
     return { ...profiles[activeProfile] };
   }
-  // Otherwise, derive from process.env based on selected system variant
+  // Otherwise, derive from process.env
   const env = process.env as Record<string, string | undefined>;
-  if (systemVariant === "icpep") {
-    return {
-      SENDER_EMAIL: env.ICPEP_SENDER_EMAIL,
-      SENDER_APP_PASSWORD: env.ICPEP_SENDER_PASSWORD,
-      SENDER_NAME: env.ICPEP_SENDER_NAME,
-    };
-  }
-  if (systemVariant === "cisco") {
-    return {
-      SENDER_EMAIL: env.CISCO_SENDER_EMAIL,
-      SENDER_APP_PASSWORD: env.CISCO_SENDER_PASSWORD,
-      SENDER_NAME: env.CISCO_SENDER_NAME,
-    };
-  }
-  if (systemVariant === "cyberph") {
-    return {
-      SENDER_EMAIL: env.CYBERPH_SENDER_EMAIL,
-      SENDER_APP_PASSWORD: env.CYBERPH_SENDER_PASSWORD,
-      SENDER_NAME: env.CYBERPH_SENDER_NAME,
-      HOST_DOMAIN: env.CYBERPH_HOST_DOMAIN,
-      PORT: env.CYBERPH_PORT,
-    };
-  }
-  // default
   return {
-    SENDER_EMAIL: env.SENDER_EMAIL,
-    SENDER_APP_PASSWORD: env.SENDER_APP_PASSWORD,
-    SENDER_NAME: env.SENDER_NAME,
+    SENDER_EMAIL: env.ARDUINODAYPH_SENDER_EMAIL,
+    SENDER_APP_PASSWORD: env.ARDUINODAYPH_SENDER_PASSWORD,
+    SENDER_NAME: env.ARDUINODAYPH_SENDER_NAME,
   };
 }
 

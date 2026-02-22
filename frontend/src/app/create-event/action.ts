@@ -41,8 +41,11 @@ export async function createEvent(formData: CreateEventFormData) {
   
 
   const parsedQuestions = questions && questions.length > 0
-    ? questions.reduce((acc: any, question: any, index: number) => {
-        acc[`q${index + 1}`] = question.text;
+    ? questions.reduce<Record<string, string>>((acc, question, index) => {
+        const candidate = question as { text?: unknown } | null | undefined;
+        if (candidate && typeof candidate.text === "string") {
+          acc[`q${index + 1}`] = candidate.text;
+        }
         return acc;
       }, {})
     : null;

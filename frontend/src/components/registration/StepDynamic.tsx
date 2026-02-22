@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button";
 import { Question } from "@/types/event";
 import { RegistrationFormData } from "./types";
 
@@ -52,10 +51,10 @@ export function StepDynamic({
       <div className="flex-1 overflow-y-auto custom-scrollbar pr-2">
         <div className="space-y-6">
           <div>
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold font-sans mb-2 leading-tight">
+            <h2 className="text-xl sm:text-2xl font-bold text-[#f5f5f5] tracking-tight mb-2 leading-tight">
               Additional Information
             </h2>
-            <p className="text-white/50 mb-6 sm:mb-8 ml-1 text-sm sm:text-base">
+            <p className="text-[rgba(197,213,213,0.8)] mb-6 sm:mb-8 ml-1 text-[11px] sm:text-sm">
               Please provide the following information
             </p>
           </div>
@@ -63,10 +62,10 @@ export function StepDynamic({
           <div className="space-y-5">
             {questions.map((question) => (
               <div key={question.id} className="space-y-2">
-                <label className="text-sm font-medium text-white/90">
+                <label className="text-[#9dd5d5] text-[11px] font-medium block">
                   {question.text}
                   {question.required && (
-                    <span className="text-primary ml-1">*</span>
+                    <span className="text-[#5dd8d8] ml-1">*</span>
                   )}
                 </label>
                 <textarea
@@ -75,7 +74,7 @@ export function StepDynamic({
                   required={question.required}
                   placeholder="Type your answer here..."
                   rows={2}
-                  className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/50 transition-all resize-none"
+                  className="w-full !bg-[rgba(15,30,30,0.9)] border border-[#5da5a5] rounded-xl px-4 py-3 !text-[#d5e5e5] text-sm !placeholder:text-[rgba(197,213,213,0.5)] outline-none transition-all duration-200 focus:border-[#7dc5c5] focus:outline-none resize-none"
                 />
               </div>
             ))}
@@ -83,22 +82,20 @@ export function StepDynamic({
         </div>
       </div>
 
-      <div className="mt-6 sm:mt-8 flex gap-3 sm:gap-4 pt-4 border-t border-white/10">
-        <Button
+      <div className="mt-6 sm:mt-8 flex gap-3 sm:gap-4 pt-4 border-t border-[rgba(139,197,197,0.15)]">
+        <button
           type="button"
-          variant="outline"
           onClick={onBack}
-          className="flex-1 text-sm sm:text-base"
+          className="flex-1 py-3.5 rounded-xl border border-[rgba(139,197,197,0.4)] hover:bg-[rgba(20,40,40,0.9)] text-[#95b5b5] font-semibold text-sm transition-all duration-200"
         >
           Back
-        </Button>
-        <Button
+        </button>
+        <button
           type="submit"
-          variant="primary"
-          className="flex-1 text-sm sm:text-base"
+          className="flex-1 py-3.5 rounded-xl bg-[rgba(35,60,60,0.6)] hover:bg-[rgba(35,60,60,0.7)] text-[#95b5b5] font-semibold text-sm transition-all duration-200"
         >
           Continue
-        </Button>
+        </button>
       </div>
     </form>
   );

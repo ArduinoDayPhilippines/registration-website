@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { createEvent } from "@/app/create-event/action";
 import { RegistrationQuestionsModal } from "@/components/create-event/registration-questions-modal";
+import { LocationPicker } from "@/components/create-event/LocationPicker";
 
 interface EventFormProps {
   formData: EventFormData;
@@ -200,13 +201,9 @@ export default function EventForm({
           </div>
 
           {/* Location */}
-          <Input
-            label="Location"
-            icon={MapPin}
-            type="text"
-            placeholder="Add Event Location..."
+          <LocationPicker
             value={formData.location}
-            onChange={(e) => updateField("location", e.target.value)}
+            onChange={(location) => updateField("location", location)}
           />
 
           {/* Description */}

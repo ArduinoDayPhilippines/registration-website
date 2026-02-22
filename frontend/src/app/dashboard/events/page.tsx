@@ -28,10 +28,7 @@ export default function EventsPage() {
       const result = await getEvents();
 
       if (result.success && result.data) {
-        console.log("Loaded events from database:", result.data);
         setEvents(result.data);
-      } else {
-        console.error("Failed to load events:", result.error);
       }
       setLoading(false);
     }
@@ -52,8 +49,6 @@ export default function EventsPage() {
       status: event.status ?? "upcoming",
       coverImage: event.cover_image ?? undefined,
     }));
-
-  console.log("Transformed events:", transformedEvents);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0a1f14] via-[#0a1520] to-[#120c08] text-white relative overflow-hidden font-[family-name:var(--font-urbanist)]">
