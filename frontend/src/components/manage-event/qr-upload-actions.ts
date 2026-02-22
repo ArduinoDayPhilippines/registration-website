@@ -1,18 +1,29 @@
 "use server";
 
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 
+/**
+ * Upload QR code to storage
+ * Uses authenticated client - RLS policies should control access
+ */
 export async function uploadQRCodeToStorage(
   blob: Blob,
   fileName: string
 ): Promise<{ success: boolean; error?: string; url?: string }> {
   try {
-    const supabase = createAdminClient();
+    const supabase = await createClient();
+    
+    // Verify user is authenticated
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return { success: false, error: "Unauthorized - must be logged in" };
+    }
     
     // Convert blob to buffer for server-side upload
     const arrayBuffer = await blob.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
+    // RLS policies on storage bucket should control access
     const { data, error } = await supabase.storage
       .from('ticket')
       .upload(fileName, buffer, {

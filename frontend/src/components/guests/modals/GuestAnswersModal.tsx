@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { Eye, XCircle } from "lucide-react";
 import { Guest } from "@/types/guest";
 import { EventData } from "@/types/event";
@@ -12,11 +11,10 @@ interface GuestAnswersModalProps {
 }
 
 export function GuestAnswersModal({ guest, event, onClose }: GuestAnswersModalProps) {
-  // Create a map of answer keys (a1, a2, a3) to question text
   const getQuestionText = (answerKey: string): string => {
     const match = answerKey.match(/\d+$/);
     if (match && event.questions && Array.isArray(event.questions)) {
-      const index = parseInt(match[0]) - 1; // Convert 1-based to 0-based index
+      const index = parseInt(match[0]) - 1;
       if (index >= 0 && index < event.questions.length) {
         return event.questions[index].text;
       }
@@ -26,18 +24,14 @@ export function GuestAnswersModal({ guest, event, onClose }: GuestAnswersModalPr
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/70 backdrop-blur-sm"
         onClick={onClose}
       />
 
-      {/* Modal */}
       <div className="relative w-full max-w-3xl bg-gradient-to-br from-[#0a1f14] via-[#0a1520] to-[#120c08] border border-white/10 rounded-3xl max-h-[85vh] overflow-hidden flex flex-col">
-        {/* Glow Effect */}
         <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-primary/10 via-transparent to-secondary/10 opacity-50 pointer-events-none" />
 
-        {/* Header */}
         <div className="relative flex items-start justify-between p-6 md:p-8 border-b border-white/10">
           <div className="flex-1 pr-4">
             <h3 className="font-urbanist text-2xl md:text-3xl font-bold text-white leading-tight mb-2">
@@ -55,7 +49,6 @@ export function GuestAnswersModal({ guest, event, onClose }: GuestAnswersModalPr
           </button>
         </div>
 
-        {/* Content */}
         <div className="relative flex-1 overflow-y-auto custom-scrollbar p-6 md:p-8">
           {guest.form_answers &&
           typeof guest.form_answers === "object" &&
@@ -99,7 +92,6 @@ export function GuestAnswersModal({ guest, event, onClose }: GuestAnswersModalPr
           )}
         </div>
 
-        {/* Footer */}
         <div className="relative p-6 md:p-8 border-t border-white/10 bg-black/20">
           <button
             onClick={onClose}

@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 
 /**
  * GET /api/auth/role
- * Returns the current user's role from auth.users (role, raw_app_meta_data->>'role')
- * with fallback to public.users.role so admin is recognized either way.
+ * Returns the current user's role from JWT app_metadata with fallback to public.users.role
+ * No admin client required - uses JWT claims and regular queries with RLS
  */
 export async function GET() {
   try {
@@ -18,23 +17,12 @@ export async function GET() {
       return NextResponse.json({ role: null, userId: null });
     }
 
-    let isAdmin = false;
+    // Check app_metadata from JWT token (no admin client needed)
+    // This is populated during user creation/update
+    const appRole = user.app_metadata?.role as string | undefined;
+    let isAdmin = appRole === "admin";
 
-    try {
-      const adminClient = createAdminClient();
-      const { data: adminData, error: adminError } =
-        await adminClient.auth.admin.getUserById(user.id);
-
-      if (!adminError && adminData?.user) {
-        const authUser = adminData.user;
-        const appRole = (authUser.app_metadata?.role as string) ?? null;
-        const jwtRole = authUser.role ?? null;
-        isAdmin = appRole === "admin" || jwtRole === "admin";
-      }
-    } catch {
-      // Admin client may be missing (e.g. no SUPABASE_SERVICE_ROLE_KEY); use fallback
-    }
-
+    // Fallback: check public.users.role if not found in JWT
     if (!isAdmin) {
       const { data: profile } = await supabase
         .from("users")

@@ -14,12 +14,12 @@ import { useUserRole } from "@/hooks/use-user-role";
 import {
   GuestStatistics,
   QuickActions,
-  GuestListSection,
   EventPreviewCard,
   WhenWhereSidebar,
   CoverImageChangeModal,
   EventManagementForm,
 } from "@/components/manage-event";
+import { GuestListSection } from "@/components/guests";
 import BatchmailWorkspace from "@/components/batchmail/BatchmailWorkspace";
 import SurveyBuilder from "@/components/manage-event/survey/SurveyBuilder";
 

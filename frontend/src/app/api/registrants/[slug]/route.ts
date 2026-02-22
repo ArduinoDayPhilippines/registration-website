@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCanManageEvent } from "@/lib/auth/can-manage-event";
-import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function GET(
   request: Request,
@@ -9,12 +8,22 @@ export async function GET(
 ) {
   try {
     const { slug } = await context.params;
+    const supabase = await createClient();
+    
+    // Check if user can manage this event
     const canManage = await getCanManageEvent(slug);
-    const supabase = canManage ? createAdminClient() : await createClient();
+    
+    if (!canManage) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized - must be event organizer or admin" },
+        { status: 403 }
+      );
+    }
 
     console.log("Fetching registrants for slug:", slug);
 
     // First, get the event_id from the slug
+    // RLS policies should allow organizers/admins to read their events
     const { data: event, error: eventError } = await supabase
       .from("events")
       .select("event_id")
@@ -31,6 +40,7 @@ export async function GET(
     }
 
     // Fetch registrants for this event with user data
+    // RLS policies should allow organizers/admins to read registrants for their events
     const { data: registrants, error: registrantsError } = await supabase
       .from("registrants")
       .select(`
