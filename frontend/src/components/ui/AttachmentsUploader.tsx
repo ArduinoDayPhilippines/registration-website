@@ -1,6 +1,6 @@
 "use client";
 
-import { normalizeNameKey } from "@/utils/normalizeName";
+import { normalizeNameKey } from "@/lib/utils/normalizeName";
 import { useCallback, useMemo, useRef } from "react";
 import type { ParsedCsv, CsvMapping } from "./CsvUploader";
 

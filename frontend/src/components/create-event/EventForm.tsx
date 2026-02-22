@@ -17,7 +17,8 @@ import {
 import { EventFormData, Question } from "@/types/event";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { createEvent } from "@/app/create-event/action";
+import { createEventAction } from "@/actions/eventActions";
+import { useRouter } from "next/navigation";
 import { RegistrationQuestionsModal } from "@/components/create-event/registration-questions-modal";
 import { LocationPicker } from "@/components/create-event/LocationPicker";
 
@@ -47,6 +48,7 @@ export default function EventForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [isQuestionsModalOpen, setIsQuestionsModalOpen] = useState(false);
+  const router = useRouter();
 
   const handleSubmit = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -55,7 +57,15 @@ export default function EventForm({
     setIsSubmitting(true);
 
     try {
-      await createEvent(formData);
+      const result = await createEventAction(formData);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      if (result.slug) {
+        router.push(`/event/${result.slug}`);
+      } else {
+        router.push("/dashboard");
+      }
     } catch (err) {
       console.error("Create event error:", err);
       setError(

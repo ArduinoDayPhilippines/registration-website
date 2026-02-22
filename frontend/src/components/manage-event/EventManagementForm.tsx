@@ -2,7 +2,13 @@
 
 import React, { useState } from "react";
 import { EventData } from "@/types/event";
-import { eventManage } from "../../app/event/[slug]/manage/actions";
+import { 
+  updateEventDetailsAction, 
+  addRegistrationQuestionAction, 
+  updateRegistrationQuestionAction, 
+  removeRegistrationQuestionAction, 
+  updateEventSettingsAction 
+} from "@/actions/eventActions";
 import { Check, Pencil, Trash2 } from "lucide-react";
 
 interface EventManagementFormProps {
@@ -16,45 +22,60 @@ async function updateEventDetailsFormAction(
   slug: string,
   formData: FormData
 ): Promise<void> {
-  formData.append("slug", slug);
-  formData.append("operation", "updateEventDetails");
-  await eventManage(formData);
+  await updateEventDetailsAction({
+    slug,
+    title: formData.get("title") as string,
+    description: formData.get("description") as string,
+    startDate: formData.get("startDate") as string,
+    startTime: formData.get("startTime") as string,
+    endTime: formData.get("endTime") as string,
+    location: formData.get("location") as string,
+    capacity: formData.get("capacity") as string,
+    ticketPrice: formData.get("ticketPrice") as string,
+  });
 }
 
 async function addRegistrationQuestionFormAction(
   slug: string,
   formData: FormData
 ): Promise<void> {
-  formData.append("slug", slug);
-  formData.append("operation", "addRegistrationQuestion");
-  await eventManage(formData);
+  await addRegistrationQuestionAction({
+    slug,
+    text: formData.get("text") as string,
+    required: formData.get("required") === "on",
+  });
 }
 
 async function updateRegistrationQuestionFormAction(
   slug: string,
   formData: FormData
 ): Promise<void> {
-  formData.append("slug", slug);
-  formData.append("operation", "updateRegistrationQuestion");
-  await eventManage(formData);
+  await updateRegistrationQuestionAction({
+    slug,
+    questionId: Number(formData.get("questionId")),
+    text: formData.get("text") as string,
+    required: formData.get("required") === "on",
+  });
 }
 
 async function removeRegistrationQuestionFormAction(
   slug: string,
   formData: FormData
 ): Promise<void> {
-  formData.append("slug", slug);
-  formData.append("operation", "removeRegistrationQuestion");
-  await eventManage(formData);
+  await removeRegistrationQuestionAction({
+    slug,
+    questionId: Number(formData.get("questionId")),
+  });
 }
 
 async function updateEventSettingsFormAction(
   slug: string,
   formData: FormData
 ): Promise<void> {
-  formData.append("slug", slug);
-  formData.append("operation", "updateEventSettings");
-  await eventManage(formData);
+  await updateEventSettingsAction({
+    slug,
+    requireApproval: formData.get("requireApproval") === "on",
+  });
 }
 
 export function EventManagementForm({

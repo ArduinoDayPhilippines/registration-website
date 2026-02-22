@@ -1,4 +1,4 @@
-import { saveEventSurvey } from "@/app/event/[slug]/manage/survey-actions";
+import { saveEventSurveyAction } from "@/actions/surveyActions";
 import { useSurvey } from "@/hooks/use-survey";
 import { SurveyConfig } from "@/types/survey";
 import { Loader2, Plus, Save, Info } from "lucide-react";
@@ -24,7 +24,7 @@ export default function SurveyBuilder({
     setIsSaving(true);
     setSuccessMessage(null);
     try {
-      await saveEventSurvey(slug, config);
+      await saveEventSurveyAction(slug, config);
       setSuccessMessage("Survey saved successfully!");
       setTimeout(() => setSuccessMessage(null), 3000);
     } catch (error) {

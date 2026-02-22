@@ -18,15 +18,17 @@ import { EventHost } from "@/components/event/event-host";
 import { LocationMapPreview } from "@/components/event/location-map-preview";
 import { createClient } from "@/lib/supabase/client";
 import { useEvent } from "@/hooks/event/use-event";
-import { useUserRole } from "@/hooks/use-user-role";
-import { setLastViewedEventSlug } from "@/lib/last-viewed-event";
+
+import { setLastViewedEventSlug } from "@/utils/last-viewed-event";
+import { logoutAction } from "@/actions/authActions";
+import { useUserStore } from "@/store/useUserStore";
 
 export default function EventPage() {
   const params = useParams();
   const router = useRouter();
   const slug = params.slug as string;
   const { event, loading, error } = useEvent(slug);
-  const { role, userId, loading: roleLoading } = useUserRole();
+  const { role, userId, loading: roleLoading, initialize } = useUserStore();
   const [hostName, setHostName] = useState<string | undefined>(undefined);
   const [loggingOut, setLoggingOut] = useState(false);
 
@@ -35,7 +37,8 @@ export default function EventPage() {
   const handleLogout = async () => {
     setLoggingOut(true);
     try {
-      await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+      await logoutAction();
+      useUserStore.getState().clearUser();
       router.replace("/");
     } finally {
       setLoggingOut(false);
@@ -46,6 +49,10 @@ export default function EventPage() {
     !roleLoading &&
     event &&
     (role === "admin" || (userId != null && userId === event.organizerId));
+
+  useEffect(() => {
+    initialize();
+  }, [initialize]);
 
   useEffect(() => {
     async function loadHostName() {

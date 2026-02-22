@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { SurveyConfig } from "@/types/survey";
 import { Loader2, Star, Check, User, Mail } from "lucide-react";
-import { submitSurveyResponse } from "@/app/event/[slug]/survey/actions";
+import { submitSurveyResponseAction } from "@/actions/surveyActions";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
@@ -62,7 +62,7 @@ export default function SurveyForm({
       }
 
       // Submit without passing email client-side
-      const result = await submitSurveyResponse(slug, answers);
+      const result = await submitSurveyResponseAction(slug, answers);
 
       if (result.error) {
         setError(result.error);

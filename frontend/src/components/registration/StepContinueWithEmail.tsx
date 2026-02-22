@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Mail, Lock, UserPlus, Eye, EyeOff } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { checkEmailAction } from "@/actions/authActions";
 
 type Phase = "email" | "password" | "register_required";
 
@@ -39,19 +40,14 @@ export function StepContinueWithEmail({
     }
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/check-email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: trimmed }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data?.error || "Something went wrong.");
+      const result = await checkEmailAction({ email: trimmed });
+      if (!result.success) {
+        setError(result.error || "Something went wrong.");
         setLoading(false);
         return;
       }
       setEmail(trimmed);
-      setPhase(data.exists ? "password" : "register_required");
+      setPhase(result.exists ? "password" : "register_required");
     } catch {
       setError("Could not check email. Please try again.");
     } finally {

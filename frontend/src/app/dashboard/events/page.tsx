@@ -5,7 +5,7 @@ import { AdminNavbar } from "@/components/admin/admin-navbar";
 import { ActiveEvents } from "@/components/admin/active-events";
 import BokehBackground from "@/components/create-event/bokeh-background";
 import Squares from "@/components/create-event/squares-background";
-import { getEvents } from "@/app/event/actions";
+import { listEventsAction } from "@/actions/eventActions";
 
 type DbEvent = {
   slug?: string;
@@ -25,7 +25,7 @@ export default function EventsPage() {
   useEffect(() => {
     async function loadEvents() {
       setLoading(true);
-      const result = await getEvents();
+      const result = await listEventsAction();
 
       if (result.success && result.data) {
         setEvents(result.data);

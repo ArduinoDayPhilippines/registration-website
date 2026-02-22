@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { Loader2, Eye, EyeOff } from "lucide-react";
-import { register } from "@/app/register/actions";
+import { registerAction } from "@/actions/authActions";
 
 interface UserRegisterFormProps {
   nextUrl?: string;
@@ -19,7 +19,7 @@ export default function UserRegisterForm({ nextUrl }: UserRegisterFormProps) {
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const [step, setStep] = useState<1 | 2>(1);
 
-  const [state, formAction, isPending] = useActionState(register, null);
+  const [state, formAction, isPending] = useActionState(registerAction, null);
   const error = state?.error ?? "";
 
   const passwordsMismatch =

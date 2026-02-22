@@ -10,7 +10,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { ErrorState } from "@/components/ui/error-state";
 import { useEvent } from "@/hooks/event/use-event";
 import { useGuests } from "@/hooks/guest/use-guests";
-import { useUserRole } from "@/hooks/use-user-role";
+import { useUserStore } from "@/store/useUserStore";
 import {
   GuestStatistics,
   QuickActions,
@@ -29,7 +29,7 @@ export default function ManageEventPage() {
   const slug = params.slug as string;
   const { event, loading, error, refetch } = useEvent(slug);
   const { guests, stats, refetch: refetchGuests } = useGuests(slug);
-  const { role, userId, loading: roleLoading } = useUserRole();
+  const { role, userId, loading: roleLoading, initialize } = useUserStore();
   const [activeTab, setActiveTab] = useState("overview");
   const [showCoverImageModal, setShowCoverImageModal] = useState(false);
 
@@ -37,6 +37,10 @@ export default function ManageEventPage() {
     !roleLoading &&
     event &&
     (role === "admin" || (userId != null && userId === event.organizerId));
+
+  useEffect(() => {
+    initialize();
+  }, [initialize]);
 
   useEffect(() => {
     if (roleLoading || loading || !event) return;

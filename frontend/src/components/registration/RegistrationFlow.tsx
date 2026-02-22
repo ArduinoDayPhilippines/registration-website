@@ -9,6 +9,7 @@ import { StepDynamic } from './StepDynamic';
 import { INITIAL_DATA, RegistrationFormData } from './types';
 import { Question } from '@/types/event';
 import { createClient } from '@/lib/supabase/client';
+import { createRegistrantAction } from '@/actions/registrantActions';
 
 export interface RegistrationFlowProps {
   eventSlug?: string;
@@ -41,7 +42,7 @@ export function RegistrationFlow({
 
     init();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
       syncUser(session?.user ?? null);
     });
 
@@ -102,16 +103,10 @@ export function RegistrationFlow({
     };
 
     try {
-      // Send to API endpoint
-      const response = await fetch('/api/registrants/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(registrantData)
-      });
+      // Call server action
+      const result = await createRegistrantAction(registrantData as any);
 
-      const result = await response.json();
-
-      if (!response.ok) {
+      if (!result.success) {
         alert(`Registration failed: ${result.error}`);
         throw new Error(result.error);
       }

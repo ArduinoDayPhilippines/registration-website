@@ -4,8 +4,10 @@ import { useActionState, useEffect, useRef } from "react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Eye, EyeOff } from "lucide-react";
-import { login } from "@/app/auth/actions";
-import { getLastViewedEventSlug } from "@/lib/last-viewed-event";
+import { loginAction } from "@/actions/authActions";
+import { getUserRoleAction } from "@/actions/authActions";
+import { getLastViewedEventSlug } from "@/utils/last-viewed-event";
+import { useUserStore } from "@/store/useUserStore";
 
 type UserLoginFormProps = { showRegisteredMessage?: boolean };
 
@@ -19,7 +21,7 @@ export default function UserLoginForm({
   const router = useRouter();
   const redirectDone = useRef(false);
 
-  const [state, formAction, isPending] = useActionState(login, null);
+  const [state, formAction, isPending] = useActionState(loginAction, null);
   const error = state?.error ?? "";
 
   useEffect(() => {
@@ -27,15 +29,20 @@ export default function UserLoginForm({
     redirectDone.current = true;
     let cancelled = false;
     (async () => {
-      const res = await fetch("/api/auth/role");
+      const res = await getUserRoleAction();
       if (cancelled) return;
-      const data = await res.json().catch(() => ({}));
-      if (data?.role === "admin") {
+      const data: any = res.data ?? {};
+      
+      // Update global store
+      const userRole = data?.role === "admin" ? "admin" : data?.role === "user" ? "user" : null;
+      useUserStore.getState().setUser(userRole, data?.userId ?? null);
+
+      if (userRole === "admin") {
         router.replace("/dashboard");
         return;
       }
       const lastSlug = getLastViewedEventSlug();
-      router.replace(lastSlug ? `/event/${lastSlug}` : "/");
+      router.replace(lastSlug ? `/event/${lastSlug}` : "/dashboard");
     })();
     return () => {
       cancelled = true;
@@ -58,6 +65,14 @@ export default function UserLoginForm({
         <div className="mb-4 rounded-xl bg-emerald-500/10 border border-emerald-400/30 px-4 py-3 text-center">
           <p className="text-emerald-200 text-xs">
             Account created. Login to continue.
+          </p>
+        </div>
+      )}
+      
+      {state?.success && (
+        <div className="mb-4 rounded-xl bg-emerald-500/10 border border-emerald-400/30 px-4 py-3 text-center">
+          <p className="text-emerald-200 text-xs">
+            Login successful. Please wait...
           </p>
         </div>
       )}
@@ -153,7 +168,7 @@ export default function UserLoginForm({
         {/* submit button */}
         <button
           type="submit"
-          disabled={isPending}
+          disabled={isPending || !!state?.success}
           className="
             w-full
             bg-[rgba(35,60,60,0.6)]
@@ -173,6 +188,11 @@ export default function UserLoginForm({
             <span className="flex items-center justify-center gap-2">
               <Loader2 className="w-4 h-4 animate-spin" />
               Logging in...
+            </span>
+          ) : state?.success ? (
+            <span className="flex items-center justify-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Redirecting...
             </span>
           ) : (
             "Login"

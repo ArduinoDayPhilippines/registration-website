@@ -2,6 +2,9 @@ import { LogOut, Calendar, BarChart3, Plus, Menu, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useState } from "react";
+import { logoutAction } from "@/actions/authActions";
+import { useUserStore } from "@/store/useUserStore";
+import { LogoutModal } from "./logout-modal";
 
 interface AdminNavbarProps {
   activeTab: string;
@@ -10,6 +13,8 @@ interface AdminNavbarProps {
 export function AdminNavbar({ activeTab }: AdminNavbarProps) {
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const menuItems = [
     {
@@ -34,6 +39,20 @@ export function AdminNavbar({ activeTab }: AdminNavbarProps) {
   const handleCreateEvent = () => {
     router.push("/create-event");
     setMobileMenuOpen(false);
+  };
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      await logoutAction();
+      useUserStore.getState().clearUser();
+      router.push("/");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    } finally {
+      setIsLoggingOut(false);
+      setIsLogoutModalOpen(false);
+    }
   };
 
   return (
@@ -106,7 +125,10 @@ export function AdminNavbar({ activeTab }: AdminNavbarProps) {
           </button>
 
           {/* Logout Button - Muted */}
-          <button className="flex items-center gap-2 px-3 py-1.5 rounded-md border border-white/10 hover:border-white/20 text-gray-400 hover:text-gray-300 hover:bg-white/5 transition-all duration-200 font-urbanist">
+          <button 
+            onClick={() => setIsLogoutModalOpen(true)}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-md border border-white/10 hover:border-white/20 text-gray-400 hover:text-gray-300 hover:bg-white/5 transition-all duration-200 font-urbanist"
+          >
             <LogOut className="w-4 h-4" />
             <span className="text-sm font-medium hidden sm:inline">Logout</span>
           </button>
@@ -159,6 +181,13 @@ export function AdminNavbar({ activeTab }: AdminNavbarProps) {
           </div>
         </>
       )}
+
+      <LogoutModal 
+        isOpen={isLogoutModalOpen}
+        onClose={() => setIsLogoutModalOpen(false)}
+        onConfirm={handleLogout}
+        isLoading={isLoggingOut}
+      />
     </>
   );
 }
