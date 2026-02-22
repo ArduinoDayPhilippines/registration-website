@@ -1,6 +1,6 @@
 "use client";
 
-import { normalizeNameKey } from "@/lib/utils/normalizeName";
+import { normalizeNameKey } from "@/utils/normalizeName";
 import Image from "next/image";
 import nunjucks from "nunjucks";
 import {
