@@ -23,7 +23,7 @@ export function StepDynamic({
     // Validate required questions
     const hasEmptyRequired = questions.some(q => {
       if (q.required) {
-        const answer = formData.dynamicAnswers?.[q.id.toString()];
+        const answer = formData.dynamicAnswers[q.id.toString()];
         return !answer || answer.trim() === '';
       }
       return false;
@@ -69,7 +69,7 @@ export function StepDynamic({
                   )}
                 </label>
                 <textarea
-                  value={formData.dynamicAnswers?.[question.id.toString()] || ''}
+                  value={formData.dynamicAnswers[question.id.toString()] || ''}
                   onChange={(e) => updateAnswer(question.id, e.target.value)}
                   required={question.required}
                   placeholder="Type your answer here..."
