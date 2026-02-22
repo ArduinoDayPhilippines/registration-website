@@ -1,0 +1,121 @@
+import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+
+export async function getEventBySlug(slug: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("events")
+    .select("*")
+    .eq("slug", slug)
+    .single();
+
+  if (error) {
+    throw new Error(`Failed to fetch event: ${error.message}`);
+  }
+
+  return data;
+}
+
+export async function getEventIdAndApprovalBySlug(slug: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("events")
+    .select("event_id, require_approval")
+    .eq("slug", slug)
+    .single();
+
+  if (error) {
+    throw new Error(`Failed to fetch event ID and approval: ${error.message}`);
+  }
+
+  return data;
+}
+
+export async function getOrganizerIdBySlug(slug: string) {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("events")
+    .select("organizer_id")
+    .eq("slug", slug)
+    .single();
+
+  if (error) {
+    throw new Error(`Failed to fetch event organizer: ${error.message}`);
+  }
+
+  return data;
+}
+
+export async function listEvents() {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("events").select("*");
+  if (error) {
+    throw new Error(`Failed to fetch events: ${error.message}`);
+  }
+  return data;
+}
+
+export async function updateEventDetails(slug: string, details: any) {
+  const supabase = createAdminClient();
+  const { error } = await supabase
+    .from("events")
+    .update(details)
+    .eq("slug", slug);
+  if (error) throw new Error(`Failed to update event details: ${error.message}`);
+}
+
+export async function updateEventSettings(slug: string, requireApproval: boolean) {
+  const supabase = createAdminClient();
+  const { error } = await supabase
+    .from("events")
+    .update({
+      require_approval: requireApproval,
+      modified_at: new Date().toISOString(),
+    })
+    .eq("slug", slug);
+  if (error) throw new Error(`Failed to update event settings: ${error.message}`);
+}
+
+export async function getEventQuestions(slug: string) {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("events")
+    .select("form_questions")
+    .eq("slug", slug)
+    .single();
+  if (error) throw new Error(`Failed to load event questions: ${error.message}`);
+  return data;
+}
+
+export async function updateEventQuestions(slug: string, questions: any[]) {
+  const supabase = createAdminClient();
+  const { error } = await supabase
+    .from("events")
+    .update({
+      form_questions: questions,
+      modified_at: new Date().toISOString(),
+    })
+    .eq("slug", slug);
+  if (error) throw new Error(`Failed to update questions: ${error.message}`);
+}
+
+export async function updateEventSurvey(slug: string, surveyData: any) {
+  const supabase = createAdminClient();
+  const { error } = await supabase
+    .from("events")
+    .update({ post_event_survey: surveyData })
+    .eq("slug", slug);
+
+  if (error) throw new Error(`Failed to update event survey: ${error.message}`);
+}
+
+export async function insertEvent(eventData: any) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("events")
+    .insert(eventData);
+
+  if (error) {
+    throw new Error(`Failed to create event: ${error.message}`);
+  }
+}
