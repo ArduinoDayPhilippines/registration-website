@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -19,7 +19,7 @@ export function BackButton({ label = 'Back to Home', href = '/dashboard' }: Back
   };
 
   return (
-    <button 
+    <button
       onClick={handleClick}
       className="flex items-center gap-2 text-white/70 hover:text-white transition-colors mb-6"
     >
