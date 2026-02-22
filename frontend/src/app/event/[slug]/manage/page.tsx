@@ -18,8 +18,8 @@ import {
   WhenWhereSidebar,
   CoverImageChangeModal,
   EventManagementForm,
+  GuestListSection,
 } from "@/components/manage-event";
-import { GuestListSection } from "@/components/guests";
 import BatchmailWorkspace from "@/components/batchmail/BatchmailWorkspace";
 import SurveyBuilder from "@/components/manage-event/survey/SurveyBuilder";
 
