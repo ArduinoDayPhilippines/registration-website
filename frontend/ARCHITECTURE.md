@@ -41,7 +41,7 @@ This project follows a strict **Layered Architecture** designed to separate conc
 
 ---
 
-**In a nutshell:**
+**In a nutshell, yung Life Cycle ng Request ay:**
 - **Actions** - Taga-salo ng request galing sa UI at taga-balik ng response. Wala dapat direct database query dito.
 - **Validators** - Checking checker ng data (Zod). Sila nagme-make sure na tama yung format ng ipinasang data.
 - **Services** - Ang main logic ng app. Dito ginagawa yung mga rules at validation ng business logic for example if may permissiono ba yung user na mag delete ng event.
