@@ -57,9 +57,7 @@ export function GuestAnswersModal({ guest, event, onClose }: GuestAnswersModalPr
 
         {/* Content */}
         <div className="relative flex-1 overflow-y-auto custom-scrollbar p-6 md:p-8">
-          {guest.form_answers &&
-          typeof guest.form_answers === "object" &&
-          Object.keys(guest.form_answers).length > 0 ? (
+          {Object.keys(guest.form_answers).length > 0 ? (
             <div className="space-y-4">
               {Object.entries(guest.form_answers).map(
                 ([answerKey, answer], index) => {
