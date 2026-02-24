@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { Mail, QrCode, Users } from 'lucide-react';
 
 export function QuickActions() {
