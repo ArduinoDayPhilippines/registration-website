@@ -1,51 +1,28 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { LogOut } from "lucide-react";
 import BokehBackground from "@/components/create-event/bokeh-background";
 import Squares from "@/components/create-event/squares-background";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { LoadingScreen } from "@/components/ui/loading-screen"; 
 import { ErrorState } from "@/components/ui/error-state";
 import { EventCoverImage } from "@/components/event/event-cover-image";
 import { EventDateTime } from "@/components/event/event-date-time";
 import { EventLocation } from "@/components/event/event-location";
 import { EventManageCard } from "@/components/event/event-manage-card";
 import { EventRegistrationCard } from "@/components/event/event-registration-card";
-import { EventShareCard } from "@/components/event/event-share-card";
 import { EventAbout } from "@/components/event/event-about";
 import { EventHost } from "@/components/event/event-host";
 import { LocationMapPreview } from "@/components/event/location-map-preview";
-import { createClient } from "@/lib/supabase/client";
 import { useEvent } from "@/hooks/event/use-event";
-import { useUserRole } from "@/hooks/use-user-role";
-import { setLastViewedEventSlug } from "@/lib/last-viewed-event";
+import { getCurrentUserEmail } from "@/app/event/actions"; 
 
 export default function EventPage() {
   const params = useParams();
   const router = useRouter();
   const slug = params.slug as string;
   const { event, loading, error } = useEvent(slug);
-  const { role, userId, loading: roleLoading } = useUserRole();
   const [hostName, setHostName] = useState<string | undefined>(undefined);
-  const [loggingOut, setLoggingOut] = useState(false);
-
-  const isLoggedIn = !roleLoading && userId != null;
-
-  const handleLogout = async () => {
-    setLoggingOut(true);
-    try {
-      await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
-      router.replace("/");
-    } finally {
-      setLoggingOut(false);
-    }
-  };
-
-  const canManage =
-    !roleLoading &&
-    event &&
-    (role === "admin" || (userId != null && userId === event.organizerId));
 
   useEffect(() => {
     async function loadHostName() {
@@ -55,13 +32,10 @@ export default function EventPage() {
       }
 
       try {
-        const supabase = createClient();
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
+        const currentUser = await getCurrentUserEmail();
 
-        if (user && user.id === event.organizerId) {
-          setHostName(user.email ?? "You");
+        if (currentUser && currentUser.id === event.organizerId) {
+          setHostName(currentUser.email ?? "You");
         } else {
           setHostName("Event Organizer");
         }
@@ -74,12 +48,16 @@ export default function EventPage() {
     loadHostName();
   }, [event?.organizerId]);
 
-  useEffect(() => {
-    if (slug) setLastViewedEventSlug(slug);
-  }, [slug]);
-
   if (loading) {
-    return <LoadingSpinner message="Loading event..." />;
+    return (
+      <div className="min-h-screen w-full bg-gradient-to-br from-[#0a1f14] via-[#0a1520] to-[#120c08] text-white relative overflow-hidden font-montserrat">
+        <BokehBackground />
+        <Squares direction="diagonal" speed={0.3} />
+        <div className="relative z-10 flex items-center justify-center min-h-screen">
+        <LoadingScreen message="LOADING EVENT..." colorTheme="orange" />
+        </div>
+      </div>
+    );
   }
 
   if (error || !event) {
@@ -97,21 +75,6 @@ export default function EventPage() {
       <BokehBackground />
       <Squares direction="diagonal" speed={0.3} />
 
-      {/* Logout - top right, only when logged in */}
-      {isLoggedIn && (
-        <div className="fixed top-4 right-4 z-20">
-          <button
-            type="button"
-            onClick={handleLogout}
-            disabled={loggingOut}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl border border-[rgba(93,165,165,0.4)] bg-[rgba(15,30,30,0.6)] text-[#95b5b5] hover:bg-[rgba(35,60,60,0.6)] hover:text-[#9dd5d5] hover:border-[#5da5a5]/60 transition-all duration-200 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <LogOut className="w-4 h-4" />
-            {loggingOut ? "Logging out…" : "Logout"}
-          </button>
-        </div>
-      )}
-
       <main className="relative z-10 w-full max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-10 pb-16">
         {/* Two Column Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-[400px_1fr] xl:grid-cols-[440px_1fr] gap-8 lg:gap-10 xl:gap-12">
@@ -119,11 +82,8 @@ export default function EventPage() {
           <div className="animate-fade-in space-y-6">
             <EventCoverImage src={event.coverImage || ""} alt={event.title} />
 
-            {/* Share event - below picture */}
-            <EventShareCard eventSlug={slug} eventTitle={event.title} />
-
-            {/* Manage Event Card - only for admins or event organizer */}
-            {canManage && <EventManageCard eventSlug={slug} />}
+            {/* Manage Event Card */}
+            <EventManageCard eventSlug={slug} />
 
             {/* Hosted By - Desktop Only */}
             <EventHost
