@@ -2,150 +2,27 @@
 
 import { useMemo, useState, useCallback, useEffect } from "react";
 import { driver } from "driver.js";
-import type { DriveStep } from "driver.js";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import type { CsvMapping, ParsedCsv } from "@/components/ui/CsvUploader";
-import PreviewPane from "@/components/ui/PreviewPane";
+import type { CsvMapping } from "@/components/ui/CsvUploader";
 import Tabs from "@/components/ui/Tabs";
-import Docs from "@/components/sections/Docs";
 import type { Guest } from "@/types/guest";
+import BatchmailHeader from "@/components/batchmail/BatchmailHeader";
+import { buildGuestCsv } from "@/components/batchmail/batchmailCsv";
+import { TAB_TUTORIALS, buildSteps, ensureTabSelected, type TabId } from "@/components/batchmail/batchmailTutorial";
+import DocsTab from "@/components/batchmail/sections/DocsTab";
+import GuestsTab from "@/components/batchmail/sections/GuestsTab";
+import MessageTab from "@/components/batchmail/sections/MessageTab";
+import PreviewTab from "@/components/batchmail/sections/PreviewTab";
+
+type BatchmailWorkspaceProps = {
+  guests: Guest[];
+};
 
 type RenderedEmail = {
   to: string;
   name?: string;
   subject?: string;
   html: string;
-};
-
-type TabId = "guests" | "message" | "preview" | "docs";
-
-type StepConfig = {
-  selector: string;
-  title: string;
-  description: string;
-  side?: "top" | "bottom" | "left" | "right";
-  align?: "start" | "center" | "end";
-};
-
-const tabSelector = (id: string) =>
-  `[role="tab"][aria-controls="panel-${id}"]`;
-
-const TAB_TUTORIALS: Record<TabId, StepConfig[]> = {
-  guests: [
-    {
-      selector: tabSelector("guests"),
-      title: "Recipients",
-      description: "Batchmail now pulls directly from your guest list for this event.",
-      side: "bottom",
-      align: "start",
-    },
-    {
-      selector: "#tutorial-guest-table",
-      title: "Guest Snapshot",
-      description: "Review the recipients pulled from the Guests tab before templating your message.",
-      side: "right",
-      align: "center",
-    },
-  ],
-  message: [],
-  preview: [
-    {
-      selector: tabSelector("preview"),
-      title: "Preview Tab",
-      description: "Everything before send lives here: env checks, recipients, subjects, previews, and batches.",
-      side: "bottom",
-      align: "center",
-    },
-    {
-      selector: "#tutorial-env-controls",
-      title: "Sender Environment",
-      description: "Sender uses the Arduino Day Philippines account configured in the app env.",
-      side: "bottom",
-      align: "start",
-    },
-    {
-      selector: "#tutorial-recipient-list",
-      title: "Recipient Snapshot",
-      description: "Double-check who will receive the run—scroll this list to verify every mapped email.",
-      side: "right",
-      align: "center",
-    },
-    {
-      selector: "#tutorial-preview-frame",
-      title: "Live Preview",
-      description: "Flip through rows to see exactly what each recipient will receive before exporting or sending.",
-      side: "left",
-      align: "center",
-    },
-    {
-      selector: "#tutorial-batch-preview",
-      title: "Batch Planner",
-      description: "Batch size adapts automatically so you can pace sends and review recipient grouping.",
-      side: "top",
-      align: "start",
-    },
-  ],
-  docs: [
-    {
-      selector: tabSelector("docs"),
-      title: "Documentation Tab",
-      description: "Need reminders? This section aggregates tips, FAQ, and troubleshooting steps.",
-      side: "bottom",
-      align: "center",
-    },
-    {
-      selector: "#tutorial-docs",
-      title: "Docs Stack",
-      description: "Skim release notes, watch demos, or follow links to advanced workflows.",
-      side: "right",
-      align: "start",
-    },
-  ],
-};
-
-const buildSteps = (configs: StepConfig[]): DriveStep[] =>
-  configs.reduce<DriveStep[]>((acc, { selector, title, description, side, align }) => {
-    const element = document.querySelector<HTMLElement>(selector);
-    if (!element) return acc;
-    acc.push({
-      element,
-      popover: {
-        title,
-        description,
-        side,
-        align,
-      },
-    });
-    return acc;
-  }, []);
-
-type BatchmailWorkspaceProps = {
-  guests: Guest[];
-};
-
-const buildGuestCsv = (guests: Guest[]): ParsedCsv | null => {
-  if (!guests || guests.length === 0) return null;
-  const headers = [
-    "registrant_id",
-    "event_id",
-    "email",
-    "first_name",
-    "last_name",
-    "name",
-    "terms_approval",
-    "is_registered",
-  ];
-  const rows = guests.map((guest) => ({
-    registrant_id: guest.registrant_id,
-    event_id: guest.event_id,
-    email: guest.users?.email || '',
-    first_name: guest.users?.first_name || '',
-    last_name: guest.users?.last_name || '',
-    name: `${guest.users?.first_name || ''} ${guest.users?.last_name || ''}`.trim(),
-    terms_approval: guest.terms_approval ? "true" : "false",
-    is_registered: guest.is_registered ? "true" : "false",
-  }));
-  return { headers, rows, rowCount: rows.length };
 };
 
 export default function BatchmailWorkspace({ guests }: BatchmailWorkspaceProps) {
@@ -195,10 +72,7 @@ export default function BatchmailWorkspace({ guests }: BatchmailWorkspaceProps) 
     if (typeof window === "undefined") return;
     const configs = TAB_TUTORIALS[tabId];
     if (!configs || configs.length === 0) return;
-    const tabButton = document.querySelector<HTMLButtonElement>(tabSelector(tabId));
-    if (tabButton && tabButton.getAttribute("aria-selected") !== "true") {
-      tabButton.click();
-    }
+    ensureTabSelected(tabId);
     requestAnimationFrame(() => {
       const steps = buildSteps(configs);
       if (!steps.length) return;
@@ -260,17 +134,7 @@ export default function BatchmailWorkspace({ guests }: BatchmailWorkspaceProps) 
 
   return (
     <div className="batchmail-dark space-y-6">
-      <header className="space-y-1">
-        <h1 className="text-3xl font-semibold tracking-tight flex items-center gap-3 text-primary font-morganite">
-          BatchMail
-          <span className="keep-light-pill text-[12px] font-semibold px-2.5 py-1 rounded bg-white-100 text-slate-900 border border-slate-300 tracking-widest uppercase font-urbanist">
-            ADPH
-          </span>
-        </h1>
-        <p className="text-sm text-secondary">
-          Use the Guests tab list with the ADPH template, preview, and export. {totalCount ? `(${totalCount} recipients)` : ""}
-        </p>
-      </header>
+      <BatchmailHeader totalCount={totalCount} />
 
       <div id="tutorial-tabs" className="rounded-xl border border-primary/20 bg-white p-4 shadow-sm">
         <Tabs
@@ -279,202 +143,58 @@ export default function BatchmailWorkspace({ guests }: BatchmailWorkspaceProps) 
               id: "guests",
               label: "Guests",
               content: (
-                <div className="space-y-4" id="tutorial-guests-stack">
-                  <section className="rounded-lg border border-primary/20 bg-white p-4" id="tutorial-guest-summary">
-                    <h2 className="text-lg font-semibold text-primary">Recipients</h2>
-                    <p className="text-sm text-secondary">
-                      This list is pulled directly from the Guests tab for the current event. Update guests there, then return here to send.
-                    </p>
-                    <div className="text-xs text-secondary mt-2">Total recipients: {totalCount}</div>
-                  </section>
-                  <section className="rounded-lg border border-primary/20 bg-white overflow-hidden" id="tutorial-guest-table">
-                    {filteredGuests.length === 0 ? (
-                      <div className="p-6 text-sm text-secondary">
-                        {guests.length === 0
-                          ? "No guests yet. Add or import guests in the Guests tab to enable batch mail."
-                          : "No guests match the selected recipient filters."}
-                      </div>
-                    ) : (
-                      <div className="max-h-[380px] overflow-auto">
-                        <table className="min-w-full text-sm">
-                          <thead className="sticky top-0 bg-white-100">
-                            <tr>
-                              <th className="px-4 py-2 text-left font-semibold text-primary">Name</th>
-                              <th className="px-4 py-2 text-left font-semibold text-primary">Email</th>
-                              <th className="px-4 py-2 text-left font-semibold text-primary">Status</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {filteredGuests.map((guest) => (
-                              <tr key={guest.registrant_id} className="border-t border-primary/10">
-                                <td className="px-4 py-2 text-secondary">
-                                  {guest.users?.first_name || 'N/A'} {guest.users?.last_name || ''}
-                                </td>
-                                <td className="px-4 py-2 text-secondary">{guest.users?.email || 'No email'}</td>
-                                <td className="px-4 py-2 text-secondary">
-                                  {guest.is_registered ? "Registered" : "Pending"}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                  </section>
-                </div>
+                <GuestsTab
+                  guests={guests}
+                  filteredGuests={filteredGuests}
+                  totalCount={totalCount}
+                />
               ),
             },
             {
               id: "message",
               label: "Message",
               content: (
-                <div className="space-y-4">
-                  <section className="rounded-lg border border-primary/20 bg-white p-4">
-                    <h2 className="text-lg font-semibold text-primary">Recipients</h2>
-                    <p className="text-sm text-secondary">
-                      Choose which guests should receive this message.
-                    </p>
-                    <div className="mt-4 grid gap-3 md:grid-cols-[1fr_auto] md:items-center">
-                      <div className="relative">
-                        <select
-                          value={recipientScope}
-                          onChange={(event) =>
-                            setRecipientScope(event.target.value as "all" | "registered" | "pending")
-                          }
-                          className="w-full appearance-none rounded-xl border border-primary/30 bg-white px-3 py-2.5 pr-11 text-sm text-primary shadow-sm transition focus:border-primary/60 focus:ring-2 focus:ring-primary/20 focus:outline-none hover:border-primary/50"
-                        >
-                          <option value="all">All guests</option>
-                          <option value="registered">Registered only</option>
-                          <option value="pending">Pending only</option>
-                        </select>
-                        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-primary/60">
-                          ▾
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-start md:justify-end">
-                        <span className="rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary">
-                          {recipientCountLabel} · {totalCount}
-                        </span>
-                      </div>
-                    </div>
-                  </section>
-
-                  <section className="rounded-lg border border-primary/20 bg-white p-4">
-                    <h2 className="text-lg font-semibold text-primary">Subject</h2>
-                    <p className="text-xs text-secondary mb-2">
-                      You can use variables like {"{{ name }}"} or {"{{ recipient }}"}.
-                    </p>
-                    <input
-                      type="text"
-                      value={subjectDraft}
-                      onChange={(event) => setSubjectDraft(event.target.value)}
-                      placeholder="Enter subject line"
-                      className="w-full rounded border border-primary/20 px-3 py-2 text-sm text-primary"
-                    />
-                  </section>
-
-                  <section className="rounded-lg border border-primary/20 bg-white p-4">
-                    <h2 className="text-lg font-semibold text-primary">Header</h2>
-                    <p className="text-xs text-secondary mb-2">
-                      This line appears at the top of the email body. You can use
-                      variables like {"{{ recipient }}"}.
-                    </p>
-                    <input
-                      type="text"
-                      value={headerDraft}
-                      onChange={(event) => setHeaderDraft(event.target.value)}
-                      placeholder="Hi {{ recipient }},"
-                      className="w-full rounded border border-primary/20 px-3 py-2 text-sm text-primary"
-                    />
-                  </section>
-
-                  <section className="rounded-lg border border-primary/20 bg-white p-4">
-                    <h2 className="text-lg font-semibold text-primary">Message</h2>
-                    <p className="text-xs text-secondary mb-2">
-                      The message is injected into the ADPH template. New lines are preserved.
-                    </p>
-                    <textarea
-                      value={messageDraft}
-                      onChange={(event) => setMessageDraft(event.target.value)}
-                      placeholder="Write the email content here."
-                      rows={8}
-                      className="w-full rounded border border-primary/20 px-3 py-2 text-sm text-primary"
-                    />
-                  </section>
-
-                  <section className="rounded-lg border border-primary/20 bg-white p-4">
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <div>
-                        <h2 className="text-lg font-semibold text-primary">Confirm Message</h2>
-                        <p className="text-xs text-secondary">
-                          Preview & Export uses the last confirmed subject, header, and message.
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSubjectConfirmed(subjectDraft);
-                          setHeaderConfirmed(headerDraft);
-                          setMessageConfirmed(messageDraft);
-                        }}
-                        disabled={!hasUnconfirmedChanges}
-                        className="rounded-full border border-primary/30 bg-primary/5 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-primary transition hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        Confirm Subject, Header, and Message
-                      </button>
-                    </div>
-                    {!hasUnconfirmedChanges && (
-                      <div className="mt-2 text-xs text-secondary">
-                        No unconfirmed changes.
-                      </div>
-                    )}
-                  </section>
-
-                </div>
+                <MessageTab
+                  recipientScope={recipientScope}
+                  setRecipientScope={setRecipientScope}
+                  recipientCountLabel={recipientCountLabel}
+                  totalCount={totalCount}
+                  subjectDraft={subjectDraft}
+                  setSubjectDraft={setSubjectDraft}
+                  headerDraft={headerDraft}
+                  setHeaderDraft={setHeaderDraft}
+                  messageDraft={messageDraft}
+                  setMessageDraft={setMessageDraft}
+                  hasUnconfirmedChanges={hasUnconfirmedChanges}
+                  onConfirmMessage={() => {
+                    setSubjectConfirmed(subjectDraft);
+                    setHeaderConfirmed(headerDraft);
+                    setMessageConfirmed(messageDraft);
+                  }}
+                />
               ),
             },
             {
               id: "preview",
               label: "Preview & Export",
               content: (
-                <div id="tutorial-preview-pane">
-                  <div className="flex justify-end pb-3">
-                    <button
-                      type="button"
-                      onClick={() => startTabTutorial("preview")}
-                      className="text-xs font-semibold rounded-full border border-primary/30 bg-primary/5 px-3 py-1 text-primary hover:bg-primary/10"
-                    >
-                      Preview Tutorial
-                    </button>
-                  </div>
-                  <PreviewPane
-                    csv={csv}
-                    mapping={mapping}
-                    template={template}
-                    onExportJson={onExportJson}
-                    subjectTemplate={subjectConfirmed}
-                    extraContext={{ content: messageContentHtml, header: headerConfirmed }}
-                    showSubjectEditor={false}
-                  />
-                </div>
+                <PreviewTab
+                  startTutorial={() => startTabTutorial("preview")}
+                  csv={csv}
+                  mapping={mapping}
+                  template={template}
+                  onExportJson={onExportJson}
+                  subjectTemplate={subjectConfirmed}
+                  messageContentHtml={messageContentHtml}
+                  headerConfirmed={headerConfirmed}
+                />
               ),
             },
             {
               id: "docs",
               label: "Documentation",
               content: (
-                <div className="space-y-4" id="tutorial-docs">
-                  <div className="flex justify-end">
-                    <button
-                      type="button"
-                      onClick={() => startTabTutorial("docs")}
-                      className="text-xs font-semibold rounded-full border border-primary/30 bg-primary/5 px-3 py-1 text-primary hover:bg-primary/10"
-                    >
-                      Docs Tutorial
-                    </button>
-                  </div>
-                  <Docs />
-                </div>
+                <DocsTab startTutorial={() => startTabTutorial("docs")} />
               ),
             },
           ]}

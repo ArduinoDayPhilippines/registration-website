@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { 
-  CreateRegistrantSchema, 
+  CreateRegistrantSchema,
+  CreateRegistrantInput,
   UpdateGuestStatusSchema, 
   DeleteGuestSchema 
 } from "@/validators/registrantValidators";
@@ -14,12 +15,7 @@ import {
 import { canManageEvent } from "@/services/authService";
 import { logger } from "@/utils/logger";
 
-export async function createRegistrantAction(data: {
-  event_id: string;
-  user_id: string;
-  terms_approval?: boolean;
-  form_answers?: any;
-}) {
+export async function createRegistrantAction(data: CreateRegistrantInput) {
   try {
     const validatedData = CreateRegistrantSchema.parse(data);
     const result = await registerForEvent(validatedData);
