@@ -1,14 +1,9 @@
 "use server";
 
-import { CreateRegistrantSchema } from "@/validators/registrantValidators";
+import { CreateRegistrantSchema, CreateRegistrantInput } from "@/validators/registrantValidators";
 import { registerForEvent } from "@/services/registrantService";
 
-export async function createRegistrantAction(data: {
-  event_id: string;
-  user_id: string;
-  terms_approval?: boolean;
-  form_answers?: any;
-}) {
+export async function createRegistrantAction(data: CreateRegistrantInput) {
   try {
     const validatedData = CreateRegistrantSchema.parse(data);
     const result = await registerForEvent(validatedData);

@@ -20,7 +20,7 @@ export async function createRegistrant(registrantData: {
   event_id: string;
   users_id: string;
   terms_approval: boolean;
-  form_answers: any;
+  form_answers: Record<string, string>;
   is_registered: boolean;
 }) {
   const supabase = await createClient();

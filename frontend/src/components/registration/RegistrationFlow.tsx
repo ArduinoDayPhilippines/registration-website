@@ -85,9 +85,9 @@ export function RegistrationFlow({
 
     const formAnswers: Record<string, string> = {};
     
-    if (formData.dynamicAnswers && formQuestions.length > 0) {
+    if (formQuestions.length > 0) {
       formQuestions.forEach((question, index) => {
-        const answer = formData.dynamicAnswers?.[question.id.toString()];
+        const answer = formData.dynamicAnswers[question.id.toString()];
         if (answer) {
           formAnswers[`a${index + 1}`] = answer;
         }
