@@ -118,8 +118,8 @@ export default function EventForm({
       if (!result.success) {
         throw new Error(result.error);
       }
-      if (result.slug) {
-        router.push(`/event/${result.slug}`);
+      if (result.data?.slug) {
+        router.push(`/event/${result.data.slug}`);
       } else {
         router.push("/dashboard");
       }
@@ -128,7 +128,7 @@ export default function EventForm({
       setError(
         err instanceof Error
           ? err.message
-          : "Failed to create event. Please try again."
+          : "Failed to create event. Please try again.",
       );
       setIsSubmitting(false);
     }
@@ -423,11 +423,13 @@ export default function EventForm({
                   <Settings className="w-5 h-5 text-primary" />
                 </div>
                 <div className="text-left">
-                  <h3 className="text-sm font-urbanist font-bold text-white tracking-wide">Registration Questions</h3>
+                  <h3 className="text-sm font-urbanist font-bold text-white tracking-wide">
+                    Registration Questions
+                  </h3>
                   <p className="text-xs text-white/50 mt-0.5">
-                    {formData.questions?.length === 0 
-                      ? 'No questions added' 
-                      : `${formData.questions?.length} question${formData.questions?.length === 1 ? '' : 's'} configured`}
+                    {formData.questions?.length === 0
+                      ? "No questions added"
+                      : `${formData.questions?.length} question${formData.questions?.length === 1 ? "" : "s"} configured`}
                   </p>
                 </div>
               </div>

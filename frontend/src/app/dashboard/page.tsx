@@ -26,7 +26,7 @@ const mockStats = {
 };
 
 export default function AdminDashboard() {
-  const { role, loading, initialize } = useUserStore();
+  const { role, loading, initialize, userId,  } = useUserStore();
   const router = useRouter();
 
   useEffect(() => {

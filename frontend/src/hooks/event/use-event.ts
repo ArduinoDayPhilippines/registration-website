@@ -27,13 +27,13 @@ export function useEvent(slug: string): UseEventReturn {
 
       const res = await getEventAction(slug);
 
-      if (!res.success || !res.event) {
+      if (!res.success || !res.data || !res.data.event) {
         setEvent(null);
         setError(res.error || "Event not found");
         return;
       }
 
-      setEvent(res.event);
+      setEvent(res.data.event);
     } catch (err) {
       setError("Failed to load event");
       console.error("Error loading event:", err);
