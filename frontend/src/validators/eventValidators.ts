@@ -1,5 +1,26 @@
 import { z } from "zod";
 
+// --- Reusable helpers ---
+
+const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+const TIME_REGEX = /^([01]\d|2[0-3]):([0-5]\d)$/;
+
+const requiredField = (label: string, regex: RegExp, format: string) =>
+  z.string()
+    .min(1, `${label} is required`)
+    .regex(regex, `${label} must be in ${format} format`);
+
+const optionalField = (label: string, regex: RegExp, format: string) =>
+  z.string()
+    .regex(regex, `${label} must be in ${format} format`)
+    .optional()
+    .nullable();
+
+const toDateTime = (date: string, time: string): Date =>
+  new Date(`${date}T${time}`);
+
+// --- Schemas ---
+
 export const EventSlugSchema = z.object({
   slug: z.string().min(1, "Slug is required"),
 });
@@ -34,29 +55,10 @@ export const CreateEventSchema = z.object({
     .min(1, "Event title is required")
     .max(200, "Event title must be at most 200 characters")
     .trim(),
-  startDate: z.string()
-    .min(1, "Start date is required")
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Start date must be in YYYY-MM-DD format")
-    .refine((date) => {
-      const parsedDate = new Date(date);
-      return !isNaN(parsedDate.getTime());
-    }, "Start date must be a valid date"),
-  startTime: z.string()
-    .min(1, "Start time is required")
-    .regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Start time must be in HH:MM format (24-hour)"),
-  endDate: z.string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "End date must be in YYYY-MM-DD format")
-    .refine((date) => {
-      if (!date) return true;
-      const parsedDate = new Date(date);
-      return !isNaN(parsedDate.getTime());
-    }, "End date must be a valid date")
-    .optional()
-    .nullable(),
-  endTime: z.string()
-    .regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "End time must be in HH:MM format (24-hour)")
-    .optional()
-    .nullable(),
+  startDate: requiredField("Start date", DATE_REGEX, "YYYY-MM-DD"),
+  startTime: requiredField("Start time", TIME_REGEX, "HH:MM (24-hour)"),
+  endDate: optionalField("End date", DATE_REGEX, "YYYY-MM-DD"),
+  endTime: optionalField("End time", TIME_REGEX, "HH:MM (24-hour)"),
   location: z.string()
     .max(500, "Location must be at most 500 characters")
     .optional()
@@ -68,11 +70,10 @@ export const CreateEventSchema = z.object({
   ticketPrice: z.enum(["free", "paid"]).optional().nullable(),
   requireApproval: z.boolean().optional(),
   capacity: z.string()
-    .refine((val) => {
-      if (!val) return true;
-      const num = Number(val);
-      return !isNaN(num) && num > 0 && Number.isInteger(num);
-    }, "Capacity must be a positive integer")
+    .refine(
+      (val) => !val || (Number.isInteger(Number(val)) && Number(val) > 0),
+      "Capacity must be a positive integer"
+    )
     .optional()
     .nullable(),
   questions: z.array(z.object({
@@ -82,26 +83,22 @@ export const CreateEventSchema = z.object({
       .max(500, "Question text must be at most 500 characters")
       .trim(),
   })).optional().nullable(),
-}).refine((data) => {
-  if (data.endDate && data.startDate) {
-    const start = new Date(data.startDate);
-    const end = new Date(data.endDate);
-    return end >= start;
+}).superRefine((data, ctx) => {
+  if (!data.endDate) return;
+
+  const startDT = toDateTime(data.startDate, data.startTime);
+  const endDT = toDateTime(data.endDate, data.endTime ?? "00:00");
+
+  if (isNaN(startDT.getTime()) || isNaN(endDT.getTime())) return;
+
+  if (endDT < startDT) {
+    const isSameDay = data.startDate === data.endDate;
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: isSameDay
+        ? "End time must be after start time on the same day"
+        : "End date must be on or after start date",
+      path: [isSameDay ? "endTime" : "endDate"],
+    });
   }
-  return true;
-}, {
-  message: "End date must be on or after start date",
-  path: ["endDate"],
-}).refine((data) => {
-  if (data.startDate && data.endDate && data.startDate === data.endDate && data.startTime && data.endTime) {
-    const [startHour, startMin] = data.startTime.split(':').map(Number);
-    const [endHour, endMin] = data.endTime.split(':').map(Number);
-    const startMinutes = startHour * 60 + startMin;
-    const endMinutes = endHour * 60 + endMin;
-    return endMinutes > startMinutes;
-  }
-  return true;
-}, {
-  message: "End time must be after start time on the same day",
-  path: ["endTime"],
 });
