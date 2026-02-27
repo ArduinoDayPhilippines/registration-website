@@ -10,6 +10,7 @@ import { INITIAL_DATA, RegistrationFormData } from './types';
 import { Question } from '@/types/event';
 import { createClient } from '@/lib/supabase/client';
 import { createRegistrantAction } from '@/actions/registrantActions';
+import { uploadRegistrationFile } from '@/lib/storage/file-upload';
 
 export interface RegistrationFlowProps {
   eventSlug?: string;
@@ -84,14 +85,31 @@ export function RegistrationFlow({
     }
 
     const formAnswers: Record<string, string> = {};
+    const supabase = createClient();
     
     if (formQuestions.length > 0) {
-      formQuestions.forEach((question, index) => {
+      // Upload files and build form answers
+      for (let index = 0; index < formQuestions.length; index++) {
+        const question = formQuestions[index];
         const answer = formData.dynamicAnswers[question.id.toString()];
+        
         if (answer) {
-          formAnswers[`a${index + 1}`] = answer;
+          // If it's a File object, upload it first
+          if (answer instanceof File) {
+            try {
+              const fileUrl = await uploadRegistrationFile(supabase, answer, eventSlug || '');
+              formAnswers[`a${index + 1}`] = fileUrl;
+            } catch (error) {
+              console.error('File upload error:', error);
+              alert(`Failed to upload file: ${error instanceof Error ? error.message : 'Unknown error'}`);
+              throw error;
+            }
+          } else {
+            // Regular string answer
+            formAnswers[`a${index + 1}`] = answer;
+          }
         }
-      });
+      }
     }
 
     // Prepare data for registrants table
@@ -200,6 +218,7 @@ export function RegistrationFlow({
             updateData={updateData}
             onNext={nextStep}
             onBack={prevStep}
+            eventSlug={eventSlug || ''}
           />
         );
       })}

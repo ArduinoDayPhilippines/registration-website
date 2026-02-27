@@ -41,7 +41,13 @@ export const CreateEventSchema = z.object({
   requireApproval: z.boolean().optional(),
   capacity: z.string().optional().nullable(),
   questions: z.array(z.object({
-    id: z.string().or(z.number()),
+    id: z.number(),
     text: z.string().min(1, "Question text cannot be empty"),
+    required: z.boolean(),
+    type: z.enum(['text', 'multiple_choice', 'dropdown', 'file_upload']),
+    options: z.array(z.string()).optional(),
+    allowedFileTypes: z.array(z.string()).optional(),
+    validationPattern: z.string().optional(),
+    validationMessage: z.string().optional(),
   })).optional().nullable(),
 });

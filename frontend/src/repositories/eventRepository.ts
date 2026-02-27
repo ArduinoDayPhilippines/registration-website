@@ -25,7 +25,11 @@ export async function getEventIdAndApprovalBySlug(slug: string) {
     .single();
 
   if (error) {
-    throw new Error(`Failed to fetch event ID and approval: ${error.message}`);
+    throw new Error(`Failed to fetch event: ${error.message}`);
+  }
+
+  if (!data) {
+    throw new Error('Event not found');
   }
 
   return data;

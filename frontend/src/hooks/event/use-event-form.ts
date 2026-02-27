@@ -1,12 +1,12 @@
 import { useState, useCallback } from 'react';
-import { EventFormData, Question } from '@/types/event';
+import { EventFormData, Question, QuestionFieldValue } from '@/types/event';
 
 interface UseEventFormReturn {
   formData: EventFormData;
   updateField: <K extends keyof EventFormData>(field: K, value: EventFormData[K]) => void;
   addQuestion: () => void;
   removeQuestion: (id: number) => void;
-  updateQuestion: (id: number, field: keyof Question, value: string | boolean) => void;
+  updateQuestion: (id: number, field: keyof Question, value: QuestionFieldValue) => void;
 }
 
 const initialFormData: EventFormData = {
@@ -22,11 +22,7 @@ const initialFormData: EventFormData = {
   ticketPrice: 'Free',
   capacity: 'Unlimited',
   requireApproval: false,
-  questions: [
-    { id: 1, text: 'First Name', required: true },
-    { id: 2, text: 'Last Name', required: true },
-    { id: 3, text: 'Email', required: true },
-  ],
+  questions: [],
 };
 
 export function useEventForm(): UseEventFormReturn {
@@ -40,10 +36,16 @@ export function useEventForm(): UseEventFormReturn {
   }, []);
 
   const addQuestion = useCallback(() => {
-    setFormData(prev => ({
-      ...prev,
-      questions: [...prev.questions, { id: Date.now(), text: '', required: false }],
-    }));
+    setFormData(prev => {
+      // Generate sequential ID based on current questions length
+      const nextId = prev.questions.length > 0 
+        ? Math.max(...prev.questions.map(q => q.id)) + 1 
+        : 1;
+      return {
+        ...prev,
+        questions: [...prev.questions, { id: nextId, text: '', required: false, type: 'text' }],
+      };
+    });
   }, []);
 
   const removeQuestion = useCallback((id: number) => {
@@ -56,7 +58,7 @@ export function useEventForm(): UseEventFormReturn {
   const updateQuestion = useCallback((
     id: number,
     field: keyof Question,
-    value: string | boolean
+    value: QuestionFieldValue
   ) => {
     setFormData(prev => ({
       ...prev,

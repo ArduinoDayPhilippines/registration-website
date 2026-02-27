@@ -14,7 +14,7 @@ import {
   LockOpen,
   Settings,
 } from "lucide-react";
-import { EventFormData, Question } from "@/types/event";
+import { EventFormData, Question, QuestionFieldValue } from "@/types/event";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { createEventAction } from "@/actions/eventActions";
@@ -33,7 +33,7 @@ interface EventFormProps {
   updateQuestion: (
     id: number,
     field: keyof Question,
-    value: string | boolean
+    value: QuestionFieldValue
   ) => void;
 }
 

@@ -1,10 +1,19 @@
 import { SurveyConfig } from "./survey";
 
+export type QuestionType = 'text' | 'multiple_choice' | 'dropdown' | 'file_upload';
+
 export interface Question {
   id: number;
   text: string;
   required: boolean;
+  type: QuestionType;
+  options?: string[]; 
+  allowedFileTypes?: string[]; 
+  validationPattern?: string; 
+  validationMessage?: string; 
 }
+
+export type QuestionFieldValue = string | boolean | QuestionType | string[];
 
 export interface EventData {
   slug: string;
