@@ -20,13 +20,9 @@ const initialFormData: EventFormData = {
   coverImage: '',
   theme: 'Minimal Dark',
   ticketPrice: 'Free',
-  capacity: 'Unlimited',
+  capacity: '',
   requireApproval: false,
-  questions: [
-    { id: 1, text: 'First Name', required: true },
-    { id: 2, text: 'Last Name', required: true },
-    { id: 3, text: 'Email', required: true },
-  ],
+  questions: [],
 };
 
 export function useEventForm(): UseEventFormReturn {

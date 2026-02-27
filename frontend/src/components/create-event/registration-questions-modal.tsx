@@ -25,7 +25,7 @@ export function RegistrationQuestionsModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4">
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/90 backdrop-blur-md animate-backdrop-enter"
@@ -33,17 +33,17 @@ export function RegistrationQuestionsModal({
       />
       
       {/* Modal */}
-      <div className="relative w-full max-w-3xl bg-gradient-to-b from-[#0f0f0f] to-[#0a0a0a] border border-white/10 rounded-3xl max-h-[85vh] overflow-hidden flex flex-col animate-modal-enter">
+      <div className="relative w-full max-w-3xl bg-gradient-to-b from-[#0f0f0f] to-[#0a0a0a] border border-white/10 rounded-2xl sm:rounded-3xl max-h-[90vh] sm:max-h-[85vh] overflow-hidden flex flex-col animate-modal-enter">
         {/* Glow Effect */}
         <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-primary/10 via-transparent to-secondary/10 opacity-50 pointer-events-none" />
         
         {/* Header */}
-        <div className="relative flex items-start justify-between p-6 md:p-8 border-b border-white/10">
-          <div className="flex-1 pr-4">
-            <h2 className="font-urbanist text-2xl md:text-3xl font-bold text-white leading-tight mb-2">
+        <div className="relative flex items-start justify-between p-4 sm:p-6 md:p-8 border-b border-white/10">
+          <div className="flex-1 pr-3 sm:pr-4">
+            <h2 className="font-urbanist text-xl sm:text-2xl md:text-3xl font-bold text-white leading-tight mb-1.5 sm:mb-2">
               Registration Questions
             </h2>
-            <p className="text-white/60 text-sm">
+            <p className="text-white/60 text-xs sm:text-sm">
               Add custom questions to collect information from attendees during registration
             </p>
           </div>
@@ -56,7 +56,7 @@ export function RegistrationQuestionsModal({
         </div>
 
         {/* Content */}
-        <div className="relative flex-1 overflow-y-auto custom-scrollbar p-6 md:p-8">
+        <div className="relative flex-1 overflow-y-auto custom-scrollbar p-4 sm:p-6 md:p-8">
           <div className="space-y-4">
             {questions.length === 0 ? (
               <div className="text-center py-12">

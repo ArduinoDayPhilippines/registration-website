@@ -67,7 +67,10 @@ export const CreateEventSchema = z.object({
     .max(5000, "Description must be at most 5000 characters")
     .optional()
     .nullable(),
-  ticketPrice: z.enum(["free", "paid"]).optional().nullable(),
+  ticketPrice: z.string()
+    .max(100, "Ticket price must be at most 100 characters")
+    .optional()
+    .nullable(),
   requireApproval: z.boolean().optional(),
   capacity: z.string()
     .refine(
