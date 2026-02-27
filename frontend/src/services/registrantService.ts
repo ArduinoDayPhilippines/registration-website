@@ -10,7 +10,7 @@ export async function registerForEvent({
   event_id: string;
   user_id: string;
   terms_approval?: boolean;
-  form_answers?: any;
+  form_answers: Record<string, string>;
 }) {
   if (!event_id || !user_id) {
     throw new Error("Missing required fields");
@@ -32,7 +32,7 @@ export async function registerForEvent({
     event_id: eventData.event_id,
     users_id: user_id,
     terms_approval: terms_approval || true,
-    form_answers: form_answers || {},
+    form_answers,
     is_registered,
   });
 
@@ -54,4 +54,7 @@ export async function deleteGuest(guestId: string) {
   return await deleteGuest(guestId);
 }
 
-// Implement other registrant-related service functions here, such as getRegistrant, updateRegistrant, deleteRegistrant, listRegistrantsByEvent, etc, if there is
+export async function getEventRegistrants(eventId: string) {
+  const { getRegistrantsByEvent } = await import("@/repositories/registrantRepository");
+  return await getRegistrantsByEvent(eventId);
+}
