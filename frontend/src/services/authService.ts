@@ -1,6 +1,11 @@
 import { findUserByEmail, getUserProfile } from "@/repositories/userRepository";
-import { getAuthUser, getAdminUserById } from "@/repositories/authRepository";
-import { createClient } from "@/lib/supabase/server";
+import { 
+  getAuthUser, 
+  getUserWithMetadata,
+  signInWithPassword,
+  signUpUser,
+  signOutUser
+} from "@/repositories/authRepository";
 
 // Check if email exists
 export async function checkEmailExists(email: string): Promise<boolean> {
@@ -21,7 +26,7 @@ export async function getUserRole() {
 
   let isAdmin = false;
 
-  const authUser = await getAdminUserById(user.id);
+  const authUser = await getUserWithMetadata(user.id);
   if (authUser) {
     const appRole = (authUser.app_metadata?.role as string) ?? null;
     const jwtRole = authUser.role ?? null;
@@ -44,7 +49,7 @@ export async function canManageEvent(slug: string): Promise<boolean> {
   const user = await getAuthUser();
   if (!user) return false;
 
-  const authUser = await getAdminUserById(user.id);
+  const authUser = await getUserWithMetadata(user.id);
   if (authUser) {
     const appRole = (authUser.app_metadata?.role as string) ?? null;
     const jwtRole = authUser.role ?? null;
@@ -62,35 +67,18 @@ export async function canManageEvent(slug: string): Promise<boolean> {
 
 // Login User
 export async function loginUser(email: string, password: string) {
-  const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) throw new Error(error.message);
+  await signInWithPassword(email, password);
   return { success: true };
 }
 
 // Register User
 export async function registerUser(firstName: string, lastName: string, email: string, password: string) {
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: {
-        first_name: firstName,
-        last_name: lastName,
-        full_name: `${firstName} ${lastName}`.trim() || null,
-        role: "user",
-      },
-    },
-  });
-  if (error) throw new Error(error.message);
+  const data = await signUpUser(email, password, firstName, lastName);
   return data;
 }
 
 // Logout User
 export async function logoutUser() {
-  const supabase = await createClient();
-  const { error } = await supabase.auth.signOut();
-  if (error) throw new Error(error.message);
+  await signOutUser();
   return { success: true };
 }

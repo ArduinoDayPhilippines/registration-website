@@ -1,5 +1,3 @@
-import React from 'react';
-
 interface GuestStatisticsProps {
   totalRegistered: number;
   going: number;

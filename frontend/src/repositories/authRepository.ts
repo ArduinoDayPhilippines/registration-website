@@ -1,5 +1,4 @@
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function getAuthUser() {
   const supabase = await createClient();
@@ -14,17 +13,51 @@ export async function getAuthUser() {
   return user;
 }
 
-export async function getAdminUserById(userId: string) {
-  try {
-    const adminClient = createAdminClient();
-    const { data: adminData, error: adminError } =
-      await adminClient.auth.admin.getUserById(userId);
+export async function getUserWithMetadata(userId: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
 
-    if (!adminError && adminData?.user) {
-      return adminData.user;
-    }
-  } catch {
-    // Admin client may be missing
+  if (error || !user || user.id !== userId) {
+    return null;
   }
-  return null;
+
+  return user;
+}
+
+export async function signInWithPassword(email: string, password: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) throw new Error(error.message);
+}
+
+export async function signUpUser(
+  email: string,
+  password: string,
+  firstName: string,
+  lastName: string
+) {
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        first_name: firstName,
+        last_name: lastName,
+        full_name: `${firstName} ${lastName}`.trim() || null,
+        role: "user",
+      },
+    },
+  });
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+export async function signOutUser() {
+  const supabase = await createClient();
+  const { error } = await supabase.auth.signOut();
+  if (error) throw new Error(error.message);
 }

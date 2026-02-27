@@ -21,6 +21,8 @@ import { createEventAction } from "@/actions/eventActions";
 import { useRouter } from "next/navigation";
 import { RegistrationQuestionsModal } from "@/components/create-event/registration-questions-modal";
 import { LocationPicker } from "@/components/create-event/LocationPicker";
+import { CreateEventSchema } from "@/validators/eventValidators";
+import { z } from "zod";
 
 interface EventFormProps {
   formData: EventFormData;
@@ -47,13 +49,68 @@ export default function EventForm({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [isQuestionsModalOpen, setIsQuestionsModalOpen] = useState(false);
   const router = useRouter();
+
+  const validateField = (field: keyof EventFormData, value: any) => {
+    try {
+      // Validate entire form to check cross-field validations
+      CreateEventSchema.parse({ ...formData, [field]: value });
+      setValidationErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        // Clear related errors for cross-field validation
+        if (field === "startDate" || field === "startTime") {
+          delete newErrors["endDate"];
+          delete newErrors["endTime"];
+        }
+        return newErrors;
+      });
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        const fieldError = err.issues.find((e: z.ZodIssue) => e.path.includes(field as string));
+        if (fieldError) {
+          setValidationErrors((prev) => ({
+            ...prev,
+            [field]: fieldError.message,
+          }));
+        }
+      }
+    }
+  };
+
+  const validateForm = () => {
+    try {
+      CreateEventSchema.parse(formData);
+      setValidationErrors({});
+      return true;
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        const errors: Record<string, string> = {};
+        err.issues.forEach((error: z.ZodIssue) => {
+          const field = error.path[0];
+          if (field && typeof field === 'string') {
+            errors[field] = error.message;
+          }
+        });
+        setValidationErrors(errors);
+      }
+      return false;
+    }
+  };
 
   const handleSubmit = async (e: React.MouseEvent) => {
     e.preventDefault();
 
     setError("");
+
+    // Validate form before submitting
+    if (!validateForm()) {
+      setError("Please fix the validation errors before submitting.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -161,53 +218,81 @@ export default function EventForm({
               type="text"
               placeholder="Event Name"
               value={formData.title}
-              onChange={(e) => updateField("title", e.target.value)}
+              onChange={(e) => {
+                updateField("title", e.target.value);
+                validateField("title", e.target.value);
+              }}
               className="w-full bg-transparent border-none text-3xl md:text-5xl font-urbanist font-bold placeholder-white/10 focus:ring-0 p-0 text-white outline-none"
             />
-            <div className="absolute bottom-0 left-0 w-full h-[2px] bg-white-50/10 group-focus-within:bg-gradient-to-r group-focus-within:from-primary group-focus-within:to-secondary transition-colors" />
+            <div className={`absolute bottom-0 left-0 w-full h-[2px] transition-colors ${
+              validationErrors.title 
+                ? "bg-red-500/50" 
+                : "bg-white-50/10 group-focus-within:bg-gradient-to-r group-focus-within:from-primary group-focus-within:to-secondary"
+            }`} />
+            {validationErrors.title && (
+              <p className="text-red-400 text-[10px] mt-1 uppercase tracking-wider">{validationErrors.title}</p>
+            )}
           </div>
 
           {/* Date & Time */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <Input
-              label="Start"
-              icon={Calendar}
-              type="datetime-local"
-              iconAlwaysActive={true}
-              value={
-                formData.startDate && formData.startTime
-                  ? `${formData.startDate}T${formData.startTime}`
-                  : ""
-              }
-              onChange={(e) => {
-                const value = e.target.value;
-                if (value) {
-                  const [date, time] = value.split("T");
-                  updateField("startDate", date);
-                  updateField("startTime", time);
+            <div>
+              <Input
+                label="Start"
+                icon={Calendar}
+                type="datetime-local"
+                iconAlwaysActive={true}
+                value={
+                  formData.startDate && formData.startTime
+                    ? `${formData.startDate}T${formData.startTime}`
+                    : ""
                 }
-              }}
-            />
-            <Input
-              label="End"
-              icon={Clock}
-              type="datetime-local"
-              variant="secondary"
-              iconAlwaysActive={true}
-              value={
-                formData.endDate && formData.endTime
-                  ? `${formData.endDate}T${formData.endTime}`
-                  : ""
-              }
-              onChange={(e) => {
-                const value = e.target.value;
-                if (value) {
-                  const [date, time] = value.split("T");
-                  updateField("endDate", date);
-                  updateField("endTime", time);
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value) {
+                    const [date, time] = value.split("T");
+                    updateField("startDate", date);
+                    updateField("startTime", time);
+                    validateField("startDate", date);
+                    validateField("startTime", time);
+                  }
+                }}
+              />
+              {(validationErrors.startDate || validationErrors.startTime) && (
+                <p className="text-red-400 text-[10px] mt-1 uppercase tracking-wider">
+                  {validationErrors.startDate || validationErrors.startTime}
+                </p>
+              )}
+            </div>
+            <div>
+              <Input
+                label="End"
+                icon={Clock}
+                type="datetime-local"
+                variant="secondary"
+                iconAlwaysActive={true}
+                value={
+                  formData.endDate && formData.endTime
+                    ? `${formData.endDate}T${formData.endTime}`
+                    : ""
                 }
-              }}
-            />
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value) {
+                    const [date, time] = value.split("T");
+                    updateField("endDate", date);
+                    updateField("endTime", time);
+                    validateField("endDate", date);
+                    validateField("endTime", time);
+                  }
+                }}
+              />
+              {(validationErrors.endDate || validationErrors.endTime) && (
+                <p className="text-red-400 text-[10px] mt-1 uppercase tracking-wider">
+                  {validationErrors.endDate || validationErrors.endTime}
+                </p>
+              )}
+            </div>
           </div>
 
           {/* Location */}
@@ -217,7 +302,9 @@ export default function EventForm({
           />
 
           {/* Description */}
-          <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-xl p-2.5 flex items-start gap-2.5 hover:border-primary/30 transition-all group focus-within:border-primary">
+          <div className={`bg-black/40 backdrop-blur-md border rounded-xl p-2.5 flex items-start gap-2.5 transition-all group focus-within:border-primary ${
+            validationErrors.description ? "border-red-500/50" : "border-white/10 hover:border-primary/30"
+          }`}>
             <div className="p-2 bg-white-50/5 rounded-lg mt-0.5">
               <FileText className="w-4 h-4 text-white/50" />
             </div>
@@ -228,9 +315,15 @@ export default function EventForm({
               <textarea
                 placeholder="Details about your event..."
                 value={formData.description}
-                onChange={(e) => updateField("description", e.target.value)}
+                onChange={(e) => {
+                  updateField("description", e.target.value);
+                  validateField("description", e.target.value);
+                }}
                 className="bg-transparent border-none outline-none text-sm focus:ring-0 w-full p-0 placeholder-white/20 resize-none h-16 text-white leading-relaxed"
               />
+              {validationErrors.description && (
+                <p className="text-red-400 text-[10px] mt-1 uppercase tracking-wider">{validationErrors.description}</p>
+              )}
             </div>
           </div>
 
@@ -293,7 +386,9 @@ export default function EventForm({
             </div>
 
             {/* Capacity */}
-            <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-xl p-3 hover:border-primary/30 transition-all group focus-within:border-primary">
+            <div className={`bg-black/40 backdrop-blur-md border rounded-xl p-3 transition-all group focus-within:border-primary ${
+              validationErrors.capacity ? "border-red-500/50" : "border-white/10 hover:border-primary/30"
+            }`}>
               <div className="flex items-center gap-2 mb-2">
                 <Users className="w-4 h-4 text-primary" />
                 <label className="text-[9px] text-white/40 uppercase tracking-widest font-bold">
@@ -304,9 +399,15 @@ export default function EventForm({
                 type="text"
                 placeholder="Unlimited"
                 value={formData.capacity}
-                onChange={(e) => updateField("capacity", e.target.value)}
+                onChange={(e) => {
+                  updateField("capacity", e.target.value);
+                  validateField("capacity", e.target.value);
+                }}
                 className="bg-transparent border-none outline-none text-sm focus:ring-0 w-full p-0 placeholder-white/40 text-white"
               />
+              {validationErrors.capacity && (
+                <p className="text-red-400 text-[10px] mt-1 uppercase tracking-wider">{validationErrors.capacity}</p>
+              )}
             </div>
           </div>
 

@@ -1,5 +1,4 @@
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function getEventBySlug(slug: string) {
   const supabase = await createClient();
@@ -36,7 +35,7 @@ export async function getEventIdAndApprovalBySlug(slug: string) {
 }
 
 export async function getOrganizerIdBySlug(slug: string) {
-  const supabase = createAdminClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("events")
     .select("organizer_id")
@@ -60,7 +59,7 @@ export async function listEvents() {
 }
 
 export async function updateEventDetails(slug: string, details: any) {
-  const supabase = createAdminClient();
+  const supabase = await createClient();
   const { error } = await supabase
     .from("events")
     .update(details)
@@ -69,7 +68,7 @@ export async function updateEventDetails(slug: string, details: any) {
 }
 
 export async function updateEventSettings(slug: string, requireApproval: boolean) {
-  const supabase = createAdminClient();
+  const supabase = await createClient();
   const { error } = await supabase
     .from("events")
     .update({
@@ -81,7 +80,7 @@ export async function updateEventSettings(slug: string, requireApproval: boolean
 }
 
 export async function getEventQuestions(slug: string) {
-  const supabase = createAdminClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("events")
     .select("form_questions")
@@ -92,7 +91,7 @@ export async function getEventQuestions(slug: string) {
 }
 
 export async function updateEventQuestions(slug: string, questions: any[]) {
-  const supabase = createAdminClient();
+  const supabase = await createClient();
   const { error } = await supabase
     .from("events")
     .update({
@@ -104,7 +103,7 @@ export async function updateEventQuestions(slug: string, questions: any[]) {
 }
 
 export async function updateEventSurvey(slug: string, surveyData: any) {
-  const supabase = createAdminClient();
+  const supabase = await createClient();
   const { error } = await supabase
     .from("events")
     .update({ post_event_survey: surveyData })
