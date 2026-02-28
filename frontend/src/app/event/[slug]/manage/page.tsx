@@ -124,7 +124,7 @@ export default function ManageEventPage() {
               checkedIn={stats?.checkedIn || 0}
               waitlist={stats?.waitlist || 0}
             />
-            <QuickActions />
+            <QuickActions eventSlug={slug} />
             <GuestListSection
               guests={guests}
               slug={slug}

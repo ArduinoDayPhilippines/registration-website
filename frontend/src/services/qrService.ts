@@ -1,10 +1,9 @@
 import { Guest } from "@/types/guest";
 
 export interface QRCodeData {
+  name: string;
   registrant_id: string;
   event_id: string;
-  email: string;
-  name: string;
   event_slug: string;
 }
 
@@ -38,7 +37,7 @@ export async function generateQRCodeBlob(
       }, 'image/png');
     });
 
-    const fileName = `ticket-${qrData.name.replace(/\s+/g, '-')}-${qrData.registrant_id.slice(0, 8)}.png`;
+    const fileName = `ticket-${qrData.name.replace(/\s+/g, '-')}-${qrData.event_slug}.png`;
     
     return { success: true, blob, fileName };
   } catch (error) {
@@ -56,10 +55,9 @@ export function createQRDataFromGuest(guest: Guest, eventSlug: string): QRCodeDa
   }
 
   return {
+    name: `${guest.users.first_name || ''} ${guest.users.last_name || ''}`.trim(),
     registrant_id: guest.registrant_id,
     event_id: guest.event_id,
-    email: guest.users.email,
-    name: `${guest.users.first_name || ''} ${guest.users.last_name || ''}`.trim(),
-    event_slug: eventSlug,
+    event_slug: eventSlug
   };
 }

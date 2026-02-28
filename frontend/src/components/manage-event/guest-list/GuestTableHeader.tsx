@@ -76,11 +76,11 @@ export function GuestTableHeader({
             {selectedCount > 0 && (
               <button
                 onClick={onBulkGenerateQR}
-                className="px-2 py-1 bg-purple-600 hover:bg-purple-700 rounded text-xs text-white font-medium transition-colors flex items-center gap-1"
-                title={`Generate QR for ${selectedCount} selected guest${selectedCount > 1 ? 's' : ''}`}
+                className="px-2 py-1 bg-purple-600 hover:bg-purple-700 rounded text-xs text-white font-medium transition-colors flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                title={`Generate QR for ${selectedCount} registered guest${selectedCount > 1 ? 's' : ''}`}
               >
                 <QrCode size={12} />
-                Generate for Selected ({selectedCount})
+                Generate for {selectedCount}
               </button>
             )}
           </div>

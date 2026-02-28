@@ -78,7 +78,7 @@ export function useGuestActions(slug: string, onRefresh: () => void) {
       const result = await generateSingleQRAction(guest, slug);
 
       if (result.success) {
-        showSuccess(`QR code uploaded successfully!\nURL: ${result.url}`);
+        showSuccess("QR code uploaded successfully!");
       } else {
         showError(result.error || "Failed to generate QR code");
       }

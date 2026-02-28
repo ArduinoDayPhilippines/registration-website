@@ -75,9 +75,9 @@ export function GuestTableRow({
         <div className="flex justify-center">
           <button
             onClick={() => onGenerateQR(guest)}
-            disabled={isPending}
-            className="p-1.5 hover:bg-purple-500/20 rounded text-purple-400 transition-colors disabled:opacity-50"
-            title="Generate QR Code Ticket"
+            disabled={isPending || !guest.is_registered}
+            className="p-1.5 hover:bg-purple-500/20 rounded text-purple-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            title={guest.is_registered ? "Generate QR Code Ticket" : "Cannot generate QR for pending guests"}
           >
             <QrCode size={16} />
           </button>

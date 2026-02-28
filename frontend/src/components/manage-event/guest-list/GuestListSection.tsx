@@ -51,6 +51,7 @@ export function GuestListSection({
   } = useGuestActions(slug, onRefresh);
 
   const selectedGuests = guests.filter(g => selectedGuestIds.has(g.registrant_id));
+  const selectedRegisteredGuests = selectedGuests.filter(g => g.is_registered);
 
   const allSelected = filteredGuests.length > 0 && 
     filteredGuests.every(g => selectedGuestIds.has(g.registrant_id));
@@ -104,8 +105,8 @@ export function GuestListSection({
                   onToggleSelectMenu={toggleSelectMenu}
                   onSelectByStatus={(status) => handleSelectByStatus(filteredGuests, status)}
                   onDeselectAll={clearSelection}
-                  selectedCount={selectedGuestIds.size}
-                  onBulkGenerateQR={() => handleBulkGenerateQR(selectedGuests)}
+                  selectedCount={selectedRegisteredGuests.length}
+                  onBulkGenerateQR={() => handleBulkGenerateQR(selectedRegisteredGuests)}
                 />
                 <tbody>
                   {filteredGuests.map((guest) => (
