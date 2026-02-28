@@ -86,3 +86,31 @@ export async function getRegistrantsByEvent(eventId: string): Promise<Guest[]> {
 
   return (data || []) as unknown as Guest[];
 }
+
+export async function getRegistrantById(registrantId: string): Promise<Guest | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("registrants")
+    .select(`
+      registrant_id,
+      event_id,
+      users_id,
+      terms_approval,
+      form_answers,
+      is_registered,
+      qr_url,
+      users!users_id (
+        first_name,
+        last_name,
+        email
+      )
+    `)
+    .eq("registrant_id", registrantId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Failed to fetch registrant: ${error.message}`);
+  }
+
+  return data as unknown as Guest;
+}
