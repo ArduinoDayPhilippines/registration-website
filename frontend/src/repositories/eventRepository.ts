@@ -19,7 +19,7 @@ export async function getEventIdAndApprovalBySlug(slug: string) {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("events")
-    .select("event_id, require_approval")
+    .select("event_id, event_name, require_approval")
     .eq("slug", slug)
     .single();
 

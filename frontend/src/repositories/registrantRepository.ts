@@ -50,6 +50,37 @@ export async function updateGuestStatus(guestId: string, isRegistered: boolean) 
   return data;
 }
 
+export async function getRegistrantStatusEmailAndEvent(guestId: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("registrants")
+    .select(`
+      registrant_id,
+      is_registered,
+      users:users!users_id (
+        email
+      ),
+      event:events!event_id (
+        event_name
+      )
+    `)
+    .eq("registrant_id", guestId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Failed to fetch registrant details: ${error.message}`);
+  }
+
+  return data as
+    | {
+        registrant_id: string;
+        is_registered: boolean;
+        users: { email: string } | null;
+        event: { event_name: string | null } | null;
+      }
+    | null;
+}
+
 export async function deleteGuest(guestId: string) {
   const supabase = await createClient();
   const { error } = await supabase
