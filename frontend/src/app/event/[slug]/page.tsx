@@ -21,6 +21,7 @@ import { useEvent } from "@/hooks/event/use-event";
 
 import { setLastViewedEventSlug } from "@/utils/last-viewed-event";
 import { logoutAction } from "@/actions/authActions";
+import { getUserInfoAction } from "@/actions/userActions";
 import { useUserStore } from "@/store/useUserStore";
 
 export default function EventPage() {
@@ -30,6 +31,7 @@ export default function EventPage() {
   const { event, loading, error } = useEvent(slug);
   const { role, userId, loading: roleLoading, initialize } = useUserStore();
   const [hostName, setHostName] = useState<string | undefined>(undefined);
+  const [hostEmail, setHostEmail] = useState<string | undefined>(undefined);
   const [loggingOut, setLoggingOut] = useState(false);
 
   const isLoggedIn = !roleLoading && userId != null;
@@ -55,30 +57,46 @@ export default function EventPage() {
   }, [initialize]);
 
   useEffect(() => {
-    async function loadHostName() {
+    async function loadHostInfo() {
       if (!event?.organizerId) {
         setHostName(undefined);
+        setHostEmail(undefined);
         return;
       }
 
       try {
-        const supabase = createClient();
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-
-        if (user && user.id === event.organizerId) {
-          setHostName(user.email ?? "You");
+        // Fetch organizer's details using the server action
+        const result = await getUserInfoAction({ userId: event.organizerId });
+        
+        if (result.success && result.data) {
+          // Set name (full name if available, otherwise fallback)
+          const displayName = result.data.fullName || result.data.email || "Event Organizer";
+          setHostName(displayName);
+          
+          // Set email
+          setHostEmail(result.data.email || undefined);
         } else {
-          setHostName("Event Organizer");
+          // Fallback: check if it's the current logged-in user
+          const supabase = createClient();
+          const { data: { user: authUser } } = await supabase.auth.getUser();
+          
+          if (authUser && authUser.id === event.organizerId) {
+            const fullName = authUser.user_metadata?.full_name;
+            setHostName(fullName || authUser.email || "You");
+            setHostEmail(authUser.email || undefined);
+          } else {
+            setHostName("Event Organizer");
+            setHostEmail(undefined);
+          }
         }
       } catch (e) {
         console.error("Failed to load organizer info:", e);
         setHostName("Event Organizer");
+        setHostEmail(undefined);
       }
     }
 
-    loadHostName();
+    loadHostInfo();
   }, [event?.organizerId]);
 
   useEffect(() => {
@@ -135,6 +153,7 @@ export default function EventPage() {
             {/* Hosted By - Desktop Only */}
             <EventHost
               hostName={hostName}
+              hostEmail={hostEmail}
               className="hidden lg:block border-t border-white/10 pt-6"
             />
           </div>
@@ -180,6 +199,7 @@ export default function EventPage() {
             {/* Hosted By - Mobile Only (at the end) */}
             <EventHost
               hostName={hostName}
+              hostEmail={hostEmail}
               className="lg:hidden border-t border-white/10 pt-6 mt-8"
             />
           </div>

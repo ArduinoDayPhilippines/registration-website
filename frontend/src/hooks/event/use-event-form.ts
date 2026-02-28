@@ -20,7 +20,7 @@ const initialFormData: EventFormData = {
   coverImage: '',
   theme: 'Minimal Dark',
   ticketPrice: 'Free',
-  capacity: 'Unlimited',
+  capacity: '',
   requireApproval: false,
   questions: [],
 };

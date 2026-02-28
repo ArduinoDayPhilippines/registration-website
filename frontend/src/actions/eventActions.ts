@@ -1,5 +1,6 @@
 "use server";
 
+import { z } from "zod";
 import { 
   EventSlugSchema, 
   UpdateEventDetailsSchema, 
@@ -41,144 +42,234 @@ export const listEventsAction = withActionErrorHandler(async () => {
   return data;
 });
 
-export const updateEventDetailsAction = withActionErrorHandler(
-  async (data: any) => {
+export async function updateEventDetailsAction(data: unknown) {
+  try {
+    // Validate input data
     const validatedData = UpdateEventDetailsSchema.parse(data);
     const { slug, ...details } = validatedData;
-
+    
+    // Check authorization
     if (!(await canManageEvent(slug))) {
-      logger.warn(
-        `Unauthorized event details update attempt for slug: ${slug}`,
-      );
-      throw new UnauthorizedError("Unauthorized");
+      logger.warn("Unauthorized event details update attempt", { slug });
+      return { success: false, error: "You are not authorized to update this event" };
     }
 
-    const { startDate, startTime, endTime } = details;
-    const startDateTime =
-      startDate && startTime
-        ? new Date(`${startDate}T${startTime}`).toISOString()
-        : undefined;
-    const endDateTime =
-      startDate && endTime
-        ? new Date(`${startDate}T${endTime}`).toISOString()
-        : undefined;
-
-    const mappedDetails = {
-      event_name: details.title,
-      description: details.description,
-      location: details.location,
-      price: details.ticketPrice,
-      capacity: details.capacity ? Number(details.capacity) : null,
-      require_approval: details.requireApproval,
-      modified_at: new Date().toISOString(),
-    };
-
-    if (startDateTime)
-      Object.assign(mappedDetails, { start_date: startDateTime });
-    if (endDateTime) Object.assign(mappedDetails, { end_date: endDateTime });
-
-    await updateEventDetails(slug, mappedDetails);
+    // Call service layer
+    await updateEventDetails(slug, details);
+    
+    // Revalidate Next.js cache
     revalidatePath(`/event/${slug}/manage`);
-    logger.info(`Updated event details for slug: ${slug}`);
-  },
-);
-
-export const updateEventSettingsAction = withActionErrorHandler(
-  async (data: any) => {
-    const validatedData = UpdateEventSettingsSchema.parse(data);
-
-    if (!(await canManageEvent(validatedData.slug))) {
-      throw new UnauthorizedError("Unauthorized");
+    revalidatePath(`/event/${slug}`);
+    
+    logger.info("Successfully updated event details", { slug });
+    return { success: true };
+  } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      const errorMessage = error.issues.map((e: any) => `${e.path.join(".")}: ${e.message}`).join(", ");
+      logger.error("Event update validation failed", { errors: error.issues });
+      return { success: false, error: `Validation error: ${errorMessage}` };
     }
-
-    await updateEventSettings(
-      validatedData.slug,
-      validatedData.requireApproval,
-    );
-    revalidatePath(`/event/${validatedData.slug}/manage`);
-    logger.info(`Updated event settings for slug: ${validatedData.slug}`);
-  },
-);
-
-export const addRegistrationQuestionAction = withActionErrorHandler(
-  async (data: any) => {
-    const validatedData = RegistrationQuestionSchema.parse(data);
-
-    if (!(await canManageEvent(validatedData.slug))) {
-      throw new UnauthorizedError("Unauthorized");
-    }
-
-    if (!validatedData.text) throw new Error("Question text is required");
-
-    await addRegistrationQuestion(
-      validatedData.slug,
-      validatedData.text,
-      !!validatedData.required,
-    );
-    revalidatePath(`/event/${validatedData.slug}/manage`);
-    logger.info(`Added registration question for slug: ${validatedData.slug}`);
-  },
-);
-
-export const updateRegistrationQuestionAction = withActionErrorHandler(
-  async (data: any) => {
-    const validatedData = RegistrationQuestionSchema.parse(data);
-
-    if (!(await canManageEvent(validatedData.slug))) {
-      throw new UnauthorizedError("Unauthorized");
-    }
-
-    if (!validatedData.questionId || !validatedData.text)
-      throw new Error("Question ID and text are required");
-
-    await updateRegistrationQuestion(
-      validatedData.slug,
-      validatedData.questionId,
-      validatedData.text,
-      !!validatedData.required,
-    );
-    revalidatePath(`/event/${validatedData.slug}/manage`);
-    logger.info(
-      `Updated registration question ${validatedData.questionId} for slug: ${validatedData.slug}`,
-    );
-  },
-);
-
-export const removeRegistrationQuestionAction = withActionErrorHandler(
-  async (data: any) => {
-    const validatedData = RegistrationQuestionSchema.parse(data);
-
-    if (!(await canManageEvent(validatedData.slug))) {
-      throw new UnauthorizedError("Unauthorized");
-    }
-
-    if (!validatedData.questionId) throw new Error("Question ID is required");
-
-    await removeRegistrationQuestion(
-      validatedData.slug,
-      validatedData.questionId,
-    );
-    revalidatePath(`/event/${validatedData.slug}/manage`);
-    logger.info(
-      `Removed registration question ${validatedData.questionId} for slug: ${validatedData.slug}`,
-    );
-  },
-);
-
-export const createEventAction = withActionErrorHandler(async (data: any) => {
-  const validatedData = CreateEventSchema.parse(data);
-
-  const { getUserRoleAction } = await import("@/actions/authActions");
-  const roleResponse = await getUserRoleAction();
-  const userId = roleResponse.data?.userId as string | undefined;
-
-  if (!userId) {
-    throw new UnauthorizedError("Unauthorized");
+    
+    const errorMessage = error instanceof Error ? error.message : "Failed to update event details";
+    logger.error("Failed to update event details", error);
+    return { success: false, error: errorMessage };
   }
+}
 
-  const newSlug = await createEvent(validatedData, userId);
+export async function updateEventSettingsAction(data: unknown) {
+  try {
+    // Validate input data
+    const validatedData = UpdateEventSettingsSchema.parse(data);
+    
+    // Check authorization
+    if (!(await canManageEvent(validatedData.slug))) {
+      logger.warn("Unauthorized event settings update attempt", { slug: validatedData.slug });
+      return { success: false, error: "You are not authorized to update this event" };
+    }
 
-  revalidatePath("/dashboard");
-  logger.info(`Created new event with slug: ${newSlug}`);
-  return { slug: newSlug };
-});
+    // Call service layer
+    await updateEventSettings(validatedData.slug, validatedData.requireApproval);
+    
+    // Revalidate Next.js cache
+    revalidatePath(`/event/${validatedData.slug}/manage`);
+    revalidatePath(`/event/${validatedData.slug}`);
+    
+    logger.info("Successfully updated event settings", { slug: validatedData.slug });
+    return { success: true };
+  } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      const errorMessage = error.issues.map((e: any) => `${e.path.join(".")}: ${e.message}`).join(", ");
+      logger.error("Event settings validation failed", { errors: error.issues });
+      return { success: false, error: `Validation error: ${errorMessage}` };
+    }
+    
+    const errorMessage = error instanceof Error ? error.message : "Failed to update event settings";
+    logger.error("Failed to update event settings", error);
+    return { success: false, error: errorMessage };
+  }
+}
+
+export async function addRegistrationQuestionAction(data: unknown) {
+  try {
+    // Validate input data
+    const validatedData = RegistrationQuestionSchema.parse(data);
+    
+    // Check authorization
+    if (!(await canManageEvent(validatedData.slug))) {
+      logger.warn("Unauthorized question addition attempt", { slug: validatedData.slug });
+      return { success: false, error: "You are not authorized to update this event" };
+    }
+
+    if (!validatedData.text) {
+      return { success: false, error: "Question text is required" };
+    }
+
+    // Call service layer
+    await addRegistrationQuestion(validatedData.slug, validatedData.text, !!validatedData.required);
+    
+    // Revalidate Next.js cache
+    revalidatePath(`/event/${validatedData.slug}/manage`);
+    revalidatePath(`/event/${validatedData.slug}/register`);
+    
+    logger.info("Successfully added registration question", { slug: validatedData.slug });
+    return { success: true };
+  } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      const errorMessage = error.issues.map((e: any) => `${e.path.join(".")}: ${e.message}`).join(", ");
+      logger.error("Question validation failed", { errors: error.issues });
+      return { success: false, error: `Validation error: ${errorMessage}` };
+    }
+    
+    const errorMessage = error instanceof Error ? error.message : "Failed to add registration question";
+    logger.error("Failed to add registration question", error);
+    return { success: false, error: errorMessage };
+  }
+}
+
+export async function updateRegistrationQuestionAction(data: unknown) {
+  try {
+    // Validate input data
+    const validatedData = RegistrationQuestionSchema.parse(data);
+    
+    // Check authorization
+    if (!(await canManageEvent(validatedData.slug))) {
+      logger.warn("Unauthorized question update attempt", { slug: validatedData.slug });
+      return { success: false, error: "You are not authorized to update this event" };
+    }
+
+    if (!validatedData.questionId || !validatedData.text) {
+      return { success: false, error: "Question ID and text are required" };
+    }
+
+    // Call service layer
+    await updateRegistrationQuestion(validatedData.slug, validatedData.questionId, validatedData.text, !!validatedData.required);
+    
+    // Revalidate Next.js cache
+    revalidatePath(`/event/${validatedData.slug}/manage`);
+    revalidatePath(`/event/${validatedData.slug}/register`);
+    
+    logger.info("Successfully updated registration question", { 
+      slug: validatedData.slug, 
+      questionId: validatedData.questionId 
+    });
+    return { success: true };
+  } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      const errorMessage = error.issues.map((e: any) => `${e.path.join(".")}: ${e.message}`).join(", ");
+      logger.error("Question validation failed", { errors: error.issues });
+      return { success: false, error: `Validation error: ${errorMessage}` };
+    }
+    
+    const errorMessage = error instanceof Error ? error.message : "Failed to update registration question";
+    logger.error("Failed to update registration question", error);
+    return { success: false, error: errorMessage };
+  }
+}
+
+export async function removeRegistrationQuestionAction(data: unknown) {
+  try {
+    // Validate input data
+    const validatedData = RegistrationQuestionSchema.parse(data);
+    
+    // Check authorization
+    if (!(await canManageEvent(validatedData.slug))) {
+      logger.warn("Unauthorized question removal attempt", { slug: validatedData.slug });
+      return { success: false, error: "You are not authorized to update this event" };
+    }
+
+    if (!validatedData.questionId) {
+      return { success: false, error: "Question ID is required" };
+    }
+
+    // Call service layer
+    await removeRegistrationQuestion(validatedData.slug, validatedData.questionId);
+    
+    // Revalidate Next.js cache
+    revalidatePath(`/event/${validatedData.slug}/manage`);
+    revalidatePath(`/event/${validatedData.slug}/register`);
+    
+    logger.info("Successfully removed registration question", { 
+      slug: validatedData.slug, 
+      questionId: validatedData.questionId 
+    });
+    return { success: true };
+  } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      const errorMessage = error.issues.map((e: any) => `${e.path.join(".")}: ${e.message}`).join(", ");
+      logger.error("Question validation failed", { errors: error.issues });
+      return { success: false, error: `Validation error: ${errorMessage}` };
+    }
+    
+    const errorMessage = error instanceof Error ? error.message : "Failed to remove registration question";
+    logger.error("Failed to remove registration question", error);
+    return { success: false, error: errorMessage };
+  }
+}
+
+export async function createEventAction(data: unknown) {
+  try {
+    // Validate input data using Zod schema
+    const validatedData = CreateEventSchema.parse(data);
+    
+    // Get current user ID
+    const { getUserRoleAction } = await import("@/actions/authActions");
+    const roleResponse = await getUserRoleAction();
+    
+    // Check if user is authenticated
+    if (!roleResponse.success || !roleResponse.data?.userId) {
+      logger.warn("Unauthorized event creation attempt - no user session", { 
+        hasResponse: !!roleResponse,
+        hasData: !!roleResponse.data,
+        userId: roleResponse.data?.userId 
+      });
+      return { 
+        success: false, 
+        error: "You must be logged in to create an event. Please log in and try again." 
+      };
+    }
+
+    const userId = roleResponse.data.userId;
+
+    // Call service layer to create the event
+    const newSlug = await createEvent(validatedData, userId);
+    
+    // Revalidate Next.js cache for dashboard
+    revalidatePath("/dashboard");
+    revalidatePath("/");
+    
+    logger.info("Successfully created new event", { slug: newSlug, userId });
+    return { success: true, slug: newSlug };
+  } catch (error: any) {
+    // Handle Zod validation errors
+    if (error instanceof z.ZodError) {
+      const errorMessage = error.issues.map((e: any) => `${e.path.join(".")}: ${e.message}`).join(", ");
+      logger.error("Event creation validation failed", { errors: error.issues });
+      return { success: false, error: `Validation error: ${errorMessage}` };
+    }
+    
+    // Handle other errors
+    const errorMessage = error instanceof Error ? error.message : "Failed to create event";
+    logger.error("Failed to create event", error);
+    return { success: false, error: errorMessage };
+  }
+}

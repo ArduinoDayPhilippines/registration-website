@@ -112,13 +112,13 @@ export async function updateEventSurvey(slug: string, surveyData: any) {
   if (error) throw new Error(`Failed to update event survey: ${error.message}`);
 }
 
-export async function insertEvent(eventData: any) {
+export async function insertEvent(eventData: import("@/types/event").EventInsertData): Promise<void> {
   const supabase = await createClient();
   const { error } = await supabase
     .from("events")
     .insert(eventData);
 
   if (error) {
-    throw new Error(`Failed to create event: ${error.message}`);
+    throw new Error(`Failed to insert event into database: ${error.message}`);
   }
 }

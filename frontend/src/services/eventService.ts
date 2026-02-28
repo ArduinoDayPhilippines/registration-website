@@ -79,9 +79,57 @@ export async function listAllEvents() {
   return await listEvents();
 }
 
-export async function updateEventDetails(slug: string, details: any) {
+export async function updateEventDetails(
+  slug: string,
+  details: {
+    title?: string | null;
+    description?: string | null;
+    startDate?: string | null;
+    startTime?: string | null;
+    endTime?: string | null;
+    location?: string | null;
+    capacity?: string | null;
+    ticketPrice?: string | null;
+    requireApproval?: boolean;
+  }
+) {
   const { updateEventDetails: repoUpdate } = await import("@/repositories/eventRepository");
-  await repoUpdate(slug, details);
+  
+  // Transform datetime fields
+  const startDateTime =
+    details.startDate && details.startTime
+      ? new Date(`${details.startDate}T${details.startTime}`).toISOString()
+      : undefined;
+      
+  const endDateTime =
+    details.startDate && details.endTime
+      ? new Date(`${details.startDate}T${details.endTime}`).toISOString()
+      : undefined;
+
+  // Parse capacity
+  const parsedCapacity = details.capacity ? Number(details.capacity) : null;
+  
+  // Validate capacity if provided
+  if (parsedCapacity !== null && (isNaN(parsedCapacity) || parsedCapacity <= 0)) {
+    throw new Error("Capacity must be a positive number");
+  }
+
+  // Map to database schema
+  const mappedDetails: Record<string, unknown> = {
+    event_name: details.title,
+    description: details.description,
+    location: details.location,
+    price: details.ticketPrice,
+    capacity: parsedCapacity,
+    require_approval: details.requireApproval,
+    modified_at: new Date().toISOString(),
+  };
+
+  // Add datetime fields if provided
+  if (startDateTime) mappedDetails.start_date = startDateTime;
+  if (endDateTime) mappedDetails.end_date = endDateTime;
+
+  await repoUpdate(slug, mappedDetails);
 }
 
 export async function updateEventSettings(slug: string, requireApproval: boolean) {
@@ -130,49 +178,75 @@ export async function removeRegistrationQuestion(slug: string, questionId: numbe
   await updateEventQuestions(slug, updatedQuestions);
 }
 
-export async function createEvent(eventData: any, userId: string): Promise<string> {
+export async function createEvent(
+  eventData: import("@/types/event").CreateEventInput,
+  userId: string
+): Promise<string> {
   const { insertEvent } = await import("@/repositories/eventRepository");
   const { generateSlug } = await import("@/utils/slug");
 
-  const {
-    title,
-    startDate,
-    startTime,
-    endDate,
-    endTime,
-    location,
-    description,
-    ticketPrice,
-    requireApproval,
-    capacity,
-    questions,
-  } = eventData;
+  if (!userId) {
+    throw new Error("User ID is required to create an event");
+  }
 
-  const parsedCapacity = capacity && capacity !== "Unlimited" ? parseInt(capacity) : null;
-  
-  // Store complete question objects with all properties
-  const parsedQuestions = questions && questions.length > 0 ? questions : null;
+  // Generate unique slug for the event
+  const slug = generateSlug(eventData.title);
 
-  const slug = generateSlug(title);
+  // Transform capacity: parse as integer or set to null
+  const parsedCapacity =
+    eventData.capacity && eventData.capacity !== "Unlimited" && eventData.capacity.trim() !== ""
+      ? parseInt(eventData.capacity, 10)
+      : null;
 
-  const mappedData = {
+  // Validate parsed capacity
+  if (
+    parsedCapacity !== null &&
+    (isNaN(parsedCapacity) || parsedCapacity <= 0)
+  ) {
+    throw new Error("Capacity must be a positive number");
+  }
+
+  // Transform questions array to object format for database
+  const formQuestions =
+    eventData.questions && eventData.questions.length > 0
+      ? eventData.questions.reduce(
+          (acc: Record<string, string>, question, index) => {
+            acc[`q${index + 1}`] = question.text;
+            return acc;
+          },
+          {}
+        )
+      : null;
+
+  // Build start date
+  const startDate = new Date(
+    `${eventData.startDate}T${eventData.startTime}`
+  ).toISOString();
+
+  // Build end date if provided
+  const endDate =
+    eventData.endDate && eventData.endTime
+      ? new Date(`${eventData.endDate}T${eventData.endTime}`).toISOString()
+      : null;
+
+  // Map to database schema
+  const insertData: import("@/types/event").EventInsertData = {
     organizer_id: userId,
-    event_name: title,
+    event_name: eventData.title,
     slug,
-    start_date: new Date(`${startDate}T${startTime}`).toISOString(),
-    end_date:
-      endDate && endTime
-        ? new Date(`${endDate}T${endTime}`).toISOString()
-        : null,
-    location,
-    description: description || null,
-    price: ticketPrice || "free",
+    start_date: startDate,
+    end_date: endDate,
+    location: eventData.location || "",
+    description: eventData.description || null,
+    price: eventData.ticketPrice || "Free",
     capacity: parsedCapacity,
-    require_approval: requireApproval || false,
-    form_questions: parsedQuestions,
+    require_approval: eventData.requireApproval || false,
+    form_questions: formQuestions,
     status: "upcoming",
   };
 
-  await insertEvent(mappedData);
+  // Persist to database
+  await insertEvent(insertData);
+
   return slug;
 }

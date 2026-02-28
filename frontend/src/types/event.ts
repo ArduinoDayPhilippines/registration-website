@@ -52,3 +52,34 @@ export interface EventFormData {
   requireApproval: boolean;
   questions: Question[];
 }
+
+// Type for database insert (repository layer)
+export interface EventInsertData {
+  organizer_id: string;
+  event_name: string;
+  slug: string;
+  start_date: string;
+  end_date: string | null;
+  location: string;
+  description: string | null;
+  price: string;
+  capacity: number | null;
+  require_approval: boolean;
+  form_questions: Record<string, string> | null;
+  status: string;
+}
+
+// Type for validated event creation input (from Zod schema)
+export interface CreateEventInput {
+  title: string;
+  startDate: string;
+  startTime: string;
+  endDate?: string | null;
+  endTime?: string | null;
+  location?: string | null;
+  description?: string | null;
+  ticketPrice?: string | null;
+  requireApproval?: boolean;
+  capacity?: string | null;
+  questions?: Array<{ id: number | string; text: string }> | null;
+}
