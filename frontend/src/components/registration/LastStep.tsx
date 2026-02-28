@@ -26,7 +26,8 @@ export function LastStep({ eventSlug, onSubmit }: LastStepProps) {
 
   const handleReturn = () => {
     if (eventSlug) {
-      router.push(`/event/${eventSlug}`);
+      router.refresh();
+      router.push(`/event/${eventSlug}?refresh=${Date.now()}`);
     } else {
       router.push("/");
     }

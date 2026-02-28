@@ -23,6 +23,10 @@ export const createRegistrantAction = withActionErrorHandler(
   async (data: CreateRegistrantInput) => {
     const validatedData = CreateRegistrantSchema.parse(data);
     const result = await registerForEvent(validatedData);
+    
+    revalidatePath(`/event/${validatedData.event_id}`);
+    revalidatePath(`/event/${validatedData.event_id}/manage`);
+    
     return { result };
   },
 );
@@ -40,6 +44,7 @@ export const updateGuestStatusAction = withActionErrorHandler(
 
     await updateGuestStatus(validatedData.guestId, validatedData.isRegistered);
     revalidatePath(`/event/${slug}/manage`);
+    revalidatePath(`/event/${slug}`);
     logger.info(`Successfully updated guest ${validatedData.guestId} status`);
   },
 );
@@ -78,5 +83,42 @@ export const exportGuestsAction = withActionErrorHandler(
     }
 
     return result;
+  },
+);
+
+export const checkUserRegistrationAction = withActionErrorHandler(
+  async (eventSlug: string) => {
+    const { getRegistrantByUserAndEvent } = await import("@/repositories/registrantRepository");
+    const { getEventIdAndApprovalBySlug } = await import("@/repositories/eventRepository");
+    const { createClient } = await import("@/lib/supabase/server");
+    
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      return { isRegistered: false, registrationStatus: null as "approved" | "pending" | null };
+    }
+
+    const eventData = await getEventIdAndApprovalBySlug(eventSlug);
+    if (!eventData) {
+      throw new Error("Event not found");
+    }
+
+    const registrant = await getRegistrantByUserAndEvent(user.id, eventData.event_id);
+    
+    if (!registrant) {
+      return { isRegistered: false, registrationStatus: null as "approved" | "pending" | null };
+    }
+
+    const { data: registrantDetails } = await supabase
+      .from("registrants")
+      .select("is_registered")
+      .eq("registrant_id", registrant.registrant_id)
+      .single();
+
+    return { 
+      isRegistered: true, 
+      registrationStatus: (registrantDetails?.is_registered ? "approved" : "pending") as "approved" | "pending"
+    };
   },
 );

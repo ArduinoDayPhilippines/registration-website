@@ -49,7 +49,7 @@ export function StepDynamic({
     onNext();
   };
 
-  const updateAnswer = (questionId: number, value: string | File) => {
+  const updateAnswer = (questionId: number | string, value: string | File) => {
     updateData({
       dynamicAnswers: {
         ...formData.dynamicAnswers,

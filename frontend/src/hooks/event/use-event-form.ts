@@ -5,8 +5,8 @@ interface UseEventFormReturn {
   formData: EventFormData;
   updateField: <K extends keyof EventFormData>(field: K, value: EventFormData[K]) => void;
   addQuestion: () => void;
-  removeQuestion: (id: number) => void;
-  updateQuestion: (id: number, field: keyof Question, value: QuestionFieldValue) => void;
+  removeQuestion: (id: number | string) => void;
+  updateQuestion: (id: number | string, field: keyof Question, value: QuestionFieldValue) => void;
 }
 
 const initialFormData: EventFormData = {
@@ -39,7 +39,7 @@ export function useEventForm(): UseEventFormReturn {
     setFormData(prev => {
       // Generate sequential ID based on current questions length
       const nextId = prev.questions.length > 0 
-        ? Math.max(...prev.questions.map(q => q.id)) + 1 
+        ? Math.max(...prev.questions.map(q => typeof q.id === 'number' ? q.id : parseInt(String(q.id), 10) || 0)) + 1 
         : 1;
       return {
         ...prev,
@@ -48,7 +48,7 @@ export function useEventForm(): UseEventFormReturn {
     });
   }, []);
 
-  const removeQuestion = useCallback((id: number) => {
+  const removeQuestion = useCallback((id: number | string) => {
     setFormData(prev => ({
       ...prev,
       questions: prev.questions.filter(q => q.id !== id),
@@ -56,7 +56,7 @@ export function useEventForm(): UseEventFormReturn {
   }, []);
 
   const updateQuestion = useCallback((
-    id: number,
+    id: number | string,
     field: keyof Question,
     value: QuestionFieldValue
   ) => {

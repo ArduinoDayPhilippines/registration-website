@@ -145,3 +145,25 @@ export async function getRegistrantById(registrantId: string): Promise<Guest | n
 
   return data as unknown as Guest;
 }
+
+export async function getRegistrantCountByEventSlug(eventSlug: string): Promise<number> {
+  const supabase = await createClient();
+  const { getEventIdAndApprovalBySlug } = await import("@/repositories/eventRepository");
+  
+  const eventData = await getEventIdAndApprovalBySlug(eventSlug);
+  if (!eventData) {
+    return 0;
+  }
+
+  const { count, error } = await supabase
+    .from("registrants")
+    .select("*", { count: "exact", head: true })
+    .eq("event_id", eventData.event_id)
+    .eq("is_registered", true);
+
+  if (error) {
+    throw new Error(`Failed to fetch registrant count: ${error.message}`);
+  }
+
+  return count ?? 0;
+}
