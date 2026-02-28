@@ -3,7 +3,6 @@
 import React, { useState, useRef, useTransition } from "react";
 import { X, Image as ImageIcon, Upload } from "lucide-react";
 import { updateEventDetailsAction } from "@/actions/eventActions";
-import { eventStorage } from "@/lib/storage/event-storage";
 
 interface CoverImageChangeModalProps {
   isOpen: boolean;
@@ -16,7 +15,7 @@ interface CoverImageChangeModalProps {
 // shared server action without modifying it.
 async function updateEventCoverImage(slug: string, imageData: string) {
   // We use the new Server Action
-  return await updateEventDetailsAction({ slug, cover_image: imageData });
+  return await updateEventDetailsAction({ slug, coverImage: imageData });
 }
 
 export function CoverImageChangeModal({
@@ -26,7 +25,7 @@ export function CoverImageChangeModal({
   slug,
 }: CoverImageChangeModalProps) {
   const [selectedImage, setSelectedImage] = useState<string>(
-    currentImage || ""
+    currentImage || "",
   );
   const [isPending, startTransition] = useTransition();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -58,25 +57,12 @@ export function CoverImageChangeModal({
   const handleSave = () => {
     startTransition(async () => {
       try {
-        // Get the current event
-        const event = eventStorage.getBySlug(slug);
+        // Call the server action to update database directly
+        const result = await updateEventCoverImage(slug, selectedImage);
 
-        if (!event) {
-          alert("Event not found");
-          return;
+        if (!result || (result && !result.success)) {
+          throw new Error("Failed to save via Server Action");
         }
-
-        // Update the event with new cover image
-        const updatedEvent = {
-          ...event,
-          coverImage: selectedImage,
-        };
-
-        // Save to localStorage
-        eventStorage.update(slug, updatedEvent);
-
-        // Also call the server action for cache revalidation
-        await updateEventCoverImage(slug, selectedImage);
 
         alert("Cover image updated successfully!");
         onClose();

@@ -22,7 +22,8 @@ import { LocationPicker } from "@/components/create-event/LocationPicker";
 import { useEventValidation } from "@/hooks/event/use-event-validation";
 import { useEventSubmission } from "@/hooks/event/use-event-submission";
 import { useTicketPrice } from "@/hooks/event/use-ticket-price";
-import { readFileAsDataURL, parseDateTimeInput } from "@/utils/file-utils";
+import { useEventImageUpload } from "@/hooks/event/use-event-image-upload";
+import { parseDateTimeInput } from "@/utils/file-utils";
 
 interface EventFormProps {
   formData: EventFormData;
@@ -35,7 +36,7 @@ interface EventFormProps {
   updateQuestion: (
     id: number,
     field: keyof Question,
-    value: QuestionFieldValue
+    value: QuestionFieldValue,
   ) => void;
 }
 
@@ -93,22 +94,8 @@ export default function EventForm({
     validateField(field, value, formData);
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    try {
-      const dataUrl = await readFileAsDataURL(file);
-      updateField("coverImage", dataUrl);
-    } catch (err) {
-      console.error("Failed to read file:", err);
-    }
-  };
-
-  const handleCoverImageRemove = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    updateField("coverImage", "");
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
+  const { isUploading, handleFileUpload, handleCoverImageRemove } =
+    useEventImageUpload({ updateField });
 
   const handleSubmit = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -145,7 +132,7 @@ export default function EventForm({
                 className="absolute inset-0 w-full h-full object-cover"
               />
               <button
-                onClick={handleCoverImageRemove}
+                onClick={(e) => handleCoverImageRemove(e, fileInputRef)}
                 className="absolute top-4 right-4 p-2 bg-black/60 backdrop-blur-sm rounded-full hover:bg-black/80 transition-colors z-10"
               >
                 <X className="w-5 h-5 text-white" />
@@ -156,15 +143,26 @@ export default function EventForm({
               <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 md:group-hover:opacity-100 transition-opacity" />
               <div className="absolute inset-3 md:inset-4 border-2 border-dashed border-white/10 rounded-2xl md:group-hover:border-primary/50 transition-colors" />
               <div className="text-center p-4 relative z-10">
-                <div className="bg-white/5 p-2.5 rounded-full mb-2.5 mx-auto w-fit">
-                  <ImageIcon className="w-6 h-6 text-white/50" />
-                </div>
-                <p className="text-base font-bold text-white mb-1 uppercase tracking-wide">
-                  Upload Cover Image
-                </p>
-                <p className="text-[9px] text-white/40 uppercase tracking-widest">
-                  1080x1080 Recommended
-                </p>
+                {isUploading ? (
+                  <div className="flex flex-col items-center">
+                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent mb-2.5" />
+                    <p className="text-base font-bold text-white mb-1 uppercase tracking-wide">
+                      Uploading...
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="bg-white/5 p-2.5 rounded-full mb-2.5 mx-auto w-fit">
+                      <ImageIcon className="w-6 h-6 text-white/50" />
+                    </div>
+                    <p className="text-base font-bold text-white mb-1 uppercase tracking-wide">
+                      Upload Cover Image
+                    </p>
+                    <p className="text-[9px] text-white/40 uppercase tracking-widest">
+                      1080x1080 Recommended
+                    </p>
+                  </>
+                )}
               </div>
             </>
           )}
