@@ -24,12 +24,15 @@ export default function SurveyBuilder({
     setIsSaving(true);
     setSuccessMessage(null);
     try {
-      await saveEventSurveyAction(slug, config);
+      const result = await saveEventSurveyAction(slug, config);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
       setSuccessMessage("Survey saved successfully!");
       setTimeout(() => setSuccessMessage(null), 3000);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      alert("Failed to save survey. Please try again.");
+      alert(error.message || "Failed to save survey. Please try again.");
     } finally {
       setIsSaving(false);
     }

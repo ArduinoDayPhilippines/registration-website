@@ -47,7 +47,7 @@ export function StepContinueWithEmail({
         return;
       }
       setEmail(trimmed);
-      setPhase(result.exists ? "password" : "register_required");
+      setPhase(result.data?.exists ? "password" : "register_required");
     } catch {
       setError("Could not check email. Please try again.");
     } finally {

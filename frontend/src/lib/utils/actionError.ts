@@ -2,6 +2,8 @@
  * Shared utility for standardized Action Error handling across Service and Action layers.
  */
 import { ActionResponse } from "@/types/action";
+import { logger } from "@/utils/logger";
+import { redirect } from "next/navigation";
 
 export class ActionError extends Error {
   code: number;
@@ -37,12 +39,19 @@ export class ForbiddenError extends ActionError {
   }
 }
 
-
 /**
  * Standard utility to handle and format Server Action errors consistently.
  */
 export function handleActionError(error: unknown): ActionResponse {
-  // 1. If we intentionally threw an ActionError (or its subclasses like Unauthorized, Forbidden)
+  // Pass through Next.js redirect/notFound errors
+  if (
+    error instanceof Error &&
+    (error.message === "NEXT_REDIRECT" || error.message === "NEXT_NOT_FOUND")
+  ) {
+    throw error;
+  }
+
+  // 1. If we intentionally threw another ActionError
   if (error instanceof ActionError) {
     return {
       success: false,
@@ -58,7 +67,7 @@ export function handleActionError(error: unknown): ActionResponse {
       code: string;
       details?: string;
     };
-    console.error("[Database Action Error]:", dbError);
+    logger.error("[Database Action Error]:", dbError);
 
     // Handle Postgres constraint errors
     if (dbError.code === "23505") {
@@ -78,17 +87,17 @@ export function handleActionError(error: unknown): ActionResponse {
 
   // 3. Handle standard JS errors
   if (error instanceof Error) {
-    console.error("[Server Action Error]:", error.message);
+    logger.error("[Server Action Error]:", error);
     // Be careful not to expose internal stack traces/database queries to the client
     return {
       success: false,
-      error: "An unexpected server error occurred.",
+      error: error.message || "An unexpected server error occurred.",
       code: 500,
     };
   }
 
   // 4. Ultimate fallback
-  console.error("[Unknown Action Error]:", error);
+  logger.error("[Unknown Action Error]:", error);
   return {
     success: false,
     error: "An unexpected error occurred.",

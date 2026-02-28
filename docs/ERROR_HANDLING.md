@@ -4,7 +4,7 @@ This project uses a standardized error handling architecture for Server Actions 
 
 ## 📁 Source File
 
-`frontend/src/lib/utils/action-error.ts`
+`frontend/src/lib/utils/actionError.ts`
 
 ## 🧱 The Standardized Response
 
@@ -31,7 +31,7 @@ You do not need massive `try/catch` blocks inside your actions anymore.
 ### Step 1: Wrap your Action
 
 ```typescript
-import { withActionErrorHandler } from "@/lib/utils/action-error";
+import { withActionErrorHandler } from "@/lib/utils/actionError";
 
 export const doSomethingAwesome = withActionErrorHandler(async (formData) => {
   // 1. Business Logic here
@@ -50,7 +50,7 @@ We have built-in classes to throw specific error codes. You do not need to retur
 Use when the user does not have a valid session.
 
 ```typescript
-import { UnauthorizedError } from "@/lib/utils/action-error";
+import { UnauthorizedError } from "@/lib/utils/actionError";
 
 const user = await checkSession();
 if (!user) {
@@ -64,7 +64,7 @@ if (!user) {
 Use when the user is logged in, but their role (e.g., Guest vs Admin) prevents them from performing the action.
 
 ```typescript
-import { ForbiddenError } from "@/lib/utils/action-error";
+import { ForbiddenError } from "@/lib/utils/actionError";
 
 if (user.role !== "admin") {
   throw new ForbiddenError("You must be an admin to delete an event.");
@@ -77,7 +77,7 @@ if (user.role !== "admin") {
 Use the base `ActionError` class for specific business logic failures (Bad input, Rate Limiting, Not Found).
 
 ```typescript
-import { ActionError } from "@/lib/utils/action-error";
+import { ActionError } from "@/lib/utils/actionError";
 
 // 400 Bad Request
 if (!title) {

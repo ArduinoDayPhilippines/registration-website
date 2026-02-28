@@ -3,6 +3,10 @@
 import { canManageEvent } from "@/services/authService";
 import { uploadQRBufferToStorage } from "@/repositories/qrServerRepository";
 import { logger } from "@/utils/logger";
+import {
+  withActionErrorHandler,
+  UnauthorizedError,
+} from "@/lib/utils/actionError";
 
 export interface QRUploadResult {
   success: boolean;
@@ -10,16 +14,12 @@ export interface QRUploadResult {
   error?: string;
 }
 
-export async function uploadQRCodeAction(
-  blob: Blob,
-  fileName: string,
-  eventSlug: string
-): Promise<QRUploadResult> {
-  try {
+export const uploadQRCodeAction = withActionErrorHandler(
+  async (blob: Blob, fileName: string, eventSlug: string) => {
     const canManage = await canManageEvent(eventSlug);
     if (!canManage) {
       logger.warn("Unauthorized QR upload attempt", { eventSlug });
-      return { success: false, error: "Unauthorized" };
+      throw new UnauthorizedError("Unauthorized");
     }
 
     const arrayBuffer = await blob.arrayBuffer();
@@ -29,16 +29,10 @@ export async function uploadQRCodeAction(
 
     if (result.success) {
       logger.info("QR code uploaded successfully", { fileName });
+      return result;
     } else {
       logger.error("QR upload failed", result.error);
+      throw new Error(result.error);
     }
-
-    return result;
-  } catch (error) {
-    logger.error("Error uploading QR code", error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error' 
-    };
-  }
-}
+  },
+);
