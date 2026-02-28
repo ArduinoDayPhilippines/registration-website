@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { LogOut } from "lucide-react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { LogOut, Clock } from "lucide-react";
 import BokehBackground from "@/components/create-event/bokeh-background";
 import Squares from "@/components/create-event/squares-background";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
@@ -22,17 +22,23 @@ import { useEvent } from "@/hooks/event/use-event";
 import { setLastViewedEventSlug } from "@/utils/last-viewed-event";
 import { logoutAction } from "@/actions/authActions";
 import { getUserInfoAction } from "@/actions/userActions";
+import { checkUserRegistrationAction } from "@/actions/registrantActions";
 import { useUserStore } from "@/store/useUserStore";
 
 export default function EventPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const slug = params.slug as string;
-  const { event, loading, error } = useEvent(slug);
+  const { event, loading, error, refetch } = useEvent(slug);
   const { role, userId, loading: roleLoading, initialize } = useUserStore();
   const [hostName, setHostName] = useState<string | undefined>(undefined);
   const [hostEmail, setHostEmail] = useState<string | undefined>(undefined);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [registrationStatus, setRegistrationStatus] = useState<{
+    isRegistered: boolean;
+    registrationStatus: "approved" | "pending" | null;
+  } | null>(null);
 
   const isLoggedIn = !roleLoading && userId != null;
 
@@ -102,6 +108,56 @@ export default function EventPage() {
   useEffect(() => {
     if (slug) setLastViewedEventSlug(slug);
   }, [slug]);
+
+  useEffect(() => {
+    async function checkRegistration() {
+      if (!userId || !slug) return;
+      
+      try {
+        const result = await checkUserRegistrationAction(slug);
+        if (result.success && result.data) {
+          setRegistrationStatus(result.data);
+        }
+      } catch (err) {
+        console.error("Failed to check registration status:", err);
+      }
+    }
+
+    checkRegistration();
+  }, [userId, slug, event]);
+
+  useEffect(() => {
+    const refreshParam = searchParams.get('refresh');
+    if (refreshParam) {
+      router.refresh();
+      refetch();
+      const url = new URL(window.location.href);
+      url.searchParams.delete('refresh');
+      window.history.replaceState({}, '', url.toString());
+    }
+  }, [searchParams, refetch, router]);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        router.refresh();
+        refetch();
+      }
+    };
+
+    const handleFocus = () => {
+      router.refresh();
+      refetch();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [refetch, router]);
 
   if (loading) {
     return <LoadingSpinner message="Loading event..." />;
@@ -181,12 +237,35 @@ export default function EventPage() {
               className="mb-6"
             />
 
+            {/* Pending Approval Alert */}
+            {registrationStatus?.isRegistered && 
+             registrationStatus?.registrationStatus === "pending" && 
+             event.requireApproval && (
+              <div className="mb-6 bg-yellow-500/10 backdrop-blur-md rounded-xl p-4 border border-yellow-500/30">
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-yellow-500/20 border border-yellow-500/30 flex items-center justify-center">
+                    <Clock className="w-5 h-5 text-yellow-400" />
+                  </div>
+                  <div>
+                    <h3 className="font-urbanist text-base font-bold text-yellow-400 mb-1">
+                      Application Pending
+                    </h3>
+                    <p className="text-white/70 text-sm">
+                      Your registration is awaiting approval from the event host. You'll be notified once it's reviewed.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Registration Card */}
             <EventRegistrationCard
               requireApproval={event.requireApproval}
               ticketPrice={event.ticketPrice}
               capacity={event.capacity}
               registeredCount={event.registeredCount}
+              isUserRegistered={registrationStatus?.isRegistered || false}
+              registrationApprovalStatus={registrationStatus?.registrationStatus || null}
               onRsvpClick={() => router.push(`/event/${slug}/register`)}
             />
 

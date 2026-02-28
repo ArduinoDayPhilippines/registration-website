@@ -67,10 +67,8 @@ export async function getEventDetails(slug: string) {
   if (row.registered !== null && row.registered !== undefined) {
     event.registeredCount = row.registered;
   } else {
-    event.registeredCount = await getGuestCountByEvent(slug, [
-      "approved",
-      "pending",
-    ]);
+    const { getRegistrantCountByEventSlug } = await import("@/repositories/registrantRepository");
+    event.registeredCount = await getRegistrantCountByEventSlug(slug);
   }
 
   return event;
@@ -243,16 +241,10 @@ export async function createEvent(
     throw new Error("Capacity must be a positive number");
   }
 
-  // Transform questions array to object format for database
+  // Transform questions array for database
   const formQuestions =
     eventData.questions && eventData.questions.length > 0
-      ? eventData.questions.reduce(
-          (acc: Record<string, string>, question, index) => {
-            acc[`q${index + 1}`] = question.text;
-            return acc;
-          },
-          {},
-        )
+      ? eventData.questions
       : null;
 
   // Build start date

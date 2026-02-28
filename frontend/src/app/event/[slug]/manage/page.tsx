@@ -128,7 +128,10 @@ export default function ManageEventPage() {
             <GuestListSection
               guests={guests}
               slug={slug}
-              onRefresh={refetchGuests}
+              onRefresh={() => {
+                refetchGuests();
+                refetch();
+              }}
               event={event}
             />
           </>
