@@ -7,10 +7,10 @@ export interface Question {
   text: string;
   required: boolean;
   type: QuestionType;
-  options?: string[]; 
-  allowedFileTypes?: string[]; 
-  validationPattern?: string; 
-  validationMessage?: string; 
+  options?: string[];
+  allowedFileTypes?: string[];
+  validationPattern?: string;
+  validationMessage?: string;
 }
 
 export type QuestionFieldValue = string | boolean | QuestionType | string[];
@@ -67,6 +67,7 @@ export interface EventInsertData {
   require_approval: boolean;
   form_questions: Record<string, string> | null;
   status: string;
+  cover_image?: string | null;
 }
 
 // Type for validated event creation input (from Zod schema)
@@ -81,5 +82,6 @@ export interface CreateEventInput {
   ticketPrice?: string | null;
   requireApproval?: boolean;
   capacity?: string | null;
+  coverImage?: string | null;
   questions?: Array<{ id: number | string; text: string }> | null;
 }

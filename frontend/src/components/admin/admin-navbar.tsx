@@ -79,6 +79,7 @@ export function AdminNavbar({ activeTab }: AdminNavbarProps) {
                 src="/images/logos/adph-logo.png"
                 alt="ADPH"
                 fill
+                sizes="32px"
                 className="object-contain"
               />
             </div>

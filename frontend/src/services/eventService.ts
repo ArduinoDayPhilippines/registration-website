@@ -14,7 +14,7 @@ function mapRowToEvent(row: any): EventData {
         id: q.id,
         text: q.text,
         required: q.required ?? true,
-        type: q.type || 'text',
+        type: q.type || "text",
         options: q.options,
         allowedFileTypes: q.allowedFileTypes,
         validationPattern: q.validationPattern,
@@ -26,7 +26,7 @@ function mapRowToEvent(row: any): EventData {
           id: index + 1,
           text: String(value),
           required: true,
-          type: 'text' as const,
+          type: "text" as const,
         }),
       );
     }
@@ -48,8 +48,8 @@ function mapRowToEvent(row: any): EventData {
         ? String(row.capacity)
         : "",
     requireApproval: row.require_approval ?? false,
-    coverImage: undefined,
-    theme: "Minimal Dark",
+    coverImage: row.cover_image ?? undefined,
+    theme: row.theme ?? "Minimal Dark",
     questions,
     createdAt: row.created_at ?? new Date().toISOString(),
     postEventSurvey: row.post_event_survey,
@@ -67,12 +67,14 @@ export async function getEventDetails(slug: string) {
   if (row.registered !== null && row.registered !== undefined) {
     event.registeredCount = row.registered;
   } else {
-    event.registeredCount = await getGuestCountByEvent(slug, ["approved", "pending"]);
+    event.registeredCount = await getGuestCountByEvent(slug, [
+      "approved",
+      "pending",
+    ]);
   }
 
   return event;
 }
-
 
 export async function listAllEvents() {
   const { listEvents } = await import("@/repositories/eventRepository");
@@ -89,18 +91,20 @@ export async function updateEventDetails(
     endTime?: string | null;
     location?: string | null;
     capacity?: string | null;
+    coverImage?: string | null;
     ticketPrice?: string | null;
     requireApproval?: boolean;
-  }
+  },
 ) {
-  const { updateEventDetails: repoUpdate } = await import("@/repositories/eventRepository");
-  
+  const { updateEventDetails: repoUpdate } =
+    await import("@/repositories/eventRepository");
+
   // Transform datetime fields
   const startDateTime =
     details.startDate && details.startTime
       ? new Date(`${details.startDate}T${details.startTime}`).toISOString()
       : undefined;
-      
+
   const endDateTime =
     details.startDate && details.endTime
       ? new Date(`${details.startDate}T${details.endTime}`).toISOString()
@@ -108,9 +112,12 @@ export async function updateEventDetails(
 
   // Parse capacity
   const parsedCapacity = details.capacity ? Number(details.capacity) : null;
-  
+
   // Validate capacity if provided
-  if (parsedCapacity !== null && (isNaN(parsedCapacity) || parsedCapacity <= 0)) {
+  if (
+    parsedCapacity !== null &&
+    (isNaN(parsedCapacity) || parsedCapacity <= 0)
+  ) {
     throw new Error("Capacity must be a positive number");
   }
 
@@ -128,59 +135,87 @@ export async function updateEventDetails(
   // Add datetime fields if provided
   if (startDateTime) mappedDetails.start_date = startDateTime;
   if (endDateTime) mappedDetails.end_date = endDateTime;
+  if ("coverImage" in details) mappedDetails.cover_image = details.coverImage;
 
   await repoUpdate(slug, mappedDetails);
 }
 
-export async function updateEventSettings(slug: string, requireApproval: boolean) {
-  const { updateEventSettings: repoUpdateSettings } = await import("@/repositories/eventRepository");
+export async function updateEventSettings(
+  slug: string,
+  requireApproval: boolean,
+) {
+  const { updateEventSettings: repoUpdateSettings } =
+    await import("@/repositories/eventRepository");
   await repoUpdateSettings(slug, requireApproval);
 }
 
-export async function addRegistrationQuestion(slug: string, text: string, required: boolean) {
-  const { getEventQuestions, updateEventQuestions } = await import("@/repositories/eventRepository");
-  
+export async function addRegistrationQuestion(
+  slug: string,
+  text: string,
+  required: boolean,
+) {
+  const { getEventQuestions, updateEventQuestions } =
+    await import("@/repositories/eventRepository");
+
   const raw = await getEventQuestions(slug);
-  const existingQuestions = Array.isArray(raw?.form_questions) ? raw.form_questions : [];
-  
+  const existingQuestions = Array.isArray(raw?.form_questions)
+    ? raw.form_questions
+    : [];
+
   const newQuestion = {
     id: Date.now(),
     text,
     required,
-    type: 'text' as const,
+    type: "text" as const,
   };
-  
+
   const updatedQuestions = [...existingQuestions, newQuestion];
   await updateEventQuestions(slug, updatedQuestions);
 }
 
-export async function updateRegistrationQuestion(slug: string, questionId: number, text: string, required: boolean) {
-  const { getEventQuestions, updateEventQuestions } = await import("@/repositories/eventRepository");
-  
+export async function updateRegistrationQuestion(
+  slug: string,
+  questionId: number,
+  text: string,
+  required: boolean,
+) {
+  const { getEventQuestions, updateEventQuestions } =
+    await import("@/repositories/eventRepository");
+
   const raw = await getEventQuestions(slug);
-  const existingQuestions = Array.isArray(raw?.form_questions) ? raw.form_questions : [];
-  
+  const existingQuestions = Array.isArray(raw?.form_questions)
+    ? raw.form_questions
+    : [];
+
   const updatedQuestions = existingQuestions.map((q: any) =>
-    q.id === questionId ? { ...q, text, required } : q
+    q.id === questionId ? { ...q, text, required } : q,
   );
-  
+
   await updateEventQuestions(slug, updatedQuestions);
 }
 
-export async function removeRegistrationQuestion(slug: string, questionId: number) {
-  const { getEventQuestions, updateEventQuestions } = await import("@/repositories/eventRepository");
-  
+export async function removeRegistrationQuestion(
+  slug: string,
+  questionId: number,
+) {
+  const { getEventQuestions, updateEventQuestions } =
+    await import("@/repositories/eventRepository");
+
   const raw = await getEventQuestions(slug);
-  const existingQuestions = Array.isArray(raw?.form_questions) ? raw.form_questions : [];
-  
-  const updatedQuestions = existingQuestions.filter((q: any) => q.id !== questionId);
-  
+  const existingQuestions = Array.isArray(raw?.form_questions)
+    ? raw.form_questions
+    : [];
+
+  const updatedQuestions = existingQuestions.filter(
+    (q: any) => q.id !== questionId,
+  );
+
   await updateEventQuestions(slug, updatedQuestions);
 }
 
 export async function createEvent(
   eventData: import("@/types/event").CreateEventInput,
-  userId: string
+  userId: string,
 ): Promise<string> {
   const { insertEvent } = await import("@/repositories/eventRepository");
   const { generateSlug } = await import("@/utils/slug");
@@ -194,7 +229,9 @@ export async function createEvent(
 
   // Transform capacity: parse as integer or set to null
   const parsedCapacity =
-    eventData.capacity && eventData.capacity !== "Unlimited" && eventData.capacity.trim() !== ""
+    eventData.capacity &&
+    eventData.capacity !== "Unlimited" &&
+    eventData.capacity.trim() !== ""
       ? parseInt(eventData.capacity, 10)
       : null;
 
@@ -214,13 +251,13 @@ export async function createEvent(
             acc[`q${index + 1}`] = question.text;
             return acc;
           },
-          {}
+          {},
         )
       : null;
 
   // Build start date
   const startDate = new Date(
-    `${eventData.startDate}T${eventData.startTime}`
+    `${eventData.startDate}T${eventData.startTime}`,
   ).toISOString();
 
   // Build end date if provided
@@ -243,6 +280,7 @@ export async function createEvent(
     require_approval: eventData.requireApproval || false,
     form_questions: formQuestions,
     status: "upcoming",
+    cover_image: eventData.coverImage || null,
   };
 
   // Persist to database
