@@ -73,19 +73,22 @@ export default function EventPage() {
       try {
         // Fetch organizer's details using the server action
         const result = await getUserInfoAction({ userId: event.organizerId });
-        
+
         if (result.success && result.data) {
           // Set name (full name if available, otherwise fallback)
-          const displayName = result.data.fullName || result.data.email || "Event Organizer";
+          const displayName =
+            result.data.fullName || result.data.email || "Event Organizer";
           setHostName(displayName);
-          
+
           // Set email
           setHostEmail(result.data.email || undefined);
         } else {
           // Fallback: check if it's the current logged-in user
           const supabase = createClient();
-          const { data: { user: authUser } } = await supabase.auth.getUser();
-          
+          const {
+            data: { user: authUser },
+          } = await supabase.auth.getUser();
+
           if (authUser && authUser.id === event.organizerId) {
             const fullName = authUser.user_metadata?.full_name;
             setHostName(fullName || authUser.email || "You");
@@ -112,7 +115,7 @@ export default function EventPage() {
   useEffect(() => {
     async function checkRegistration() {
       if (!userId || !slug) return;
-      
+
       try {
         const result = await checkUserRegistrationAction(slug);
         if (result.success && result.data) {
@@ -127,19 +130,19 @@ export default function EventPage() {
   }, [userId, slug, event]);
 
   useEffect(() => {
-    const refreshParam = searchParams.get('refresh');
+    const refreshParam = searchParams.get("refresh");
     if (refreshParam) {
       router.refresh();
       refetch();
       const url = new URL(window.location.href);
-      url.searchParams.delete('refresh');
-      window.history.replaceState({}, '', url.toString());
+      url.searchParams.delete("refresh");
+      window.history.replaceState({}, "", url.toString());
     }
   }, [searchParams, refetch, router]);
 
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
+      if (document.visibilityState === "visible") {
         router.refresh();
         refetch();
       }
@@ -150,12 +153,12 @@ export default function EventPage() {
       refetch();
     };
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('focus', handleFocus);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("focus", handleFocus);
 
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", handleFocus);
     };
   }, [refetch, router]);
 
@@ -203,8 +206,11 @@ export default function EventPage() {
             {/* Share event - below picture */}
             <EventShareCard eventSlug={slug} eventTitle={event.title} />
 
-            {/* Manage Event Card - only for admins or event organizer */}
-            {canManage && <EventManageCard eventSlug={slug} />}
+            {/* About - below share event */}
+            <EventAbout
+              description={event.description}
+              className="border-t border-white/10 pt-6"
+            />
 
             {/* Hosted By - Desktop Only */}
             <EventHost
@@ -212,6 +218,11 @@ export default function EventPage() {
               hostEmail={hostEmail}
               className="hidden lg:block border-t border-white/10 pt-6"
             />
+
+            {/* Manage Event Card - only for admins or event organizer, below host */}
+            {canManage && (
+              <EventManageCard eventSlug={slug} className="hidden lg:flex" />
+            )}
           </div>
 
           {/* Right Column - Event Info */}
@@ -232,31 +243,29 @@ export default function EventPage() {
             <EventLocation location={event.location} />
 
             {/* Location Map Preview */}
-            <LocationMapPreview
-              location={event.location}
-              className="mb-6"
-            />
+            <LocationMapPreview location={event.location} className="mb-6" />
 
             {/* Pending Approval Alert */}
-            {registrationStatus?.isRegistered && 
-             registrationStatus?.registrationStatus === "pending" && 
-             event.requireApproval && (
-              <div className="mb-6 bg-yellow-500/10 backdrop-blur-md rounded-xl p-4 border border-yellow-500/30">
-                <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-yellow-500/20 border border-yellow-500/30 flex items-center justify-center">
-                    <Clock className="w-5 h-5 text-yellow-400" />
-                  </div>
-                  <div>
-                    <h3 className="font-urbanist text-base font-bold text-yellow-400 mb-1">
-                      Application Pending
-                    </h3>
-                    <p className="text-white/70 text-sm">
-                      Your registration is awaiting approval from the event host. You'll be notified once it's reviewed.
-                    </p>
+            {registrationStatus?.isRegistered &&
+              registrationStatus?.registrationStatus === "pending" &&
+              event.requireApproval && (
+                <div className="mb-6 bg-yellow-500/10 backdrop-blur-md rounded-xl p-4 border border-yellow-500/30">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-yellow-500/20 border border-yellow-500/30 flex items-center justify-center">
+                      <Clock className="w-5 h-5 text-yellow-400" />
+                    </div>
+                    <div>
+                      <h3 className="font-urbanist text-base font-bold text-yellow-400 mb-1">
+                        Application Pending
+                      </h3>
+                      <p className="text-white/70 text-sm">
+                        Your registration is awaiting approval from the event
+                        host. You'll be notified once it's reviewed.
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
             {/* Registration Card */}
             <EventRegistrationCard
@@ -265,14 +274,10 @@ export default function EventPage() {
               capacity={event.capacity}
               registeredCount={event.registeredCount}
               isUserRegistered={registrationStatus?.isRegistered || false}
-              registrationApprovalStatus={registrationStatus?.registrationStatus || null}
+              registrationApprovalStatus={
+                registrationStatus?.registrationStatus || null
+              }
               onRsvpClick={() => router.push(`/event/${slug}/register`)}
-            />
-
-            {/* About - Below RSVP */}
-            <EventAbout
-              description={event.description}
-              className="mt-6 pt-6 border-t border-white/10"
             />
 
             {/* Hosted By - Mobile Only (at the end) */}
@@ -281,6 +286,11 @@ export default function EventPage() {
               hostEmail={hostEmail}
               className="lg:hidden border-t border-white/10 pt-6 mt-8"
             />
+
+            {/* Manage Event Card - Mobile Only, below host */}
+            {canManage && (
+              <EventManageCard eventSlug={slug} className="lg:hidden mt-6 flex" />
+            )}
           </div>
         </div>
       </main>
