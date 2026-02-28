@@ -9,13 +9,24 @@ function mapRowToEvent(row: any): EventData {
   let questions: Question[] = [];
   if (row.form_questions) {
     if (Array.isArray(row.form_questions)) {
-      questions = row.form_questions;
+      // Map all question properties, ensuring type field exists
+      questions = row.form_questions.map((q: any) => ({
+        id: q.id,
+        text: q.text,
+        required: q.required ?? true,
+        type: q.type || 'text',
+        options: q.options,
+        allowedFileTypes: q.allowedFileTypes,
+        validationPattern: q.validationPattern,
+        validationMessage: q.validationMessage,
+      }));
     } else if (typeof row.form_questions === "object") {
       questions = Object.entries(row.form_questions).map(
         ([key, value], index) => ({
           id: index + 1,
           text: String(value),
           required: true,
+          type: 'text' as const,
         }),
       );
     }
@@ -88,6 +99,7 @@ export async function addRegistrationQuestion(slug: string, text: string, requir
     id: Date.now(),
     text,
     required,
+    type: 'text' as const,
   };
   
   const updatedQuestions = [...existingQuestions, newQuestion];
@@ -138,12 +150,8 @@ export async function createEvent(eventData: any, userId: string): Promise<strin
 
   const parsedCapacity = capacity && capacity !== "Unlimited" ? parseInt(capacity) : null;
   
-  const parsedQuestions = questions && questions.length > 0
-    ? questions.reduce((acc: any, question: any, index: number) => {
-        acc[`q${index + 1}`] = question.text;
-        return acc;
-      }, {})
-    : null;
+  // Store complete question objects with all properties
+  const parsedQuestions = questions && questions.length > 0 ? questions : null;
 
   const slug = generateSlug(title);
 

@@ -74,9 +74,36 @@ export function GuestAnswersModal({ guest, event, onClose }: GuestAnswersModalPr
                           <p className="font-urbanist text-sm font-medium text-white/60 mb-2">
                             {questionText}
                           </p>
-                          <p className="font-urbanist text-base text-white leading-relaxed">
-                            {String(answer)}
-                          </p>
+                          {/* Check if answer is a URL (file upload) */}
+                          {String(answer).startsWith('http') ? (
+                            <a
+                              href={String(answer)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-urbanist text-base text-primary hover:text-primary/80 underline leading-relaxed inline-flex items-center gap-2"
+                            >
+                              View Uploaded File
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                                <polyline points="15 3 21 3 21 9" />
+                                <line x1="10" y1="14" x2="21" y2="3" />
+                              </svg>
+                            </a>
+                          ) : (
+                            <p className="font-urbanist text-base text-white leading-relaxed">
+                              {String(answer)}
+                            </p>
+                          )}
                         </div>
                       </div>
                     </div>

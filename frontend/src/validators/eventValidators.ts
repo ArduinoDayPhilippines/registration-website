@@ -82,6 +82,12 @@ export const CreateEventSchema = z.object({
       .min(1, "Question text cannot be empty")
       .max(500, "Question text must be at most 500 characters")
       .trim(),
+    required: z.boolean(),
+    type: z.enum(['text', 'multiple_choice', 'dropdown', 'file_upload']),
+    options: z.array(z.string()).optional(),
+    allowedFileTypes: z.array(z.string()).optional(),
+    validationPattern: z.string().optional(),
+    validationMessage: z.string().optional(),
   })).optional().nullable(),
 }).superRefine((data, ctx) => {
   if (!data.endDate) return;
