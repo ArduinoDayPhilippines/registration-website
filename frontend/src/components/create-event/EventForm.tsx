@@ -32,9 +32,9 @@ interface EventFormProps {
     value: EventFormData[K],
   ) => void;
   addQuestion: () => void;
-  removeQuestion: (id: number) => void;
+  removeQuestion: (id: number | string) => void;
   updateQuestion: (
-    id: number,
+    id: number | string,
     field: keyof Question,
     value: QuestionFieldValue,
   ) => void;

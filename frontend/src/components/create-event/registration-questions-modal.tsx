@@ -10,8 +10,8 @@ interface RegistrationQuestionsModalProps {
   onClose: () => void;
   questions: Question[];
   addQuestion: () => void;
-  removeQuestion: (id: number) => void;
-  updateQuestion: (id: number, field: keyof Question, value: QuestionFieldValue) => void;
+  removeQuestion: (id: number | string) => void;
+  updateQuestion: (id: number | string, field: keyof Question, value: QuestionFieldValue) => void;
 }
 
 export function RegistrationQuestionsModal({ 
@@ -41,7 +41,7 @@ export function RegistrationQuestionsModal({
     { value: 'alphanumeric', label: 'Alphanumeric', pattern: '^[a-zA-Z0-9]+$', message: 'Please enter letters and numbers only', example: 'ABC123' },
   ];
 
-  const addOption = (questionId: number) => {
+  const addOption = (questionId: number | string) => {
     const question = questions.find(q => q.id === questionId);
     if (question) {
       const currentOptions = question.options || [];
@@ -49,7 +49,7 @@ export function RegistrationQuestionsModal({
     }
   };
 
-  const updateOption = (questionId: number, optionIndex: number, value: string) => {
+  const updateOption = (questionId: number | string, optionIndex: number, value: string) => {
     const question = questions.find(q => q.id === questionId);
     if (question && question.options) {
       const newOptions = [...question.options];
@@ -58,7 +58,7 @@ export function RegistrationQuestionsModal({
     }
   };
 
-  const removeOption = (questionId: number, optionIndex: number) => {
+  const removeOption = (questionId: number | string, optionIndex: number) => {
     const question = questions.find(q => q.id === questionId);
     if (question && question.options) {
       const newOptions = question.options.filter((_, index) => index !== optionIndex);

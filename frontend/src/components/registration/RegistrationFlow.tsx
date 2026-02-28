@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { RegistrationLayout } from './RegistrationLayout';
 import { Step0 } from './Step0';
 import { StepContinueWithEmail } from './StepContinueWithEmail';
@@ -21,6 +22,7 @@ export function RegistrationFlow({
   eventSlug,
   formQuestions = []
 }: RegistrationFlowProps) {
+  const router = useRouter();
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState<RegistrationFormData>(INITIAL_DATA);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -186,7 +188,10 @@ export function RegistrationFlow({
                 </p>
                 <button
                     type="button"
-                    onClick={() => { window.location.href = eventSlug ? `/event/${eventSlug}` : "/"; }}
+                    onClick={() => { 
+                      router.refresh();
+                      router.push(eventSlug ? `/event/${eventSlug}?refresh=${Date.now()}` : "/");
+                    }}
                     className="px-6 py-3 bg-[rgba(35,60,60,0.6)] hover:bg-[rgba(35,60,60,0.7)] text-[#95b5b5] font-semibold rounded-xl transition-all duration-200 text-sm"
                 >
                     {eventSlug ? "Go Back to Event Page" : "Go to Home"}

@@ -3,7 +3,7 @@ import { SurveyConfig } from "./survey";
 export type QuestionType = 'text' | 'multiple_choice' | 'dropdown' | 'file_upload';
 
 export interface Question {
-  id: number;
+  id: number | string;
   text: string;
   required: boolean;
   type: QuestionType;
@@ -65,7 +65,7 @@ export interface EventInsertData {
   price: string;
   capacity: number | null;
   require_approval: boolean;
-  form_questions: Record<string, string> | null;
+  form_questions: Question[] | null;
   status: string;
   cover_image?: string | null;
 }
@@ -83,5 +83,5 @@ export interface CreateEventInput {
   requireApproval?: boolean;
   capacity?: string | null;
   coverImage?: string | null;
-  questions?: Array<{ id: number | string; text: string }> | null;
+  questions?: Question[] | null;
 }
