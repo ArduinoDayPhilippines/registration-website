@@ -1,8 +1,19 @@
+import { SurveyConfig } from "./survey";
+
+export type QuestionType = 'text' | 'multiple_choice' | 'dropdown' | 'file_upload';
+
 export interface Question {
-  id: number;
+  id: number | string;
   text: string;
   required: boolean;
+  type: QuestionType;
+  options?: string[];
+  allowedFileTypes?: string[];
+  validationPattern?: string;
+  validationMessage?: string;
 }
+
+export type QuestionFieldValue = string | boolean | QuestionType | string[];
 
 export interface EventData {
   slug: string;
@@ -17,11 +28,13 @@ export interface EventData {
   description: string;
   ticketPrice: string;
   capacity: string;
+  registeredCount?: number;
   requireApproval: boolean;
   coverImage?: string;
   theme: string;
   questions: Question[];
   createdAt: string;
+  postEventSurvey?: SurveyConfig;
 }
 
 export interface EventFormData {
@@ -38,4 +51,37 @@ export interface EventFormData {
   capacity: string;
   requireApproval: boolean;
   questions: Question[];
+}
+
+// Type for database insert (repository layer)
+export interface EventInsertData {
+  organizer_id: string;
+  event_name: string;
+  slug: string;
+  start_date: string;
+  end_date: string | null;
+  location: string;
+  description: string | null;
+  price: string;
+  capacity: number | null;
+  require_approval: boolean;
+  form_questions: Question[] | null;
+  status: string;
+  cover_image?: string | null;
+}
+
+// Type for validated event creation input (from Zod schema)
+export interface CreateEventInput {
+  title: string;
+  startDate: string;
+  startTime: string;
+  endDate?: string | null;
+  endTime?: string | null;
+  location?: string | null;
+  description?: string | null;
+  ticketPrice?: string | null;
+  requireApproval?: boolean;
+  capacity?: string | null;
+  coverImage?: string | null;
+  questions?: Question[] | null;
 }

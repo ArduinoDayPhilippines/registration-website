@@ -6,6 +6,13 @@ interface EventLocationProps {
 }
 
 export function EventLocation({ location }: EventLocationProps) {
+  const handleLocationClick = () => {
+    if (location) {
+      const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`;
+      window.open(googleMapsUrl, '_blank');
+    }
+  };
+
   return (
     <div className="flex items-start gap-3 mb-6 pb-6 border-b border-white/10">
       <div className="flex-shrink-0">
@@ -14,9 +21,18 @@ export function EventLocation({ location }: EventLocationProps) {
         </div>
       </div>
       <div className="flex-1 min-w-0 pt-2">
-        <p className="text-white/90 text-sm break-words">
-          {location || "Register to See Address"}
-        </p>
+        {location ? (
+          <button
+            onClick={handleLocationClick}
+            className="text-white/90 text-sm break-words hover:text-primary transition-colors text-left underline decoration-primary/30 hover:decoration-primary"
+          >
+            {location}
+          </button>
+        ) : (
+          <p className="text-white/90 text-sm break-words">
+            Register to See Address
+          </p>
+        )}
       </div>
     </div>
   );

@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { LogOut, Clock } from "lucide-react";
 import BokehBackground from "@/components/create-event/bokeh-background";
 import Squares from "@/components/create-event/squares-background";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
@@ -11,44 +12,152 @@ import { EventDateTime } from "@/components/event/event-date-time";
 import { EventLocation } from "@/components/event/event-location";
 import { EventManageCard } from "@/components/event/event-manage-card";
 import { EventRegistrationCard } from "@/components/event/event-registration-card";
+import { EventShareCard } from "@/components/event/event-share-card";
 import { EventAbout } from "@/components/event/event-about";
 import { EventHost } from "@/components/event/event-host";
+import { LocationMapPreview } from "@/components/event/location-map-preview";
 import { createClient } from "@/lib/supabase/client";
 import { useEvent } from "@/hooks/event/use-event";
+
+import { setLastViewedEventSlug } from "@/utils/last-viewed-event";
+import { logoutAction } from "@/actions/authActions";
+import { getUserInfoAction } from "@/actions/userActions";
+import { checkUserRegistrationAction } from "@/actions/registrantActions";
+import { useUserStore } from "@/store/useUserStore";
 
 export default function EventPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const slug = params.slug as string;
-  const { event, loading, error } = useEvent(slug);
+  const { event, loading, error, refetch } = useEvent(slug);
+  const { role, userId, loading: roleLoading, initialize } = useUserStore();
   const [hostName, setHostName] = useState<string | undefined>(undefined);
+  const [hostEmail, setHostEmail] = useState<string | undefined>(undefined);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [registrationStatus, setRegistrationStatus] = useState<{
+    isRegistered: boolean;
+    registrationStatus: "approved" | "pending" | null;
+  } | null>(null);
+
+  const isLoggedIn = !roleLoading && userId != null;
+
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    try {
+      await logoutAction();
+      useUserStore.getState().clearUser();
+      router.replace("/");
+    } finally {
+      setLoggingOut(false);
+    }
+  };
+
+  const canManage =
+    !roleLoading &&
+    event &&
+    (role === "admin" || (userId != null && userId === event.organizerId));
 
   useEffect(() => {
-    async function loadHostName() {
+    initialize();
+  }, [initialize]);
+
+  useEffect(() => {
+    async function loadHostInfo() {
       if (!event?.organizerId) {
         setHostName(undefined);
+        setHostEmail(undefined);
         return;
       }
 
       try {
-        const supabase = createClient();
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-
-        if (user && user.id === event.organizerId) {
-          setHostName(user.email ?? "You");
+        // Fetch organizer's details using the server action
+        const result = await getUserInfoAction({ userId: event.organizerId });
+        
+        if (result.success && result.data) {
+          // Set name (full name if available, otherwise fallback)
+          const displayName = result.data.fullName || result.data.email || "Event Organizer";
+          setHostName(displayName);
+          
+          // Set email
+          setHostEmail(result.data.email || undefined);
         } else {
-          setHostName("Event Organizer");
+          // Fallback: check if it's the current logged-in user
+          const supabase = createClient();
+          const { data: { user: authUser } } = await supabase.auth.getUser();
+          
+          if (authUser && authUser.id === event.organizerId) {
+            const fullName = authUser.user_metadata?.full_name;
+            setHostName(fullName || authUser.email || "You");
+            setHostEmail(authUser.email || undefined);
+          } else {
+            setHostName("Event Organizer");
+            setHostEmail(undefined);
+          }
         }
       } catch (e) {
         console.error("Failed to load organizer info:", e);
         setHostName("Event Organizer");
+        setHostEmail(undefined);
       }
     }
 
-    loadHostName();
+    loadHostInfo();
   }, [event?.organizerId]);
+
+  useEffect(() => {
+    if (slug) setLastViewedEventSlug(slug);
+  }, [slug]);
+
+  useEffect(() => {
+    async function checkRegistration() {
+      if (!userId || !slug) return;
+      
+      try {
+        const result = await checkUserRegistrationAction(slug);
+        if (result.success && result.data) {
+          setRegistrationStatus(result.data);
+        }
+      } catch (err) {
+        console.error("Failed to check registration status:", err);
+      }
+    }
+
+    checkRegistration();
+  }, [userId, slug, event]);
+
+  useEffect(() => {
+    const refreshParam = searchParams.get('refresh');
+    if (refreshParam) {
+      router.refresh();
+      refetch();
+      const url = new URL(window.location.href);
+      url.searchParams.delete('refresh');
+      window.history.replaceState({}, '', url.toString());
+    }
+  }, [searchParams, refetch, router]);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        router.refresh();
+        refetch();
+      }
+    };
+
+    const handleFocus = () => {
+      router.refresh();
+      refetch();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [refetch, router]);
 
   if (loading) {
     return <LoadingSpinner message="Loading event..." />;
@@ -69,6 +178,21 @@ export default function EventPage() {
       <BokehBackground />
       <Squares direction="diagonal" speed={0.3} />
 
+      {/* Logout - top right, only when logged in */}
+      {isLoggedIn && (
+        <div className="fixed top-4 right-4 z-20">
+          <button
+            type="button"
+            onClick={handleLogout}
+            disabled={loggingOut}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl border border-[rgba(93,165,165,0.4)] bg-[rgba(15,30,30,0.6)] text-[#95b5b5] hover:bg-[rgba(35,60,60,0.6)] hover:text-[#9dd5d5] hover:border-[#5da5a5]/60 transition-all duration-200 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <LogOut className="w-4 h-4" />
+            {loggingOut ? "Logging out…" : "Logout"}
+          </button>
+        </div>
+      )}
+
       <main className="relative z-10 w-full max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-10 pb-16">
         {/* Two Column Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-[400px_1fr] xl:grid-cols-[440px_1fr] gap-8 lg:gap-10 xl:gap-12">
@@ -76,18 +200,16 @@ export default function EventPage() {
           <div className="animate-fade-in space-y-6">
             <EventCoverImage src={event.coverImage || ""} alt={event.title} />
 
-            {/* Manage Event Card */}
-            <EventManageCard eventSlug={slug} />
+            {/* Share event - below picture */}
+            <EventShareCard eventSlug={slug} eventTitle={event.title} />
 
-            {/* About - Desktop Only */}
-            <EventAbout
-              description={event.description}
-              className="hidden lg:block"
-            />
+            {/* Manage Event Card - only for admins or event organizer */}
+            {canManage && <EventManageCard eventSlug={slug} />}
 
             {/* Hosted By - Desktop Only */}
             <EventHost
               hostName={hostName}
+              hostEmail={hostEmail}
               className="hidden lg:block border-t border-white/10 pt-6"
             />
           </div>
@@ -99,12 +221,6 @@ export default function EventPage() {
               {event.title}
             </h1>
 
-            {/* About - Mobile Only (below title) */}
-            <EventAbout
-              description={event.description}
-              className="lg:hidden mb-6 pb-6 border-b border-white/10"
-            />
-
             {/* Date & Time */}
             <EventDateTime
               startDate={event.startDate}
@@ -115,17 +231,54 @@ export default function EventPage() {
             {/* Location */}
             <EventLocation location={event.location} />
 
+            {/* Location Map Preview */}
+            <LocationMapPreview
+              location={event.location}
+              className="mb-6"
+            />
+
+            {/* Pending Approval Alert */}
+            {registrationStatus?.isRegistered && 
+             registrationStatus?.registrationStatus === "pending" && 
+             event.requireApproval && (
+              <div className="mb-6 bg-yellow-500/10 backdrop-blur-md rounded-xl p-4 border border-yellow-500/30">
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-yellow-500/20 border border-yellow-500/30 flex items-center justify-center">
+                    <Clock className="w-5 h-5 text-yellow-400" />
+                  </div>
+                  <div>
+                    <h3 className="font-urbanist text-base font-bold text-yellow-400 mb-1">
+                      Application Pending
+                    </h3>
+                    <p className="text-white/70 text-sm">
+                      Your registration is awaiting approval from the event host. You'll be notified once it's reviewed.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Registration Card */}
             <EventRegistrationCard
               requireApproval={event.requireApproval}
               ticketPrice={event.ticketPrice}
               capacity={event.capacity}
+              registeredCount={event.registeredCount}
+              isUserRegistered={registrationStatus?.isRegistered || false}
+              registrationApprovalStatus={registrationStatus?.registrationStatus || null}
               onRsvpClick={() => router.push(`/event/${slug}/register`)}
+            />
+
+            {/* About - Below RSVP */}
+            <EventAbout
+              description={event.description}
+              className="mt-6 pt-6 border-t border-white/10"
             />
 
             {/* Hosted By - Mobile Only (at the end) */}
             <EventHost
               hostName={hostName}
+              hostEmail={hostEmail}
               className="lg:hidden border-t border-white/10 pt-6 mt-8"
             />
           </div>

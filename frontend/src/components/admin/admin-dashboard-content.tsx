@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { StatCard } from "./stat-card";
 import { ActiveEvents } from "./active-events";
 import { AnalyticsCharts } from "./analytics-charts";
-import { eventStorage } from "@/lib/storage/event-storage";
+import { listEventsAction } from "@/actions/eventActions";
 import { EventData } from "@/types/event";
 import { Users, Calendar, UserPlus, Building2 } from "lucide-react";
 
@@ -26,7 +26,7 @@ const mockStats = {
 interface AdminDashboardContentProps {
   activeTab: "dashboard" | "events" | "stats" | "create-event" | "export-data";
   setActiveTab: (
-    tab: "dashboard" | "events" | "stats" | "create-event" | "export-data"
+    tab: "dashboard" | "events" | "stats" | "create-event" | "export-data",
   ) => void;
 }
 
@@ -37,12 +37,18 @@ export const AdminDashboardContent: React.FC<AdminDashboardContentProps> = ({
   const [events, setEvents] = useState<EventData[]>([]);
 
   useEffect(() => {
-    // Load events from storage
-    const loadedEvents = eventStorage.getAll();
-    console.log("Loaded events from storage:", loadedEvents);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setEvents(loadedEvents);
-  }, [activeTab]); // Reload when tab changes
+    async function fetchEvents() {
+      try {
+        const response = await listEventsAction();
+        if (response.success && response.data) {
+          setEvents(response.data);
+        }
+      } catch (e) {
+        console.error("Failed to load events", e);
+      }
+    }
+    fetchEvents();
+  }, [activeTab]);
 
   // Transform EventData to match ActiveEvents component expected format
   const transformedEvents = events.map((event) => ({
