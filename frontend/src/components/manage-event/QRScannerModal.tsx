@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { X, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { X, CheckCircle, XCircle, Loader2, FlipHorizontal } from "lucide-react";
 import { Html5Qrcode } from "html5-qrcode";
 import { QRCodeData } from "@/services/qrService";
 import { validateQRCodeAction } from "@/actions/qrActions";
@@ -25,6 +25,7 @@ export function QRScannerModal({
 }: QRScannerModalProps) {
   const [isScanning, setIsScanning] = useState(false);
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
+  const [facingMode, setFacingMode] = useState<"environment" | "user">("environment");
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const isProcessingRef = useRef(false);
 
@@ -82,21 +83,20 @@ export function QRScannerModal({
     }
   };
 
-  const startScanner = async () => {
+  const startScanner = async (camera: "environment" | "user" = facingMode) => {
     try {
       setIsScanning(true);
       const scanner = new Html5Qrcode("qr-reader");
       scannerRef.current = scanner;
 
       await scanner.start(
-        { facingMode: "environment" },
+        { facingMode: camera },
         {
           fps: 10,
           qrbox: { width: 250, height: 250 },
         },
         handleScan,
-        () => {
-        }
+        () => {}
       );
     } catch (error) {
       console.error("Error starting scanner:", error);
@@ -106,6 +106,13 @@ export function QRScannerModal({
         message: "Failed to start camera. Please check permissions.",
       });
     }
+  };
+
+  const flipCamera = async () => {
+    await stopScanner();
+    const next = facingMode === "environment" ? "user" : "environment";
+    setFacingMode(next);
+    await startScanner(next);
   };
 
   const stopScanner = async () => {
@@ -129,7 +136,7 @@ export function QRScannerModal({
 
   useEffect(() => {
     if (isOpen && !isScanning && !scannerRef.current) {
-      startScanner();
+      startScanner(facingMode);
     }
 
     return () => {
@@ -149,12 +156,23 @@ export function QRScannerModal({
           <h2 className="text-xl font-urbanist font-bold text-white">
             Scan QR Code
           </h2>
-          <button
-            onClick={handleClose}
-            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-          >
-            <X className="w-5 h-5 text-white/60" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={flipCamera}
+              disabled={!isScanning}
+              className="p-2 hover:bg-white/10 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              aria-label="Flip camera"
+              title={facingMode === "environment" ? "Switch to front camera" : "Switch to back camera"}
+            >
+              <FlipHorizontal className="w-5 h-5 text-white/60" />
+            </button>
+            <button
+              onClick={handleClose}
+              className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+            >
+              <X className="w-5 h-5 text-white/60" />
+            </button>
+          </div>
         </div>
 
         {/* Scanner Area */}

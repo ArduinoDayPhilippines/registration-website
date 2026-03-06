@@ -6,6 +6,7 @@ import { EventData } from "@/types/event";
 import { useGuestSelection } from "@/hooks/guest/use-guest-selection";
 import { useGuestFilter } from "@/hooks/guest/use-guest-filter";
 import { useGuestActions } from "@/hooks/guest/use-guest-actions";
+import { QRScannerModal } from "../QRScannerModal";
 import { GuestAnswersModal } from "./GuestAnswersModal";
 import { GuestListHeader } from "./GuestListHeader";
 import { GuestListSearchFilter } from "./GuestListSearchFilter";
@@ -28,6 +29,7 @@ export function GuestListSection({
 }: GuestListSectionProps) {
   const [selectedGuest, setSelectedGuest] = useState<Guest | null>(null);
   const [showAnswersModal, setShowAnswersModal] = useState(false);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
   
   const { searchQuery, setSearchQuery, statusFilter, setStatusFilter, filteredGuests } = useGuestFilter(guests);
   
@@ -60,6 +62,12 @@ export function GuestListSection({
 
   return (
     <>
+      <QRScannerModal
+        isOpen={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+        eventSlug={slug}
+      />
+
       {/* Answers Modal */}
       {showAnswersModal && selectedGuest && (
         <GuestAnswersModal
@@ -78,6 +86,7 @@ export function GuestListSection({
           <GuestListHeader 
             guestCount={guests.length}
             onExport={handleExport}
+            onCheckIn={() => setIsScannerOpen(true)}
           />
 
           {/* Search and Filter Bar */}

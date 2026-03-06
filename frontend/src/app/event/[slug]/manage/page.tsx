@@ -13,7 +13,6 @@ import { useGuests } from "@/hooks/guest/use-guests";
 import { useUserStore } from "@/store/useUserStore";
 import {
   GuestStatistics,
-  QuickActions,
   GuestListSection,
   EventPreviewCard,
   WhenWhereSidebar,
@@ -124,7 +123,6 @@ export default function ManageEventPage() {
               checkedIn={stats?.checkedIn || 0}
               waitlist={stats?.waitlist || 0}
             />
-            <QuickActions eventSlug={slug} />
             <GuestListSection
               guests={guests}
               slug={slug}
