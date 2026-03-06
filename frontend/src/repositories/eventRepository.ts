@@ -15,6 +15,18 @@ export async function getEventBySlug(slug: string) {
   return data;
 }
 
+export async function getEventFormQuestions(slug: string): Promise<{ text: string }[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("events")
+    .select("form_questions")
+    .eq("slug", slug)
+    .single();
+
+  if (error || !data) return [];
+  return (data.form_questions as { text: string }[]) || [];
+}
+
 export async function getEventIdAndApprovalBySlug(slug: string) {
   const supabase = await createClient();
   const { data, error } = await supabase

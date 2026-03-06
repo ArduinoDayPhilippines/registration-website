@@ -100,7 +100,7 @@ export function RegistrationFlow({
           if (answer instanceof File) {
             try {
               const fileUrl = await uploadRegistrationFile(supabase, answer, eventSlug || '');
-              formAnswers[`a${index + 1}`] = fileUrl;
+              formAnswers[question.text] = fileUrl;
             } catch (error) {
               console.error('File upload error:', error);
               alert(`Failed to upload file: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -108,7 +108,7 @@ export function RegistrationFlow({
             }
           } else {
             // Regular string answer
-            formAnswers[`a${index + 1}`] = answer;
+            formAnswers[question.text] = answer;
           }
         }
       }
