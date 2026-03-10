@@ -14,8 +14,8 @@ import { EventRegistrationCard } from "@/components/event/event-registration-car
 import { EventAbout } from "@/components/event/event-about";
 import { EventHost } from "@/components/event/event-host";
 import { LocationMapPreview } from "@/components/event/location-map-preview";
-import { createClient } from "@/lib/supabase/client";
 import { useEvent } from "@/hooks/event/use-event";
+import { getCurrentUserEmail } from "@/app/event/actions"; 
 
 export default function EventPage() {
   const params = useParams();
@@ -32,13 +32,10 @@ export default function EventPage() {
       }
 
       try {
-        const supabase = createClient();
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
+        const currentUser = await getCurrentUserEmail();
 
-        if (user && user.id === event.organizerId) {
-          setHostName(user.email ?? "You");
+        if (currentUser && currentUser.id === event.organizerId) {
+          setHostName(currentUser.email ?? "You");
         } else {
           setHostName("Event Organizer");
         }
