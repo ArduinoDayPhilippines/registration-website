@@ -1,46 +1,38 @@
-/**
- * Configuration for the Certificate Generation Service.
- * Modify these values to easily adjust the text positioning and appearance
- * without touching the core generator logic.
- */
-export const CERTIFICATE_CONFIG = {
-  // Dimensions of the background template image
-  templateWidth: 3508,
-  templateHeight: 2480,
+import { CertificateConfig } from "@/types/event";
 
-  // Text bounding box based on the template design
+export const DEFAULT_CERTIFICATE_CONFIG: CertificateConfig = {
+  isEnabled: false,
+  templateUrl: "",
   text: {
-    x: 934.6, // Left position
-    y: 993.1, // Top position
-    width: 2407.3, // Width of the bounding box
-    height: 182.5, // Height of the bounding box
-
-    // Font styling
+    x: 934,
+    y: 993,
+    width: 2407,
+    height: 182,
     color: "#2490ab",
-    fontSize: 110, // Base size used to calculate scaling
-    minFontSize: 50, // Don't go below this
-    maxFontSize: 140, // Don't go above this
-    fontFamily: '"Montserrat"', // Base font family name
-    fontFile: "Montserrat-BoldItalic.ttf", // The exact TTF file to load
-    fontWeight: 700 as const,
-    fontStyle: "italic" as const,
+    baseFontSize: 80,
+    thresholdLength: 20,
+    minFontSize: 30,
+    maxFontSize: 80,
+    fontFile: "Montserrat-BoldItalic.ttf",
+    fontWeight: 700,
+    fontStyle: "italic",
   },
 };
 
 /**
  * Smart font size calculator to fit long names within the bounding box
- * Scales dynamically based on: 35 characters = CERTIFICATE_CONFIG.text.fontSize.
+ * Scales dynamically based on: config.thresholdLength characters = config.baseFontSize.
  * Caps at maxFontSize for shorter names.
  */
-export const getSmartFontSize = (textLength: number): number => {
-  if (textLength === 0) return CERTIFICATE_CONFIG.text.maxFontSize;
-
-  // Dynamically base target on configured fontSize
-  const targetWidth = 35 * CERTIFICATE_CONFIG.text.fontSize;
+export const getSmartFontSize = (textLength: number, config: NonNullable<CertificateConfig["text"]>): number => {
+  if (textLength === 0 || !config?.thresholdLength) return config.maxFontSize;
+  
+  // Base case from the config (e.g., 20 characters)
+  const targetWidth = config.thresholdLength * config.baseFontSize;
   const calculatedSize = Math.floor(targetWidth / textLength);
-
+  
   return Math.max(
-    CERTIFICATE_CONFIG.text.minFontSize,
-    Math.min(CERTIFICATE_CONFIG.text.maxFontSize, calculatedSize),
+    config.minFontSize, 
+    Math.min(config.maxFontSize, calculatedSize)
   );
 };

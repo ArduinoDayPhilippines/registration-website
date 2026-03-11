@@ -76,7 +76,7 @@ export const submitSurveyResponseAction = withActionErrorHandler(
       userName = userProfile.first_name;
     }
 
-    const certificateBase64 = await generateCertificate(userName);
+    const certificateBase64 = await generateCertificate(userName, validatedData.slug);
 
     revalidatePath(`/event/${validatedData.slug}/manage`);
     logger.info(

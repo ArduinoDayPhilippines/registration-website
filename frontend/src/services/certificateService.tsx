@@ -2,122 +2,138 @@ import { ImageResponse } from "@vercel/og";
 import fs from "fs";
 import path from "path";
 import { logger } from "@/utils/logger";
-import { CERTIFICATE_CONFIG, getSmartFontSize } from "@/config/certificateConfig";
+import { CertificateConfig } from "@/types/event";
+import { DEFAULT_CERTIFICATE_CONFIG, getSmartFontSize } from "@/config/certificateConfig";
+import { getEventDetails } from "@/services/eventService";
 
-// Font is stored locally
-const fontPath = path.join(
-  process.cwd(),
-  "public",
-  "cert-template",
-  CERTIFICATE_CONFIG.text.fontFile
-);
+// Font base directory — fonts are always loaded from local files
+const fontDir = path.join(process.cwd(), "public", "cert-template");
 
-export const generateCertificate = async (name: string): Promise<string> => {
-  try {
-    const bgImagePath = path.join(
-      process.cwd(),
-      "public",
-      "cert-template",
-      "cert-template.png"
-    );
+/**
+ * Core rendering function — renders a certificate image given a name and a fully-resolved config.
+ * Both the survey action and the admin preview API route call this.
+ */
+export const renderCertificateImage = async (
+  name: string,
+  certConfig: CertificateConfig
+): Promise<string> => {
+  // 1. Fetch the background template from Supabase Storage
+  const templateResponse = await fetch(certConfig.templateUrl!);
+  if (!templateResponse.ok) {
+    throw new Error(`Failed to fetch certificate template from URL: ${certConfig.templateUrl}`);
+  }
+  const arrayBuffer = await templateResponse.arrayBuffer();
+  const bgBuffer = Buffer.from(arrayBuffer);
+  const contentType = templateResponse.headers.get("content-type") || "image/png";
+  const bgBase64 = `data:${contentType};base64,${bgBuffer.toString("base64")}`;
 
-    let bgBase64 = "";
-    if (fs.existsSync(bgImagePath)) {
-      const bgData = fs.readFileSync(bgImagePath);
-      bgBase64 = `data:image/png;base64,${bgData.toString("base64")}`;
-    } else {
-      logger.warn(
-        "Certificate template missing at public/cert-template/cert-template.png"
-      );
-    }
+  // 2. Load the Montserrat font variation from local public files
+  const fontPath = path.join(fontDir, certConfig.text.fontFile);
+  if (!fs.existsSync(fontPath)) {
+    throw new Error(`Font file missing: ${fontPath}`);
+  }
+  const fontBuffer = fs.readFileSync(fontPath);
+  const fontData: ArrayBuffer = fontBuffer.buffer.slice(
+    fontBuffer.byteOffset,
+    fontBuffer.byteOffset + fontBuffer.byteLength
+  );
 
-    // Fetch the Montserrat font locally
-    let fontData: ArrayBuffer;
-    if (fs.existsSync(fontPath)) {
-      const fontBuffer = fs.readFileSync(fontPath);
-      fontData = fontBuffer.buffer.slice(
-        fontBuffer.byteOffset,
-        fontBuffer.byteOffset + fontBuffer.byteLength
-      );
-    } else {
-      throw new Error("Montserrat font missing at " + fontPath);
-    }
+  // 3. Calculate dynamic font size
+  const dynamicFontSize = getSmartFontSize(name.length, certConfig.text);
 
-    // Calculate dynamic font size based on name length
-    const dynamicFontSize = getSmartFontSize(name.length);
-
-    // Create the image response using Vercel OG
-    const response = new ImageResponse(
-      (
+  // 4. Render the certificate image
+  const response = new ImageResponse(
+    (
+      <div
+        style={{
+          display: "flex",
+          width: "100%",
+          height: "100%",
+          position: "relative",
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundImage: `url(${bgBase64})`,
+          backgroundSize: "100% 100%",
+        }}
+      >
         <div
           style={{
+            position: "absolute",
+            left: certConfig.text.x,
+            top: certConfig.text.y,
+            width: certConfig.text.width,
+            height: certConfig.text.height,
             display: "flex",
-            width: "100%",
-            height: "100%",
-            position: "relative",
             justifyContent: "center",
             alignItems: "center",
-            ...(bgBase64
-              ? {
-                  backgroundImage: `url(${bgBase64})`,
-                  backgroundSize: "100% 100%",
-                }
-              : { backgroundColor: "#f0f0f0" }),
           }}
         >
-          {!bgBase64 && (
-            <div
-              style={{
-                position: "absolute",
-                top: 20,
-                color: "red",
-                fontSize: 24,
-              }}
-            >
-              Missing Template: public/cert-template/cert-template.png
-            </div>
-          )}
-          <div
+          <span
             style={{
-              position: "absolute",
-              left: CERTIFICATE_CONFIG.text.x,
-              top: CERTIFICATE_CONFIG.text.y,
-              width: CERTIFICATE_CONFIG.text.width,
-              height: CERTIFICATE_CONFIG.text.height,
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
               fontSize: dynamicFontSize,
-              fontFamily: CERTIFICATE_CONFIG.text.fontFamily,
-              color: CERTIFICATE_CONFIG.text.color,
-              fontWeight: CERTIFICATE_CONFIG.text.fontWeight,
-              fontStyle: CERTIFICATE_CONFIG.text.fontStyle,
+              fontFamily: "Montserrat",
+              color: certConfig.text.color,
+              fontWeight: certConfig.text.fontWeight as any,
+              fontStyle: certConfig.text.fontStyle,
               textAlign: "center",
               whiteSpace: "nowrap",
+              lineHeight: 1,
+              marginTop: 0,
+              marginBottom: 0,
             }}
           >
             {name}
-          </div>
+          </span>
         </div>
-      ),
-      {
-        width: CERTIFICATE_CONFIG.templateWidth,
-        height: CERTIFICATE_CONFIG.templateHeight,
-        fonts: [
-          {
-            name: "Montserrat",
-            data: fontData,
-            style: CERTIFICATE_CONFIG.text.fontStyle,
-            weight: CERTIFICATE_CONFIG.text.fontWeight,
-          },
-        ],
-      }
-    );
+      </div>
+    ),
+    {
+      width: 3508,
+      height: 2480,
+      fonts: [
+        {
+          name: "Montserrat",
+          data: fontData,
+          style: certConfig.text.fontStyle,
+          weight: certConfig.text.fontWeight as any,
+        },
+      ],
+    }
+  );
 
-    const buffer = await response.arrayBuffer();
-    return Buffer.from(buffer).toString("base64");
+  const buffer = await response.arrayBuffer();
+  return Buffer.from(buffer).toString("base64");
+};
+
+/**
+ * Generates a certificate for a submitted survey.
+ * Fetches the event's certificate config from the database.
+ */
+export const generateCertificate = async (name: string, eventSlug: string): Promise<string> => {
+  try {
+    const event = await getEventDetails(eventSlug);
+
+    if (!event.certificateConfig || !event.certificateConfig.templateUrl) {
+      throw new Error(
+        `Certificate not configured for event "${eventSlug}". Please upload a template and save the configuration in the admin panel.`
+      );
+    }
+
+    // Deep-merge with defaults to fill in any missing properties added after initial save.
+    const certConfig: CertificateConfig = {
+      ...DEFAULT_CERTIFICATE_CONFIG,
+      ...event.certificateConfig,
+      text: {
+        ...DEFAULT_CERTIFICATE_CONFIG.text,
+        ...event.certificateConfig.text,
+      },
+      isEnabled: true,
+    };
+
+    logger.info("Resolved Certificate Config:", JSON.stringify(certConfig, null, 2));
+    return await renderCertificateImage(name, certConfig);
   } catch (error) {
     logger.error("Failed to generate certificate", error);
-    throw new Error("Failed to generate certificate");
+    throw error;
   }
 };
