@@ -10,7 +10,7 @@ type PageProps = { searchParams: Promise<{ registered?: string }> };
 export default async function Home({ searchParams }: PageProps) {
   const { role } = await getUserRole();
   if (role === "admin") {
-    redirect("/dashboard");
+    redirect("/admin/dashboard");
   }
 
   if (role === "user") {

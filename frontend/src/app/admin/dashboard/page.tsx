@@ -6,6 +6,7 @@ import { useUserStore } from "@/store/useUserStore";
 import { useState } from "react";
 
 import { AdminNavbar } from "@/components/admin/admin-navbar";
+import { AdminBreadcrumbs } from "@/components/admin/admin-breadcrumbs";
 import { StatCard } from "@/components/admin/stat-card";
 import { AnalyticsCharts } from "@/components/admin/analytics-charts";
 import BokehBackground from "@/components/create-event/bokeh-background";
@@ -120,6 +121,8 @@ export default function AdminDashboard() {
         <AdminNavbar activeTab="dashboard" />
         <main className="flex-1 px-4 md:px-8 py-8 pt-28">
           <div className="max-w-7xl mx-auto">
+            <AdminBreadcrumbs items={[{ label: "Dashboard" }]} />
+
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               <StatCard

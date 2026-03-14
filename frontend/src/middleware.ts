@@ -33,8 +33,8 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  // Protect /dashboard routes: only users with role = 'admin'
-  if (pathname.startsWith("/dashboard")) {
+  // Protect /admin routes: only users with role = 'admin'
+  if (pathname.startsWith("/admin")) {
     if (!user) {
       const loginUrl = request.nextUrl.clone();
       loginUrl.pathname = "/auth/login";

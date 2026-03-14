@@ -44,7 +44,7 @@ export default function UserLoginForm({
       useUserStore.getState().setUser(userRole, data?.userId ?? null);
 
       if (userRole === "admin") {
-        router.replace("/dashboard");
+        router.replace("/admin/dashboard");
         return;
       }
       const lastSlug = getLastViewedEventSlug();

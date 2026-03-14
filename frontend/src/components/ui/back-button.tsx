@@ -7,7 +7,7 @@ interface BackButtonProps {
   href?: string;
 }
 
-export function BackButton({ label = 'Back to Home', href = '/dashboard' }: BackButtonProps) {
+export function BackButton({ label = 'Back to Home', href = '/admin/dashboard' }: BackButtonProps) {
   const router = useRouter();
 
   const handleClick = () => {

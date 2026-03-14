@@ -358,8 +358,8 @@ export async function createEventAction(data: unknown) {
     // Call service layer to create the event
     const newSlug = await createEvent(validatedData, userId);
 
-    // Revalidate Next.js cache for dashboard
-    revalidatePath("/dashboard");
+    // Revalidate Next.js cache for admin dashboard
+    revalidatePath("/admin/dashboard");
     revalidatePath("/");
 
     logger.info("Successfully created new event", { slug: newSlug, userId });
