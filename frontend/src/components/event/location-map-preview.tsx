@@ -8,7 +8,10 @@ interface LocationMapPreviewProps {
   className?: string;
 }
 
-export function LocationMapPreview({ location, className = "" }: LocationMapPreviewProps) {
+export function LocationMapPreview({
+  location,
+  className = "",
+}: LocationMapPreviewProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const markerRef = useRef<any>(null);
@@ -16,24 +19,30 @@ export function LocationMapPreview({ location, className = "" }: LocationMapPrev
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    if (!location || !mapRef.current || mapInstanceRef.current) return;
+    if (!location || !mapRef.current) return;
+
+    let cancelled = false;
 
     // Geocode the location and display it on the map
     const initMap = async () => {
       try {
         // Small delay to respect Nominatim rate limits
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
+        if (cancelled) return;
 
         // First, geocode the location
         const geocodeResponse = await fetch(
           `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(location)}&countrycodes=ph&limit=1`,
           {
             headers: {
-              'User-Agent': 'EventRegistrationApp'
-            }
-          }
+              "User-Agent": "EventRegistrationApp",
+            },
+          },
         );
         const geocodeData = await geocodeResponse.json();
+
+        if (cancelled) return;
 
         if (!geocodeData || geocodeData.length === 0) {
           setError(true);
@@ -51,18 +60,23 @@ export function LocationMapPreview({ location, className = "" }: LocationMapPrev
           import("@/styles/leaflet-custom.css"),
         ]);
 
+        if (cancelled || !mapRef.current) return;
+
         const Leaflet = L.default;
 
         // Fix Leaflet default marker icon issue
         delete (Leaflet.Icon.Default.prototype as any)._getIconUrl;
         Leaflet.Icon.Default.mergeOptions({
-          iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
-          iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
-          shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+          iconRetinaUrl:
+            "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+          iconUrl:
+            "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+          shadowUrl:
+            "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
         });
 
         // Initialize map
-        const map = Leaflet.map(mapRef.current!, {
+        const map = Leaflet.map(mapRef.current, {
           center: [latitude, longitude],
           zoom: 15,
           zoomControl: true,
@@ -72,12 +86,22 @@ export function LocationMapPreview({ location, className = "" }: LocationMapPrev
           touchZoom: true,
         });
 
+        // If cleanup ran while map was being created, destroy it immediately
+        if (cancelled) {
+          map.remove();
+          return;
+        }
+
         // Add light theme tile layer
-        Leaflet.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-          subdomains: "abc",
-          maxZoom: 19,
-        }).addTo(map);
+        Leaflet.tileLayer(
+          "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+          {
+            attribution:
+              '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+            subdomains: "abc",
+            maxZoom: 19,
+          },
+        ).addTo(map);
 
         // Create custom marker
         const customIcon = Leaflet.divIcon({
@@ -88,22 +112,28 @@ export function LocationMapPreview({ location, className = "" }: LocationMapPrev
         });
 
         // Add marker
-        const marker = Leaflet.marker([latitude, longitude], { icon: customIcon }).addTo(map);
+        const marker = Leaflet.marker([latitude, longitude], {
+          icon: customIcon,
+        }).addTo(map);
         markerRef.current = marker;
         mapInstanceRef.current = map;
         setIsMapReady(true);
       } catch (err) {
-        console.error("Failed to load map:", err);
-        setError(true);
+        if (!cancelled) {
+          console.error("Failed to load map:", err);
+          setError(true);
+        }
       }
     };
 
     initMap();
 
     return () => {
+      cancelled = true;
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
+        markerRef.current = null;
       }
     };
   }, [location]);
