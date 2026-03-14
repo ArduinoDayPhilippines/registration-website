@@ -133,7 +133,19 @@ export default function EventPage() {
       try {
         const result = await checkUserRegistrationAction(slug);
         if (result.success && result.data) {
-          setRegistrationStatus(result.data);
+          const nextStatus = result.data;
+          setRegistrationStatus((prev) => {
+            if (
+              prev?.isRegistered === nextStatus.isRegistered &&
+              prev?.registrationStatus === nextStatus.registrationStatus &&
+              prev?.isGoing === nextStatus.isGoing &&
+              prev?.qrUrl === nextStatus.qrUrl &&
+              prev?.guest?.registrant_id === nextStatus.guest?.registrant_id
+            ) {
+              return prev;
+            }
+            return nextStatus;
+          });
         }
       } catch (err) {
         console.error("Failed to check registration status:", err);
@@ -141,7 +153,7 @@ export default function EventPage() {
     }
 
     checkRegistration();
-  }, [userId, slug, event]);
+  }, [userId, slug]);
 
   useEffect(() => {
     const refreshParam = searchParams.get("refresh");
@@ -241,7 +253,10 @@ export default function EventPage() {
 
           {/* Right Column - Event Info */}
           <div className="animate-fade-in animate-delay-200">
-            <nav className="mb-4 flex items-center gap-2 text-sm" aria-label="Breadcrumb">
+            <nav
+              className="mb-4 flex items-center gap-2 text-sm"
+              aria-label="Breadcrumb"
+            >
               <Link
                 href={breadcrumbParent.href}
                 className="text-cyan-300/80 hover:text-cyan-200 transition-colors"

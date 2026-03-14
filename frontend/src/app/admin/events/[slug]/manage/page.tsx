@@ -1,7 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import {
+  useParams,
+  usePathname,
+  useRouter,
+  useSearchParams,
+} from "next/navigation";
 import { ArrowUpRight } from "lucide-react";
 import { AdminNavbar } from "@/components/admin/admin-navbar";
 import BokehBackground from "@/components/create-event/bokeh-background";
@@ -25,13 +30,26 @@ import CertificateBuilder from "@/components/manage-event/certificate/Certificat
 
 export default function ManageEventPage() {
   const params = useParams();
+  const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const slug = params.slug as string;
   const { event, loading, error, refetch } = useEvent(slug);
   const { guests, stats, refetch: refetchGuests } = useGuests(slug);
   const { role, userId, loading: roleLoading, initialize } = useUserStore();
-  const [activeTab, setActiveTab] = useState("overview");
   const [showCoverImageModal, setShowCoverImageModal] = useState(false);
+
+  const tabs = [
+    "overview",
+    "guests",
+    "batchmail",
+    "survey",
+    "certificate",
+  ] as const;
+  const requestedTab = searchParams.get("tab");
+  const activeTab = tabs.includes(requestedTab as (typeof tabs)[number])
+    ? requestedTab
+    : "overview";
 
   const canManage =
     !roleLoading &&
@@ -55,7 +73,10 @@ export default function ManageEventPage() {
         <BokehBackground />
         <Squares direction="diagonal" speed={0.3} />
         <div className="relative z-10 flex items-center justify-center min-h-screen">
-        <LoadingScreen message="LOADING EVENT MANAGEMENT..." colorTheme="orange" />
+          <LoadingScreen
+            message="LOADING EVENT MANAGEMENT..."
+            colorTheme="orange"
+          />
         </div>
       </div>
     );
@@ -77,7 +98,7 @@ export default function ManageEventPage() {
         <BokehBackground />
         <Squares direction="diagonal" speed={0.3} />
         <div className="relative z-10 flex items-center justify-center min-h-screen">
-        <LoadingScreen message="REDIRECTING..." colorTheme="orange" />
+          <LoadingScreen message="REDIRECTING..." colorTheme="orange" />
         </div>
       </div>
     );
@@ -87,6 +108,12 @@ export default function ManageEventPage() {
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(eventUrl);
+  };
+
+  const handleTabChange = (tab: (typeof tabs)[number]) => {
+    const nextParams = new URLSearchParams(searchParams.toString());
+    nextParams.set("tab", tab);
+    router.push(`${pathname}?${nextParams.toString()}`);
   };
 
   return (
@@ -116,17 +143,17 @@ export default function ManageEventPage() {
 
         {/* Tab Navigation */}
         <div className="flex gap-4 md:gap-6 border-b border-white/10 mb-6 md:mb-8 overflow-x-auto -mx-3 md:mx-0 px-3 md:px-0">
-          {["Overview", "Guests", "Batchmail", "Survey", "Certificate"].map((tab) => (
+          {tabs.map((tab) => (
             <button
               key={tab}
-              onClick={() => setActiveTab(tab.toLowerCase())}
+              onClick={() => handleTabChange(tab)}
               className={`pb-2 md:pb-3 px-1 text-xs md:text-sm font-medium whitespace-nowrap transition-colors ${
-                activeTab === tab.toLowerCase()
+                activeTab === tab
                   ? "text-white border-b-2 border-white"
                   : "text-white/60 hover:text-white/80"
               }`}
             >
-              {tab}
+              {tab.charAt(0).toUpperCase() + tab.slice(1)}
             </button>
           ))}
         </div>
@@ -189,7 +216,10 @@ export default function ManageEventPage() {
 
         {/* Certificate Tab Content */}
         <div className={activeTab === "certificate" ? "" : "hidden"}>
-          <CertificateBuilder slug={slug} initialConfig={event.certificateConfig} />
+          <CertificateBuilder
+            slug={slug}
+            initialConfig={event.certificateConfig}
+          />
         </div>
       </main>
 
