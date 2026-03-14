@@ -7,6 +7,10 @@ interface UseGuestsReturn {
   loading: boolean;
   error: string | null;
   refetch: () => void;
+  updateGuestStatusLocal: (
+    guestId: string,
+    nextStatus: "registered" | "pending" | "not-going",
+  ) => void;
 }
 
 interface GuestsResult {
@@ -90,5 +94,37 @@ export function useGuests(slug: string): UseGuestsReturn {
     setRefetchTrigger((prev) => prev + 1);
   }, []);
 
-  return { guests, stats, loading, error, refetch };
+  const updateGuestStatusLocal = useCallback(
+    (guestId: string, nextStatus: "registered" | "pending" | "not-going") => {
+      setGuests((prev) =>
+        prev.map((guest) => {
+          if (guest.registrant_id !== guestId) return guest;
+
+          if (nextStatus === "not-going") {
+            return {
+              ...guest,
+              is_registered: true,
+              is_going: false,
+            };
+          }
+
+          if (nextStatus === "registered") {
+            return {
+              ...guest,
+              is_registered: true,
+            };
+          }
+
+          return {
+            ...guest,
+            is_registered: false,
+            qr_data: null,
+          };
+        }),
+      );
+    },
+    [],
+  );
+
+  return { guests, stats, loading, error, refetch, updateGuestStatusLocal };
 }

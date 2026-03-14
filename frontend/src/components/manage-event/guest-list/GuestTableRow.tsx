@@ -1,4 +1,4 @@
-import { Eye, Trash2, QrCode, Check, X } from "lucide-react";
+import { Eye, Trash2, Check, X } from "lucide-react";
 import { Guest } from "@/types/guest";
 
 interface GuestTableRowProps {
@@ -6,9 +6,11 @@ interface GuestTableRowProps {
   isSelected: boolean;
   isPending: boolean;
   onSelectGuest: (guestId: string, checked: boolean) => void;
-  onStatusChange: (guestId: string, newStatus: string) => void;
+  onStatusChange: (
+    guestId: string,
+    newStatus: "registered" | "pending" | "not-going",
+  ) => void;
   onViewAnswers: (guest: Guest) => void;
-  onGenerateQR: (guest: Guest) => void;
   onDelete: (guestId: string) => void;
 }
 
@@ -19,7 +21,6 @@ export function GuestTableRow({
   onSelectGuest,
   onStatusChange,
   onViewAnswers,
-  onGenerateQR,
   onDelete,
 }: GuestTableRowProps) {
   return (
@@ -61,7 +62,12 @@ export function GuestTableRow({
                 ? "not-going"
                 : "registered"
           }
-          onChange={(e) => onStatusChange(guest.registrant_id, e.target.value)}
+          onChange={(e) =>
+            onStatusChange(
+              guest.registrant_id,
+              e.target.value as "registered" | "pending" | "not-going",
+            )
+          }
           disabled={isPending}
           className={`font-urbanist px-3 py-1.5 rounded-lg text-xs font-medium border transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-cyan-500/50 ${
             !guest.is_registered
@@ -101,15 +107,16 @@ export function GuestTableRow({
       </td>
       <td className="py-4 px-2 hidden lg:table-cell">
         <div className="flex justify-center">
-          {guest.is_registered && guest.is_going && (
-            <button
-              onClick={() => onGenerateQR(guest)}
-              disabled={isPending}
-              className="p-1.5 hover:bg-purple-500/20 rounded text-purple-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Generate QR Code Ticket"
-            >
-              <QrCode size={16} />
-            </button>
+          {guest.is_registered && guest.is_going && guest.qr_data ? (
+            <span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/20 px-2.5 py-1 text-xs font-medium text-emerald-300">
+              Ready
+            </span>
+          ) : guest.is_registered && guest.is_going ? (
+            <span className="inline-flex items-center gap-1.5 rounded-lg border border-yellow-500/30 bg-yellow-500/20 px-2.5 py-1 text-xs font-medium text-yellow-300">
+              Missing
+            </span>
+          ) : (
+            <span className="text-xs text-white/30">—</span>
           )}
         </div>
       </td>

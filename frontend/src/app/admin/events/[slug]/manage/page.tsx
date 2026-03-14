@@ -35,7 +35,8 @@ export default function ManageEventPage() {
   const searchParams = useSearchParams();
   const slug = params.slug as string;
   const { event, loading, error, refetch } = useEvent(slug);
-  const { guests, stats, refetch: refetchGuests } = useGuests(slug);
+  const { guests, stats, refetch: refetchGuests, updateGuestStatusLocal } =
+    useGuests(slug);
   const { role, userId, loading: roleLoading, initialize } = useUserStore();
   const [showCoverImageModal, setShowCoverImageModal] = useState(false);
 
@@ -173,9 +174,9 @@ export default function ManageEventPage() {
               slug={slug}
               onRefresh={() => {
                 refetchGuests();
-                refetch();
               }}
               event={event}
+              onGuestStatusUpdated={updateGuestStatusLocal}
             />
           </>
         )}
