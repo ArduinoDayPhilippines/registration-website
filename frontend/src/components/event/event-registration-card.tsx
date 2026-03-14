@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { generateQRCodeDataUrl } from "@/services/qrService";
 
 // Helper function to convert 24-hour time to 12-hour AM/PM format
 function format12HourTime(time: string): string {
@@ -38,7 +39,7 @@ interface EventRegistrationCardProps {
   isUserRegistered?: boolean;
   registrationApprovalStatus?: "approved" | "pending" | null;
   isGoing?: boolean;
-  qrUrl?: string | null;
+  qrData?: string | null;
   forgotPasswordHref?: string;
   eventTitle?: string;
   eventDate?: string;
@@ -49,7 +50,6 @@ interface EventRegistrationCardProps {
   onRsvpClick: () => void;
   onNotGoingClick?: () => void;
   onGoingClick?: () => void;
-  onGenerateQR?: () => void;
 }
 
 export function EventRegistrationCard({
@@ -60,7 +60,7 @@ export function EventRegistrationCard({
   isUserRegistered = false,
   registrationApprovalStatus = null,
   isGoing = true,
-  qrUrl = null,
+  qrData = null,
   forgotPasswordHref = "/forgot-password",
   eventTitle = "Event",
   eventDate = "",
@@ -71,9 +71,11 @@ export function EventRegistrationCard({
   onRsvpClick,
   onNotGoingClick,
   onGoingClick,
-  onGenerateQR,
 }: EventRegistrationCardProps) {
   const [downloadingTicket, setDownloadingTicket] = useState(false);
+  const [showQRCode, setShowQRCode] = useState(false);
+  const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
+  const [generatingQRCode, setGeneratingQRCode] = useState(false);
 
   const capacityNum = parseInt(capacity) || 0;
   const slotsAvailable = capacityNum - registeredCount;
@@ -81,132 +83,48 @@ export function EventRegistrationCard({
     capacityNum > 0 && slotsAvailable <= Math.max(10, capacityNum * 0.1);
   const isFull = capacityNum > 0 && slotsAvailable <= 0;
   const isApproved = registrationApprovalStatus === "approved";
-  const isPending = registrationApprovalStatus === "pending";
+  const shouldShowTicket =
+    isUserRegistered && isApproved && isGoing && showQRCode && !!qrCodeUrl;
 
   const handleDownloadTicket = async () => {
-    if (!qrUrl) return;
+    if (!qrCodeUrl) return;
     setDownloadingTicket(true);
     try {
-      // Create white boarding pass ticket
-      const canvas = document.createElement("canvas");
-      canvas.width = 600;
-      canvas.height = 500;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return;
-
-      // White background
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, 600, 500);
-
-      // Top info
-      ctx.fillStyle = "#666666";
-      ctx.font = "bold 10px Arial";
-      ctx.textAlign = "left";
-      ctx.fillText("DATE & TIME", 30, 35);
-      ctx.fillStyle = "#000000";
-      ctx.font = "bold 14px Arial";
-      let dateTimeText = "TBD";
-      if (eventDate) {
-        dateTimeText = eventDate;
-        if (eventTime && eventEndTime) {
-          dateTimeText += ` ${format12HourTime(eventTime)} - ${format12HourTime(eventEndTime)}`;
-        } else if (eventTime) {
-          dateTimeText += ` ${format12HourTime(eventTime)}`;
-        }
-      } else if (eventTime && eventEndTime) {
-        dateTimeText = `${format12HourTime(eventTime)} - ${format12HourTime(eventEndTime)}`;
-      } else if (eventTime) {
-        dateTimeText = format12HourTime(eventTime);
-      }
-      ctx.fillText(dateTimeText, 30, 58);
-
-      ctx.fillStyle = "#666666";
-      ctx.font = "bold 10px Arial";
-      ctx.textAlign = "right";
-      ctx.fillText("LOCATION", 570, 35);
-      ctx.fillStyle = "#000000";
-      ctx.font = "bold 12px Arial";
-      const locationText = eventLocation || "TBD";
-      const locationWords = locationText.split(" ");
-      if (locationWords.length > 1) {
-        ctx.fillText(locationWords.slice(0, 2).join(" "), 570, 50);
-        if (locationWords.length > 2) {
-          ctx.fillText(locationWords.slice(2).join(" "), 570, 63);
-        }
-      } else {
-        ctx.fillText(locationText, 570, 58);
-      }
-
-      // Divider line
-      ctx.strokeStyle = "#e5e7eb";
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(30, 75);
-      ctx.lineTo(570, 75);
-      ctx.stroke();
-
-      // Centered QR
-      const qrSize = 120;
-      const qrX = (600 - qrSize) / 2;
-      const qrY = 120;
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(qrX - 8, qrY - 8, qrSize + 16, qrSize + 16);
-      ctx.strokeStyle = "#008080";
-      ctx.lineWidth = 2;
-      ctx.strokeRect(qrX - 8, qrY - 8, qrSize + 16, qrSize + 16);
-
-      const qrImage = new Image();
-      qrImage.crossOrigin = "anonymous";
-      await new Promise<void>((resolve) => {
-        qrImage.onload = () => {
-          ctx.drawImage(qrImage, qrX, qrY, qrSize, qrSize);
-          resolve();
-        };
-        qrImage.onerror = () => resolve();
-        qrImage.src = qrUrl;
-      });
-
-      // Event title centered
-      ctx.fillStyle = "#008080";
-      ctx.font = "bold 14px Arial";
-      ctx.textAlign = "center";
-      ctx.fillText(eventTitle, 300, 280);
-
-      // Details below QR
-      ctx.fillStyle = "#666666";
-      ctx.font = "bold 9px Arial";
-      ctx.textAlign = "center";
-      ctx.fillText("SCAN TO ENTER", 300, 305);
-
-      // Divider line before footer
-      ctx.strokeStyle = "#e5e7eb";
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(30, 330);
-      ctx.lineTo(570, 330);
-      ctx.stroke();
-
-      // Bottom blue bar with attendee only
-      ctx.fillStyle = "#008080";
-      ctx.fillRect(0, 350, 600, 150);
-
-      ctx.fillStyle = "#ffffff";
-      ctx.font = "bold 12px Arial";
-      ctx.textAlign = "center";
-      ctx.fillText("ATTENDEE", 300, 385);
-      ctx.font = "bold 16px Arial";
-      ctx.fillText(attendeeName.toUpperCase(), 300, 410);
       const link = document.createElement("a");
-      link.href = canvas.toDataURL("image/png");
-      link.download = `${eventTitle}-ticket.png`;
+      link.href = qrCodeUrl;
+      link.download = `${eventTitle}-qr.png`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
     } catch (error) {
-      console.error("Failed to download ticket:", error);
+      console.error("Failed to download QR code:", error);
     } finally {
       setDownloadingTicket(false);
     }
+  };
+
+  const handleToggleQRCode = async () => {
+    if (!qrData) return;
+
+    if (showQRCode) {
+      setShowQRCode(false);
+      return;
+    }
+
+    if (!qrCodeUrl) {
+      setGeneratingQRCode(true);
+      try {
+        const nextQrCodeUrl = await generateQRCodeDataUrl(qrData);
+        setQrCodeUrl(nextQrCodeUrl);
+      } catch (error) {
+        console.error("Failed to generate QR code:", error);
+        return;
+      } finally {
+        setGeneratingQRCode(false);
+      }
+    }
+
+    setShowQRCode(true);
   };
 
   return (
@@ -216,7 +134,11 @@ export function EventRegistrationCard({
       </h3>
 
       <p className="text-white/70 text-sm mb-5 leading-relaxed">
-        Welcome! To join the event, please register below.
+        {isUserRegistered
+          ? registrationApprovalStatus === "approved"
+            ? "You're registered for this event."
+            : "Your registration is pending approval."
+          : "Welcome! To join the event, please register below."}
       </p>
 
       {requireApproval && !isUserRegistered && (
@@ -229,7 +151,7 @@ export function EventRegistrationCard({
         </div>
       )}
 
-      {isUserRegistered && isApproved && isGoing && qrUrl && (
+      {shouldShowTicket && (
         <div className="mb-6">
           {/* Boarding Pass - White Only */}
           <div className="bg-white rounded-lg shadow-2xl overflow-hidden">
@@ -274,7 +196,7 @@ export function EventRegistrationCard({
               <div className="flex justify-center py-6 flex-1 items-center">
                 <div className="bg-white border-4 border-primary rounded-lg p-3">
                   <img
-                    src={qrUrl}
+                    src={qrCodeUrl}
                     alt="QR Ticket"
                     width={110}
                     height={110}
@@ -319,48 +241,53 @@ export function EventRegistrationCard({
               ) : (
                 <Download size={16} />
               )}
-              {downloadingTicket
-                ? "Generating Ticket..."
-                : "Download Event Ticket"}
+              {downloadingTicket ? "Downloading QR..." : "Download QR Code"}
             </button>
           </div>
         </div>
       )}
 
-      {isUserRegistered && isApproved && (
+      {isUserRegistered && isApproved && !isGoing && (
+        <div className="mb-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+          Registration approved. Click GOING to view your QR code.
+        </div>
+      )}
+
+      {isUserRegistered && isApproved && !isGoing && (
         <div className="mb-4 flex gap-3">
           <button
             onClick={onGoingClick}
-            className={`flex-1 text-sm font-bold px-4 py-3 rounded-lg transition-all ${
-              isGoing
-                ? "bg-accent text-white shadow-lg hover:shadow-xl"
-                : "bg-accent/30 text-accent border border-accent/50 hover:bg-accent/40"
-            }`}
+            className="flex-1 text-sm font-bold px-4 py-3 rounded-lg transition-all bg-accent/30 text-accent border border-accent/50 hover:bg-accent/40"
           >
             GOING
           </button>
           <button
             onClick={onNotGoingClick}
-            className={`flex-1 text-sm font-bold px-4 py-3 rounded-lg transition-all ${
-              !isGoing
-                ? "bg-red-600 text-white shadow-lg hover:shadow-xl"
-                : "bg-red-600/30 text-white hover:bg-red-600/40"
-            }`}
+            className="flex-1 text-sm font-bold px-4 py-3 rounded-lg transition-all bg-red-600/30 text-white hover:bg-red-600/40"
           >
             NOT GOING
           </button>
         </div>
       )}
 
-      {isUserRegistered && isApproved && isGoing && !qrUrl && onGenerateQR ? (
+      {isUserRegistered && isApproved && isGoing && qrData ? (
         <Button
           fullWidth
-          onClick={onGenerateQR}
-          className="text-sm font-bold tracking-wide bg-green-600 hover:bg-green-700 shadow-[0_0_20px_rgba(34,197,94,0.3)] hover:shadow-[0_0_30px_rgba(34,197,94,0.5)] transition-all transform hover:scale-[1.02] border-none text-white"
+          onClick={handleToggleQRCode}
+          disabled={generatingQRCode}
+          className="text-sm font-bold tracking-wide bg-green-600 hover:bg-green-700 shadow-[0_0_20px_rgba(34,197,94,0.3)] hover:shadow-[0_0_30px_rgba(34,197,94,0.5)] transition-all transform hover:scale-[1.02] border-none text-white disabled:opacity-50"
         >
-          <QrCode size={16} className="mr-2 inline-block" />
-          GENERATE TICKET
+          {generatingQRCode ? (
+            <Loader2 size={16} className="mr-2 inline-block animate-spin" />
+          ) : (
+            <QrCode size={16} className="mr-2 inline-block" />
+          )}
+          {showQRCode ? "HIDE QR CODE" : "SHOW QR CODE"}
         </Button>
+      ) : isUserRegistered && isApproved && isGoing && !qrData ? (
+        <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/10 px-4 py-3 text-sm text-yellow-200">
+          Ticket unavailable. Please contact the event organizer.
+        </div>
       ) : !isUserRegistered || !isApproved ? (
         <Button
           fullWidth

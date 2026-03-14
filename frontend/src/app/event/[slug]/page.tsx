@@ -29,14 +29,13 @@ import {
 } from "@/actions/registrantActions";
 import { useUserStore } from "@/store/useUserStore";
 import { Guest } from "@/types/guest";
-import { generateSingleQRAction } from "@/actions/qrClientActions";
 import { useNotification } from "@/hooks/use-notification";
 
 export default function EventPage() {
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { showSuccess, showError } = useNotification();
+  const { showError } = useNotification();
   const slug = params.slug as string;
   const { event, loading, error, refetch } = useEvent(slug);
   const { role, userId, loading: roleLoading, initialize } = useUserStore();
@@ -47,7 +46,7 @@ export default function EventPage() {
     isRegistered: boolean;
     registrationStatus: "approved" | "pending" | null;
     isGoing?: boolean;
-    qrUrl?: string | null;
+    qrData?: string | null;
     guest?: Guest | null;
   } | null>(null);
 
@@ -139,7 +138,7 @@ export default function EventPage() {
               prev?.isRegistered === nextStatus.isRegistered &&
               prev?.registrationStatus === nextStatus.registrationStatus &&
               prev?.isGoing === nextStatus.isGoing &&
-              prev?.qrUrl === nextStatus.qrUrl &&
+              prev?.qrData === nextStatus.qrData &&
               prev?.guest?.registrant_id === nextStatus.guest?.registrant_id
             ) {
               return prev;
@@ -165,28 +164,6 @@ export default function EventPage() {
       window.history.replaceState({}, "", url.toString());
     }
   }, [searchParams, refetch, router]);
-
-  const handleGenerateQR = async () => {
-    if (!registrationStatus?.guest || !slug) return;
-    try {
-      const result = await generateSingleQRAction(
-        registrationStatus.guest,
-        slug,
-      );
-      if (result.success && result.url) {
-        showSuccess("Ticket generated successfully!");
-        setRegistrationStatus((prev) =>
-          prev ? { ...prev, qrUrl: result.url } : null,
-        );
-      } else {
-        console.error("QR Gen Error:", result.error);
-        showError(result.error || "Failed to generate ticket");
-      }
-    } catch (e) {
-      console.error(e);
-      showError("An unexpected error occurred");
-    }
-  };
 
   if (loading) {
     return (
@@ -318,7 +295,7 @@ export default function EventPage() {
                 registrationStatus?.registrationStatus || null
               }
               isGoing={registrationStatus?.isGoing ?? true}
-              qrUrl={registrationStatus?.qrUrl ?? null}
+              qrData={registrationStatus?.qrData ?? null}
               eventTitle={event.title}
               eventDate={
                 event.startDate
@@ -360,7 +337,6 @@ export default function EventPage() {
                   showError(result.error || "Failed to update status");
                 }
               }}
-              onGenerateQR={handleGenerateQR}
             />
 
             {/* About - Below RSVP */}

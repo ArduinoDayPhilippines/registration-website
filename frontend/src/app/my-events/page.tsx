@@ -21,7 +21,7 @@ type MyEvent = {
   registrant_id: string;
   is_registered: boolean | null;
   is_going: boolean | null;
-  qr_url: string | null;
+  qr_data: string | null;
   created_at: string | null;
   event: {
     event_id: string;
@@ -206,7 +206,7 @@ export default function MyEventsPage() {
                           <span className="truncate">{ev.location}</span>
                         </div>
                       )}
-                      {isApproved && reg.qr_url && (
+                      {isApproved && reg.qr_data && (
                         <div className="flex items-center gap-1.5 text-emerald-400/70 text-xs pt-1">
                           <Ticket className="w-3.5 h-3.5 flex-shrink-0" />
                           <span>Ticket ready</span>

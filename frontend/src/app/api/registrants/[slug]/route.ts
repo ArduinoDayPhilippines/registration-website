@@ -41,7 +41,7 @@ export async function GET(
         form_answers,
         is_registered,
         is_going,
-        qr_url,
+        qr_data,
         users!users_id (
           first_name,
           last_name,
