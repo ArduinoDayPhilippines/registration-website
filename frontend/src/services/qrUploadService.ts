@@ -1,8 +1,9 @@
 "use server"; // Ensure this runs on the server to protect your secret keys
 import { Guest } from "@/types/guest";
 // Importing our updated secure service functions
-import { generateSecureQRCode, createQRDataFromGuest } from "@/services/qrService"; 
-import { uploadQRToStorage, checkUserSession, updateRegistrantQrUrl } from "@/repositories/qrRepository";
+import { generateSecureQRCode, createQRDataFromGuest } from "@/services/qrService";
+import { uploadQRBufferToStorage, updateRegistrantQrUrl } from "@/repositories/qrServerRepository";
+import { checkUserSession } from "@/repositories/qrRepository";
 
 export interface QRUploadResult {
   success: boolean;
