@@ -1,10 +1,18 @@
 import { getEventIdAndApprovalBySlug } from "@/repositories/eventRepository";
-import { getRegistrantByUserAndEvent, createRegistrant } from "@/repositories/registrantRepository";
+import {
+  getRegistrantByUserAndEvent,
+  createRegistrant,
+} from "@/repositories/registrantRepository";
 import { getAuthUser } from "@/repositories/authRepository";
 import {
   sendRegisteredConfirmationEmail,
   sendRsvpPendingEmail,
 } from "@/services/rsvpEmailService";
+import {
+  createRegistrantQrData,
+  createRegistrantQrToken,
+  parseRegistrantQrData,
+} from "@/services/qrService";
 import { logger } from "@/utils/logger";
 
 export async function registerForEvent({
@@ -52,6 +60,34 @@ export async function registerForEvent({
     is_going: is_registered,
   });
 
+  if (is_registered) {
+    const { updateRegistrantQrData } = await import(
+      "@/repositories/registrantRepository"
+    );
+    const token = createRegistrantQrToken({
+      registrantId: data.registrant_id,
+      eventId: data.event_id,
+      userId: data.users_id,
+    });
+    const attendeeName =
+      [authUser.user_metadata?.first_name, authUser.user_metadata?.last_name]
+        .filter(Boolean)
+        .join(" ") || null;
+    const qrData = createRegistrantQrData({
+      token,
+      registrantId: data.registrant_id,
+      userId: data.users_id,
+      attendeeName,
+      attendeeEmail: authUser.email ?? null,
+      eventId: data.event_id,
+      eventSlug: event_id,
+      eventName: eventData.event_name ?? null,
+    });
+
+    await updateRegistrantQrData(data.registrant_id, qrData);
+    data.qr_data = qrData;
+  }
+
   if (authUser.email) {
     try {
       const eventName = eventData.event_name || event_id;
@@ -78,10 +114,14 @@ export async function registerForEvent({
 }
 
 
-export async function updateGuestStatus(guestId: string, isRegistered: boolean) {
+export async function updateGuestStatus(
+  guestId: string,
+  isRegistered: boolean,
+  eventSlug: string,
+) {
   const {
     getRegistrantStatusEmailAndEvent,
-    updateGuestStatus,
+    updateGuestStatus: persistGuestStatus,
   } = await import("@/repositories/registrantRepository");
 
   const registrant = await getRegistrantStatusEmailAndEvent(guestId);
@@ -91,8 +131,34 @@ export async function updateGuestStatus(guestId: string, isRegistered: boolean) 
 
   const wasPending = !registrant.is_registered;
   const nowRegistered = isRegistered === true;
+  const existingPayload = registrant.qr_data
+    ? parseRegistrantQrData(registrant.qr_data)
+    : null;
+  const token = existingPayload?.token
+    ? existingPayload.token
+    : registrant.qr_data ||
+      createRegistrantQrToken({
+        registrantId: registrant.registrant_id,
+        eventId: registrant.event_id,
+        userId: registrant.users_id,
+      });
+  const nextQrData = nowRegistered
+    ? createRegistrantQrData({
+        token,
+        registrantId: registrant.registrant_id,
+        userId: registrant.users_id,
+        attendeeName:
+          [registrant.users?.first_name, registrant.users?.last_name]
+            .filter(Boolean)
+            .join(" ") || null,
+        attendeeEmail: registrant.users?.email ?? null,
+        eventId: registrant.event_id,
+        eventSlug: registrant.event?.slug ?? eventSlug,
+        eventName: registrant.event?.event_name ?? null,
+      })
+    : null;
 
-  const result = await updateGuestStatus(guestId, isRegistered);
+  const result = await persistGuestStatus(guestId, isRegistered, nextQrData);
 
   if (wasPending && nowRegistered && registrant.users?.email) {
     try {

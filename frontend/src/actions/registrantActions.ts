@@ -43,7 +43,11 @@ export const updateGuestStatusAction = withActionErrorHandler(
       throw new UnauthorizedError("Unauthorized");
     }
 
-    await updateGuestStatus(validatedData.guestId, validatedData.isRegistered);
+    await updateGuestStatus(
+      validatedData.guestId,
+      validatedData.isRegistered,
+      slug,
+    );
     revalidatePath(`/admin/events/${slug}/manage`);
     revalidatePath(`/event/${slug}`);
     logger.info(`Successfully updated guest ${validatedData.guestId} status`);
@@ -179,7 +183,7 @@ export const checkUserRegistrationAction = withActionErrorHandler(
         | "approved"
         | "pending",
       isGoing: guest?.is_going ?? false,
-      qrUrl: (guest?.qr_url as string | null) ?? null,
+      qrData: (guest?.qr_data as string | null) ?? null,
       guest,
     };
   },

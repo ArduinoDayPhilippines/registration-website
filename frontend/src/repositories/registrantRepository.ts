@@ -45,11 +45,15 @@ export async function createRegistrant(registrantData: {
 export async function updateGuestStatus(
   guestId: string,
   isRegistered: boolean,
+  qrData: string | null,
 ) {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("registrants")
-    .update({ is_registered: isRegistered, is_going: isRegistered })
+    .update({
+      is_registered: isRegistered,
+      qr_data: qrData,
+    })
     .eq("registrant_id", guestId)
     .select();
 
@@ -75,12 +79,18 @@ export async function getRegistrantStatusEmailAndEvent(guestId: string) {
     .select(
       `
       registrant_id,
+      event_id,
+      users_id,
       is_registered,
+      qr_data,
       users:users!users_id (
+        first_name,
+        last_name,
         email
       ),
       event:events!event_id (
-        event_name
+        event_name,
+        slug
       )
     `,
     )
@@ -93,9 +103,16 @@ export async function getRegistrantStatusEmailAndEvent(guestId: string) {
 
   return data as {
     registrant_id: string;
+    event_id: string;
+    users_id: string;
     is_registered: boolean;
-    users: { email: string } | null;
-    event: { event_name: string | null } | null;
+    qr_data: string | null;
+    users: {
+      first_name: string | null;
+      last_name: string | null;
+      email: string;
+    } | null;
+    event: { event_name: string | null; slug: string | null } | null;
   } | null;
 }
 
@@ -122,7 +139,7 @@ export async function getRegistrantsByEvent(eventId: string): Promise<Guest[]> {
       form_answers,
       is_registered,
       is_going,
-      qr_url,
+      qr_data,
       users!users_id (
         first_name,
         last_name,
@@ -154,7 +171,7 @@ export async function getRegistrantById(
       form_answers,
       is_registered,
       is_going,
-      qr_url,
+      qr_data,
       users!users_id (
         first_name,
         last_name,
@@ -201,7 +218,7 @@ export type UserRegistrationWithEvent = {
   registrant_id: string;
   is_registered: boolean | null;
   is_going: boolean | null;
-  qr_url: string | null;
+  qr_data: string | null;
   created_at: string | null;
   event: {
     event_id: string;
@@ -225,7 +242,7 @@ export async function getUserRegistrationsWithEvents(
       registrant_id,
       is_registered,
       is_going,
-      qr_url,
+      qr_data,
       created_at,
       event:events!event_id (
         event_id,
@@ -246,4 +263,64 @@ export async function getUserRegistrationsWithEvents(
   }
 
   return (data || []) as unknown as UserRegistrationWithEvent[];
+}
+
+export async function updateRegistrantQrData(
+  registrantId: string,
+  qrData: string | null,
+) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("registrants")
+    .update({ qr_data: qrData })
+    .eq("registrant_id", registrantId);
+
+  if (error) {
+    throw new Error(`Failed to update registrant QR data: ${error.message}`);
+  }
+}
+
+export async function getRegistrantByQrData(
+  qrData: string,
+): Promise<Guest | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("registrants")
+    .select(
+      `
+      registrant_id,
+      event_id,
+      users_id,
+      terms_approval,
+      form_answers,
+      is_registered,
+      is_going,
+      qr_data,
+      users!users_id (
+        first_name,
+        last_name,
+        email
+      )
+    `,
+    )
+    .eq("qr_data", qrData)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Failed to fetch registrant by QR data: ${error.message}`);
+  }
+
+  return (data as Guest | null) ?? null;
+}
+
+export async function checkInRegistrant(registrantId: string) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("registrants")
+    .update({ check_in: true, check_in_time: new Date().toISOString() })
+    .eq("registrant_id", registrantId);
+
+  if (error) {
+    throw new Error(`Failed to check in registrant: ${error.message}`);
+  }
 }
