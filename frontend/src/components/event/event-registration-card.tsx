@@ -1,6 +1,14 @@
 import React from "react";
 import Link from "next/link";
-import { CheckCircle, Users, Ticket, Check, Download, X } from "lucide-react";
+import {
+  CheckCircle,
+  Users,
+  Ticket,
+  Check,
+  Download,
+  X,
+  QrCode,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface EventRegistrationCardProps {
@@ -15,6 +23,8 @@ interface EventRegistrationCardProps {
   forgotPasswordHref?: string;
   onRsvpClick: () => void;
   onNotGoingClick?: () => void;
+  onGoingClick?: () => void;
+  onGenerateQR?: () => void;
 }
 
 export function EventRegistrationCard({
@@ -29,6 +39,8 @@ export function EventRegistrationCard({
   forgotPasswordHref = "/forgot-password",
   onRsvpClick,
   onNotGoingClick,
+  onGoingClick,
+  onGenerateQR,
 }: EventRegistrationCardProps) {
   const capacityNum = parseInt(capacity) || 0;
   const slotsAvailable = capacityNum - registeredCount;
@@ -58,26 +70,6 @@ export function EventRegistrationCard({
         </div>
       )}
 
-      {isUserRegistered && isApproved && !isGoing && (
-        <div className="flex items-start gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/30 mb-4">
-          <X
-            size={16}
-            className="text-red-400 mt-0.5 flex-shrink-0"
-          />
-          <p className="text-white/80 text-xs">You have marked yourself as not going</p>
-        </div>
-      )}
-
-      {isUserRegistered && isApproved && isGoing && (
-        <div className="flex items-start gap-2 p-3 rounded-lg bg-green-500/10 border border-green-500/30 mb-4">
-          <Check
-            size={16}
-            className="text-green-400 mt-0.5 flex-shrink-0"
-          />
-          <p className="text-white/80 text-xs">You're registered for this event</p>
-        </div>
-      )}
-
       {isUserRegistered && isApproved && isGoing && qrUrl && (
         <div className="mb-4 flex flex-col items-center gap-3 p-4 rounded-xl bg-white/5 border border-white/10">
           <p className="text-xs text-white/50 font-urbanist">Your QR Ticket</p>
@@ -103,37 +95,68 @@ export function EventRegistrationCard({
         </div>
       )}
 
-      {isUserRegistered && isApproved && isGoing && onNotGoingClick && (
-        <button
-          type="button"
-          onClick={onNotGoingClick}
-          className="w-full mb-4 flex items-center justify-center gap-2 px-4 py-2 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:border-red-500/50 transition-all text-sm font-medium"
-        >
-          <X size={14} />
-          Not Going
-        </button>
+      {isUserRegistered && isApproved && (
+        <div className="mb-4">
+          <select
+            value={!isGoing ? "not-going" : "registered"}
+            onChange={(e) => {
+              const val = e.target.value;
+              if (val === "not-going" && onNotGoingClick) onNotGoingClick();
+              if (val === "registered" && onGoingClick) onGoingClick();
+            }}
+            className={`w-full font-urbanist px-4 py-3 rounded-xl text-sm font-bold tracking-wide border transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-cyan-500/50 appearance-none text-center ${
+              !isGoing
+                ? "bg-red-500/20 text-red-400 border-red-500/30 hover:bg-red-500/30"
+                : "bg-green-500/20 text-green-400 border-green-500/30 hover:bg-green-500/30"
+            }`}
+          >
+            <option
+              value="registered"
+              className="bg-[#0a1520] text-green-400 font-bold"
+            >
+              GOING
+            </option>
+            <option
+              value="not-going"
+              className="bg-[#0a1520] text-red-400 font-bold"
+            >
+              NOT GOING
+            </option>
+          </select>
+        </div>
       )}
 
-      <Button
-        fullWidth
-        onClick={isUserRegistered ? undefined : onRsvpClick}
-        disabled={isFull || isUserRegistered}
-        className={`text-sm font-bold tracking-wide ${
-          isUserRegistered
-            ? isApproved
-              ? "bg-green-600/80 hover:bg-green-600/80 cursor-default shadow-[0_0_15px_rgba(34,197,94,0.3)]"
-              : "bg-yellow-600/80 hover:bg-yellow-600/80 cursor-default shadow-[0_0_15px_rgba(234,179,8,0.3)]"
-            : "shadow-[0_0_30px_rgba(0,128,128,0.4)] hover:shadow-[0_0_40px_rgba(0,128,128,0.6)]"
-        } disabled:opacity-50 disabled:cursor-not-allowed`}
-      >
-        {isFull 
-          ? "EVENT FULL" 
-          : isUserRegistered 
-          ? isApproved 
-            ? "✓ REGISTERED" 
-            : "⏳ PENDING APPROVAL"
-          : "RSVP"}
-      </Button>
+      {isUserRegistered && isApproved && isGoing && !qrUrl && onGenerateQR ? (
+        <Button
+          fullWidth
+          onClick={onGenerateQR}
+          className="text-sm font-bold tracking-wide bg-purple-600 hover:bg-purple-700 shadow-[0_0_20px_rgba(147,51,234,0.3)] hover:shadow-[0_0_30px_rgba(147,51,234,0.5)] transition-all transform hover:scale-[1.02] border-none text-white"
+        >
+          <QrCode size={16} className="mr-2 inline-block" />
+          GENERATE TICKET
+        </Button>
+      ) : !isUserRegistered || !isApproved ? (
+        <Button
+          fullWidth
+          onClick={isUserRegistered ? undefined : onRsvpClick}
+          disabled={isFull || isUserRegistered}
+          className={`text-sm font-bold tracking-wide ${
+            isUserRegistered
+              ? isApproved
+                ? "bg-green-600/80 hover:bg-green-600/80 cursor-default shadow-[0_0_15px_rgba(34,197,94,0.3)]"
+                : "bg-yellow-600/80 hover:bg-yellow-600/80 cursor-default shadow-[0_0_15px_rgba(234,179,8,0.3)]"
+              : "shadow-[0_0_30px_rgba(0,128,128,0.4)] hover:shadow-[0_0_40px_rgba(0,128,128,0.6)]"
+          } disabled:opacity-50 disabled:cursor-not-allowed`}
+        >
+          {isFull
+            ? "EVENT FULL"
+            : isUserRegistered
+              ? isApproved
+                ? "✓ REGISTERED"
+                : "⏳ PENDING APPROVAL"
+              : "RSVP"}
+        </Button>
+      ) : null}
 
       {!isUserRegistered && (
         <div className="mt-3 text-center">
