@@ -22,6 +22,10 @@ interface GuestListSectionProps {
   onGuestStatusUpdated: (
     guestId: string,
     status: "registered" | "pending" | "not-going",
+    patch?: {
+      qr_data?: string | null;
+      is_going?: boolean | null;
+    },
   ) => void;
 }
 
@@ -35,9 +39,15 @@ export function GuestListSection({
   const [selectedGuest, setSelectedGuest] = useState<Guest | null>(null);
   const [showAnswersModal, setShowAnswersModal] = useState(false);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
-  
-  const { searchQuery, setSearchQuery, statusFilter, setStatusFilter, filteredGuests } = useGuestFilter(guests);
-  
+
+  const {
+    searchQuery,
+    setSearchQuery,
+    statusFilter,
+    setStatusFilter,
+    filteredGuests,
+  } = useGuestFilter(guests);
+
   const {
     selectedGuestIds,
     showSelectMenu,
@@ -56,12 +66,15 @@ export function GuestListSection({
     handleBulkApprove,
   } = useGuestActions(slug, onRefresh);
 
-  const selectedGuests = guests.filter(g => selectedGuestIds.has(g.registrant_id));
-  const selectedPendingGuests = selectedGuests.filter(g => !g.is_registered);
+  const selectedGuests = guests.filter((g) =>
+    selectedGuestIds.has(g.registrant_id),
+  );
+  const selectedPendingGuests = selectedGuests.filter((g) => !g.is_registered);
 
-  const allSelected = filteredGuests.length > 0 && 
-    filteredGuests.every(g => selectedGuestIds.has(g.registrant_id));
-  
+  const allSelected =
+    filteredGuests.length > 0 &&
+    filteredGuests.every((g) => selectedGuestIds.has(g.registrant_id));
+
   const someSelected = selectedGuestIds.size > 0 && !allSelected;
 
   return (
@@ -87,7 +100,7 @@ export function GuestListSection({
       <div className="bg-white/5 backdrop-blur-md rounded-xl border border-white/10 overflow-hidden">
         {/* Header */}
         <div className="p-4 md:p-6 border-b border-white/10">
-          <GuestListHeader 
+          <GuestListHeader
             guestCount={guests.length}
             onExport={handleExport}
             onCheckIn={() => setIsScannerOpen(true)}
@@ -116,8 +129,21 @@ export function GuestListSection({
                   disabled={isPending}
                   className="font-urbanist px-4 py-1.5 bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-white text-sm font-medium transition-colors flex items-center gap-2"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                  Approve {selectedPendingGuests.length} Registration{selectedPendingGuests.length > 1 ? "s" : ""}
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  Approve {selectedPendingGuests.length} Registration
+                  {selectedPendingGuests.length > 1 ? "s" : ""}
                 </button>
               )}
             </div>
@@ -131,10 +157,14 @@ export function GuestListSection({
                 <GuestTableHeader
                   allSelected={allSelected}
                   someSelected={someSelected}
-                  onSelectAll={(checked) => handleSelectAll(filteredGuests, checked)}
+                  onSelectAll={(checked) =>
+                    handleSelectAll(filteredGuests, checked)
+                  }
                   showSelectMenu={showSelectMenu}
                   onToggleSelectMenu={toggleSelectMenu}
-                  onSelectByStatus={(status) => handleSelectByStatus(filteredGuests, status)}
+                  onSelectByStatus={(status) =>
+                    handleSelectByStatus(filteredGuests, status)
+                  }
                   onDeselectAll={clearSelection}
                 />
                 <tbody>
@@ -146,7 +176,11 @@ export function GuestListSection({
                       isPending={isPending}
                       onSelectGuest={handleSelectGuest}
                       onStatusChange={(guestId, status) =>
-                        handleStatusChange(guestId, status, onGuestStatusUpdated)
+                        handleStatusChange(
+                          guestId,
+                          status,
+                          onGuestStatusUpdated,
+                        )
                       }
                       onViewAnswers={(g) => {
                         setSelectedGuest(g);

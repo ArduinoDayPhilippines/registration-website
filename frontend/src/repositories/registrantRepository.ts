@@ -323,14 +323,37 @@ export async function getRegistrantByQrData(
   return (data as Guest | null) ?? null;
 }
 
-export async function checkInRegistrant(registrantId: string) {
+export async function checkInRegistrant(
+  registrantId: string,
+  checkInTime?: string,
+) {
+  const checkedInAt = checkInTime ?? new Date().toISOString();
   const supabase = await createClient();
   const { error } = await supabase
     .from("registrants")
-    .update({ check_in: true, check_in_time: new Date().toISOString() })
+    .update({
+      check_in: true,
+      check_in_time: checkedInAt,
+      is_going: true,
+    })
     .eq("registrant_id", registrantId);
 
   if (error) {
     throw new Error(`Failed to check in registrant: ${error.message}`);
+  }
+}
+
+export async function undoCheckInRegistrant(registrantId: string) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("registrants")
+    .update({
+      check_in: false,
+      check_in_time: null,
+    })
+    .eq("registrant_id", registrantId);
+
+  if (error) {
+    throw new Error(`Failed to undo check-in: ${error.message}`);
   }
 }

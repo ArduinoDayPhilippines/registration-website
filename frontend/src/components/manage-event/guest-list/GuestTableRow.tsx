@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Eye, Trash2, Check, X, QrCode, Loader2 } from "lucide-react";
+import { createPortal } from "react-dom";
 import { Guest } from "@/types/guest";
 import { generateQRCodeDataUrl } from "@/services/qrService";
 
@@ -30,6 +31,11 @@ export function GuestTableRow({
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
   const [isGeneratingQr, setIsGeneratingQr] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const handleOpenQrModal = async () => {
     if (!guest.qr_data || isGeneratingQr) return;
@@ -129,19 +135,21 @@ export function GuestTableRow({
                 <X size={11} />
                 Not Going
               </span>
-            ) : (
+            ) : guest.is_going === true ? (
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-green-500/20 text-green-400 border border-green-500/30">
                 <Check size={11} />
                 Going
               </span>
+            ) : (
+              <span className="text-xs text-white/30">—</span>
             )
           ) : (
             <span className="text-xs text-white/30">—</span>
           )}
         </td>
-        <td className="py-4 px-2 hidden lg:table-cell">
+        <td className="py-4 px-2 hidden md:table-cell">
           <div className="flex justify-center">
-            {guest.is_registered && guest.is_going && guest.qr_data ? (
+            {guest.is_registered && guest.qr_data ? (
               <button
                 onClick={handleOpenQrModal}
                 disabled={isGeneratingQr}
@@ -181,46 +189,60 @@ export function GuestTableRow({
         </td>
       </tr>
 
-      {isQrModalOpen && qrCodeUrl && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-            onClick={() => setIsQrModalOpen(false)}
-          />
-
-          <div className="relative w-full max-w-sm rounded-2xl border border-white/10 bg-gradient-to-br from-[#0a1f14] via-[#0a1520] to-[#120c08] p-6">
-            <button
+      {isMounted &&
+        isQrModalOpen &&
+        qrCodeUrl &&
+        createPortal(
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80">
+            <div
+              className="absolute inset-0"
               onClick={() => setIsQrModalOpen(false)}
-              className="absolute right-4 top-4 rounded-lg p-1.5 text-white/60 hover:bg-white/10 hover:text-white transition-colors"
-              aria-label="Close QR modal"
-            >
-              <X size={16} />
-            </button>
+            />
 
-            <h3 className="font-urbanist text-lg font-bold text-white mb-1">
-              Ticket QR Code
-            </h3>
-            <p className="font-urbanist text-sm text-white/70 mb-4">
-              {attendeeName}
-            </p>
-            {guest.users?.email && (
-              <p className="font-urbanist text-xs text-white/50 mb-4 break-all">
-                {guest.users.email}
-              </p>
-            )}
+            <div className="relative w-full max-w-lg bg-gradient-to-br from-gray-900 to-black rounded-2xl border border-white/10 overflow-hidden">
+              <div className="flex items-center justify-between p-6 border-b border-white/10">
+                <h2 className="text-xl font-urbanist font-bold text-white">
+                  Ticket QR Code
+                </h2>
+                <button
+                  onClick={() => setIsQrModalOpen(false)}
+                  className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                  aria-label="Close QR modal"
+                >
+                  <X className="w-5 h-5 text-white/60" />
+                </button>
+              </div>
 
-            <div className="mx-auto w-fit rounded-xl border-4 border-primary bg-white p-3">
-              <img
-                src={qrCodeUrl}
-                alt={`QR ticket for ${attendeeName}`}
-                width={220}
-                height={220}
-                className="block"
-              />
+              <div className="p-6">
+                <p className="font-urbanist text-sm text-white/70 text-center mb-1">
+                  {attendeeName}
+                </p>
+                {guest.users?.email && (
+                  <p className="font-urbanist text-xs text-white/50 text-center mb-5 break-all">
+                    {guest.users.email}
+                  </p>
+                )}
+
+                <div className="mx-auto w-fit rounded-xl border-4 border-primary bg-white p-3">
+                  <img
+                    src={qrCodeUrl}
+                    alt={`QR ticket for ${attendeeName}`}
+                    width={240}
+                    height={240}
+                    className="block"
+                  />
+                </div>
+
+                <div className="mt-4 p-4 bg-white/5 rounded-xl border border-white/10">
+                  <p className="text-white/60 text-sm font-urbanist text-center">
+                    Present this QR code at check-in
+                  </p>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body,
+        )}
     </>
   );
 }

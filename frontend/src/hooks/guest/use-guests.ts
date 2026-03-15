@@ -10,6 +10,10 @@ interface UseGuestsReturn {
   updateGuestStatusLocal: (
     guestId: string,
     nextStatus: "registered" | "pending" | "not-going",
+    patch?: {
+      qr_data?: string | null;
+      is_going?: boolean | null;
+    },
   ) => void;
 }
 
@@ -99,7 +103,14 @@ export function useGuests(slug: string): UseGuestsReturn {
   }, []);
 
   const updateGuestStatusLocal = useCallback(
-    (guestId: string, nextStatus: "registered" | "pending" | "not-going") => {
+    (
+      guestId: string,
+      nextStatus: "registered" | "pending" | "not-going",
+      patch?: {
+        qr_data?: string | null;
+        is_going?: boolean | null;
+      },
+    ) => {
       setGuests((prev) =>
         prev.map((guest) => {
           if (guest.registrant_id !== guestId) return guest;
@@ -116,6 +127,9 @@ export function useGuests(slug: string): UseGuestsReturn {
             return {
               ...guest,
               is_registered: true,
+              is_going: patch?.is_going ?? guest.is_going,
+              qr_data:
+                patch?.qr_data !== undefined ? patch.qr_data : guest.qr_data,
             };
           }
 

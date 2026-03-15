@@ -43,7 +43,7 @@ export const updateGuestStatusAction = withActionErrorHandler(
       throw new UnauthorizedError("Unauthorized");
     }
 
-    await updateGuestStatus(
+    const updatedRows = await updateGuestStatus(
       validatedData.guestId,
       validatedData.isRegistered,
       slug,
@@ -51,6 +51,10 @@ export const updateGuestStatusAction = withActionErrorHandler(
     revalidatePath(`/admin/events/${slug}/manage`);
     revalidatePath(`/event/${slug}`);
     logger.info(`Successfully updated guest ${validatedData.guestId} status`);
+
+    return {
+      guest: Array.isArray(updatedRows) ? (updatedRows[0] ?? null) : null,
+    };
   },
 );
 
