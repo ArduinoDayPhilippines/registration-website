@@ -182,7 +182,7 @@ export const checkUserRegistrationAction = withActionErrorHandler(
       registrationStatus: (guest?.is_registered ? "approved" : "pending") as
         | "approved"
         | "pending",
-      isGoing: guest?.is_going ?? false,
+      isGoing: guest?.is_going ?? null,
       qrData: (guest?.qr_data as string | null) ?? null,
       guest,
     };
