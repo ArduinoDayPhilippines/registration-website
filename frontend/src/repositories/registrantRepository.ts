@@ -11,6 +11,10 @@ export async function getRegistrantByUserAndEvent(
     .select(
       `
       registrant_id,
+      event_id,
+      users_id,
+      terms_approval,
+      form_answers,
       is_registered,
       is_going,
       qr_data,

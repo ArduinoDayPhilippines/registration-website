@@ -15,6 +15,7 @@ import {
 } from "@/services/registrantService";
 import { canManageEvent } from "@/services/authService";
 import { logger } from "@/utils/logger";
+import type { Guest } from "@/types/guest";
 import {
   withActionErrorHandler,
   UnauthorizedError,
@@ -186,7 +187,7 @@ export const checkUserRegistrationAction = withActionErrorHandler(
         : "pending") as "approved" | "pending",
       isGoing: registrant.is_going ?? null,
       qrData: (registrant.qr_data as string | null) ?? null,
-      guest: registrant,
+      guest: registrant as unknown as Guest,
     };
   },
 );
