@@ -1,4 +1,4 @@
-import { ChevronDown, QrCode } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { SelectionDropdown } from "./SelectionDropdown";
 
 interface GuestTableHeaderProps {
@@ -9,8 +9,6 @@ interface GuestTableHeaderProps {
   onToggleSelectMenu: () => void;
   onSelectByStatus: (status: 'all' | 'registered' | 'pending') => void;
   onDeselectAll: () => void;
-  selectedCount: number;
-  onBulkGenerateQR: () => void;
 }
 
 export function GuestTableHeader({
@@ -21,8 +19,6 @@ export function GuestTableHeader({
   onToggleSelectMenu,
   onSelectByStatus,
   onDeselectAll,
-  selectedCount,
-  onBulkGenerateQR,
 }: GuestTableHeaderProps) {
   return (
     <thead>
@@ -70,20 +66,11 @@ export function GuestTableHeader({
         <th className="font-urbanist text-left text-xs md:text-sm font-medium text-white/60 pb-3 px-2">
           Status
         </th>
+        <th className="font-urbanist text-left text-xs md:text-sm font-medium text-white/60 pb-3 px-2 hidden md:table-cell">
+          Going
+        </th>
         <th className="font-urbanist text-center text-xs md:text-sm font-medium text-white/60 pb-3 px-2 hidden lg:table-cell">
-          <div className="flex flex-col items-center gap-1">
-            <span>Generate QR</span>
-            {selectedCount > 0 && (
-              <button
-                onClick={onBulkGenerateQR}
-                className="px-2 py-1 bg-purple-600 hover:bg-purple-700 rounded text-xs text-white font-medium transition-colors flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
-                title={`Generate QR for ${selectedCount} registered guest${selectedCount > 1 ? 's' : ''}`}
-              >
-                <QrCode size={12} />
-                Generate for {selectedCount}
-              </button>
-            )}
-          </div>
+          Ticket
         </th>
         <th className="font-urbanist text-right text-xs md:text-sm font-medium text-white/60 pb-3 px-2">
           Actions

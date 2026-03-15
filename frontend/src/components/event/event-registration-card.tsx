@@ -1,7 +1,35 @@
-import React from "react";
+"use client";
+
 import Link from "next/link";
-import { CheckCircle, Users, Ticket, Check, Download } from "lucide-react";
+import {
+  CheckCircle,
+  Users,
+  Ticket,
+  Download,
+  QrCode,
+  Loader2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { generateQRCodeDataUrl } from "@/services/qrService";
+
+// Helper function to convert 24-hour time to 12-hour AM/PM format
+function format12HourTime(time: string): string {
+  if (!time) return time;
+
+  // Handle HH:MM format
+  const match = time.match(/^(\d{1,2}):(\d{2})/);
+  if (!match) return time;
+
+  let hours = parseInt(match[1], 10);
+  const minutes = match[2];
+  const ampm = hours >= 12 ? "PM" : "AM";
+
+  hours = hours % 12;
+  if (hours === 0) hours = 12;
+
+  return `${hours}:${minutes} ${ampm}`;
+}
 
 interface EventRegistrationCardProps {
   requireApproval: boolean;
@@ -10,9 +38,18 @@ interface EventRegistrationCardProps {
   registeredCount?: number;
   isUserRegistered?: boolean;
   registrationApprovalStatus?: "approved" | "pending" | null;
-  qrUrl?: string | null;
+  isGoing?: boolean;
+  qrData?: string | null;
   forgotPasswordHref?: string;
+  eventTitle?: string;
+  eventDate?: string;
+  eventTime?: string;
+  eventEndTime?: string;
+  eventLocation?: string;
+  attendeeName?: string;
   onRsvpClick: () => void;
+  onNotGoingClick?: () => void;
+  onGoingClick?: () => void;
 }
 
 export function EventRegistrationCard({
@@ -22,17 +59,73 @@ export function EventRegistrationCard({
   registeredCount = 0,
   isUserRegistered = false,
   registrationApprovalStatus = null,
-  qrUrl = null,
+  isGoing = true,
+  qrData = null,
   forgotPasswordHref = "/forgot-password",
+  eventTitle = "Event",
+  eventDate = "",
+  eventTime = "",
+  eventEndTime = "",
+  eventLocation = "",
+  attendeeName = "Guest",
   onRsvpClick,
+  onNotGoingClick,
+  onGoingClick,
 }: EventRegistrationCardProps) {
+  const [downloadingTicket, setDownloadingTicket] = useState(false);
+  const [showQRCode, setShowQRCode] = useState(false);
+  const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
+  const [generatingQRCode, setGeneratingQRCode] = useState(false);
+
   const capacityNum = parseInt(capacity) || 0;
   const slotsAvailable = capacityNum - registeredCount;
   const isAlmostFull =
     capacityNum > 0 && slotsAvailable <= Math.max(10, capacityNum * 0.1);
   const isFull = capacityNum > 0 && slotsAvailable <= 0;
   const isApproved = registrationApprovalStatus === "approved";
-  const isPending = registrationApprovalStatus === "pending";
+  const shouldShowTicket =
+    isUserRegistered && isApproved && isGoing && showQRCode && !!qrCodeUrl;
+
+  const handleDownloadTicket = async () => {
+    if (!qrCodeUrl) return;
+    setDownloadingTicket(true);
+    try {
+      const link = document.createElement("a");
+      link.href = qrCodeUrl;
+      link.download = `${eventTitle}-qr.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error("Failed to download QR code:", error);
+    } finally {
+      setDownloadingTicket(false);
+    }
+  };
+
+  const handleToggleQRCode = async () => {
+    if (!qrData) return;
+
+    if (showQRCode) {
+      setShowQRCode(false);
+      return;
+    }
+
+    if (!qrCodeUrl) {
+      setGeneratingQRCode(true);
+      try {
+        const nextQrCodeUrl = await generateQRCodeDataUrl(qrData);
+        setQrCodeUrl(nextQrCodeUrl);
+      } catch (error) {
+        console.error("Failed to generate QR code:", error);
+        return;
+      } finally {
+        setGeneratingQRCode(false);
+      }
+    }
+
+    setShowQRCode(true);
+  };
 
   return (
     <div className="bg-black/40 backdrop-blur-md rounded-xl p-5 md:p-6 border border-white/10 mb-6">
@@ -41,7 +134,11 @@ export function EventRegistrationCard({
       </h3>
 
       <p className="text-white/70 text-sm mb-5 leading-relaxed">
-        Welcome! To join the event, please register below.
+        {isUserRegistered
+          ? registrationApprovalStatus === "approved"
+            ? "You're registered for this event."
+            : "Your registration is pending approval."
+          : "Welcome! To join the event, please register below."}
       </p>
 
       {requireApproval && !isUserRegistered && (
@@ -54,61 +151,165 @@ export function EventRegistrationCard({
         </div>
       )}
 
-      {isUserRegistered && isApproved && (
-        <div className="flex items-start gap-2 p-3 rounded-lg bg-green-500/10 border border-green-500/30 mb-4">
-          <Check
-            size={16}
-            className="text-green-400 mt-0.5 flex-shrink-0"
-          />
-          <p className="text-white/80 text-xs">You're registered for this event</p>
-        </div>
-      )}
+      {shouldShowTicket && (
+        <div className="mb-6">
+          {/* Boarding Pass - White Only */}
+          <div className="bg-white rounded-lg shadow-2xl overflow-hidden">
+            <div className="flex flex-col min-h-96">
+              {/* Top info */}
+              <div className="flex justify-between items-start px-6 pt-4 pb-3 border-b border-gray-200">
+                <div>
+                  <p className="text-xs text-gray-500 uppercase tracking-wider font-bold mb-1">
+                    Date & Time
+                  </p>
+                  <p className="text-sm font-bold text-gray-900 line-clamp-2">
+                    {eventDate && (eventTime || eventEndTime) ? (
+                      <>
+                        {eventDate}
+                        {eventTime &&
+                          eventEndTime &&
+                          ` ${format12HourTime(eventTime)} - ${format12HourTime(eventEndTime)}`}
+                        {eventTime &&
+                          !eventEndTime &&
+                          ` ${format12HourTime(eventTime)}`}
+                      </>
+                    ) : eventTime && eventEndTime ? (
+                      `${format12HourTime(eventTime)} - ${format12HourTime(eventEndTime)}`
+                    ) : eventTime ? (
+                      format12HourTime(eventTime)
+                    ) : (
+                      "TBD"
+                    )}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-gray-500 uppercase tracking-wider font-bold mb-1">
+                    Location
+                  </p>
+                  <p className="text-sm font-bold text-gray-900 line-clamp-2">
+                    {eventLocation || "TBD"}
+                  </p>
+                </div>
+              </div>
 
-      {isUserRegistered && isApproved && qrUrl && (
-        <div className="mb-4 flex flex-col items-center gap-3 p-4 rounded-xl bg-white/5 border border-white/10">
-          <p className="text-xs text-white/50 font-urbanist">Your QR Ticket</p>
-          <div className="rounded-xl overflow-hidden border border-white/20 bg-white p-2">
-            <img
-              src={qrUrl}
-              alt="QR Ticket"
-              width={180}
-              height={180}
-              className="block"
-            />
+              {/* Center QR Code */}
+              <div className="flex justify-center py-6 flex-1 items-center">
+                <div className="bg-white border-4 border-primary rounded-lg p-3">
+                  <img
+                    src={qrCodeUrl}
+                    alt="QR Ticket"
+                    width={110}
+                    height={110}
+                    className="block"
+                  />
+                </div>
+              </div>
+
+              {/* Event title centered */}
+              <div className="text-center pb-3 border-b border-gray-200">
+                <p className="text-sm font-bold text-primary mb-1">
+                  {eventTitle}
+                </p>
+                <p className="text-xs text-gray-500 uppercase tracking-widest">
+                  Scan to enter
+                </p>
+              </div>
+
+              {/* Bottom teal bar - Attendee only */}
+              <div className="bg-primary text-white px-6 py-4">
+                <div className="text-center">
+                  <p className="text-xs opacity-75 uppercase tracking-wider mb-1">
+                    Attendee
+                  </p>
+                  <p className="font-bold text-sm">
+                    {attendeeName.toUpperCase()}
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
-          <a
-            href={qrUrl}
-            download
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1.5 text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
-          >
-            <Download size={13} />
-            Download QR Code
-          </a>
+
+          {/* Download Button */}
+          <div className="mt-4">
+            <button
+              onClick={handleDownloadTicket}
+              disabled={downloadingTicket}
+              className="w-full inline-flex items-center justify-center gap-2 text-sm font-bold px-4 py-3 rounded-lg bg-blue-600 text-white hover:shadow-lg transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {downloadingTicket ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : (
+                <Download size={16} />
+              )}
+              {downloadingTicket ? "Downloading QR..." : "Download QR Code"}
+            </button>
+          </div>
         </div>
       )}
 
-      <Button
-        fullWidth
-        onClick={isUserRegistered ? undefined : onRsvpClick}
-        disabled={isFull || isUserRegistered}
-        className={`text-sm font-bold tracking-wide ${
-          isUserRegistered
-            ? isApproved
-              ? "bg-green-600/80 hover:bg-green-600/80 cursor-default shadow-[0_0_15px_rgba(34,197,94,0.3)]"
-              : "bg-yellow-600/80 hover:bg-yellow-600/80 cursor-default shadow-[0_0_15px_rgba(234,179,8,0.3)]"
-            : "shadow-[0_0_30px_rgba(0,128,128,0.4)] hover:shadow-[0_0_40px_rgba(0,128,128,0.6)]"
-        } disabled:opacity-50 disabled:cursor-not-allowed`}
-      >
-        {isFull 
-          ? "EVENT FULL" 
-          : isUserRegistered 
-          ? isApproved 
-            ? "✓ REGISTERED" 
-            : "⏳ PENDING APPROVAL"
-          : "RSVP"}
-      </Button>
+      {isUserRegistered && isApproved && !isGoing && (
+        <div className="mb-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+          Registration approved. Click GOING to view your QR code.
+        </div>
+      )}
+
+      {isUserRegistered && isApproved && !isGoing && (
+        <div className="mb-4 flex gap-3">
+          <button
+            onClick={onGoingClick}
+            className="flex-1 text-sm font-bold px-4 py-3 rounded-lg transition-all bg-accent/30 text-accent border border-accent/50 hover:bg-accent/40"
+          >
+            GOING
+          </button>
+          <button
+            onClick={onNotGoingClick}
+            className="flex-1 text-sm font-bold px-4 py-3 rounded-lg transition-all bg-red-600/30 text-white hover:bg-red-600/40"
+          >
+            NOT GOING
+          </button>
+        </div>
+      )}
+
+      {isUserRegistered && isApproved && isGoing && qrData ? (
+        <Button
+          fullWidth
+          onClick={handleToggleQRCode}
+          disabled={generatingQRCode}
+          className="text-sm font-bold tracking-wide bg-green-600 hover:bg-green-700 shadow-[0_0_20px_rgba(34,197,94,0.3)] hover:shadow-[0_0_30px_rgba(34,197,94,0.5)] transition-all transform hover:scale-[1.02] border-none text-white disabled:opacity-50"
+        >
+          {generatingQRCode ? (
+            <Loader2 size={16} className="mr-2 inline-block animate-spin" />
+          ) : (
+            <QrCode size={16} className="mr-2 inline-block" />
+          )}
+          {showQRCode ? "HIDE QR CODE" : "SHOW QR CODE"}
+        </Button>
+      ) : isUserRegistered && isApproved && isGoing && !qrData ? (
+        <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/10 px-4 py-3 text-sm text-yellow-200">
+          Ticket unavailable. Please contact the event organizer.
+        </div>
+      ) : !isUserRegistered || !isApproved ? (
+        <Button
+          fullWidth
+          onClick={isUserRegistered ? undefined : onRsvpClick}
+          disabled={isFull || isUserRegistered}
+          className={`text-sm font-bold tracking-wide ${
+            isUserRegistered
+              ? isApproved
+                ? "bg-green-600/80 hover:bg-green-600/80 cursor-default shadow-[0_0_15px_rgba(34,197,94,0.3)]"
+                : "bg-yellow-600/80 hover:bg-yellow-600/80 cursor-default shadow-[0_0_15px_rgba(234,179,8,0.3)]"
+              : "shadow-[0_0_30px_rgba(0,128,128,0.4)] hover:shadow-[0_0_40px_rgba(0,128,128,0.6)]"
+          } disabled:opacity-50 disabled:cursor-not-allowed`}
+        >
+          {isFull
+            ? "EVENT FULL"
+            : isUserRegistered
+              ? isApproved
+                ? "✓ REGISTERED"
+                : "⏳ PENDING APPROVAL"
+              : "RSVP"}
+        </Button>
+      ) : null}
 
       {!isUserRegistered && (
         <div className="mt-3 text-center">

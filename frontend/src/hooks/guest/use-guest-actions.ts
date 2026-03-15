@@ -4,11 +4,8 @@ import {
   updateGuestStatusAction,
   deleteGuestAction,
   exportGuestsAction,
+  updateGuestIsGoingAction,
 } from "@/actions/registrantActions";
-import {
-  generateSingleQRAction,
-  generateBulkQRAction,
-} from "@/actions/qrClientActions";
 import { downloadCSV } from "@/utils/fileDownload";
 import { useNotification } from "@/hooks/use-notification";
 
@@ -39,73 +36,52 @@ export function useGuestActions(slug: string, onRefresh: () => void) {
   );
 
   const handleStatusChange = useCallback(
-    (guestId: string, newStatus: string) => {
-      const isRegistered = newStatus === "registered";
-
+    (
+      guestId: string,
+      newStatus: "registered" | "pending" | "not-going",
+      onGuestStatusUpdated?: (
+        guestId: string,
+        status: "registered" | "pending" | "not-going",
+      ) => void,
+    ) => {
       startTransition(async () => {
-        const result = await updateGuestStatusAction(
-          { guestId, isRegistered },
-          slug,
-        );
+        let result;
+        if (newStatus === "not-going") {
+          result = await updateGuestIsGoingAction({ guestId, isGoing: false }, slug);
+        } else {
+          const isRegistered = newStatus === "registered";
+          result = await updateGuestStatusAction({ guestId, isRegistered }, slug);
+        }
 
         if (result.success) {
-          onRefresh();
+          onGuestStatusUpdated?.(guestId, newStatus);
           showSuccess("Status updated successfully");
         } else {
           showError(result.error || "Failed to update status");
         }
       });
     },
-    [slug, onRefresh, showSuccess, showError],
+    [slug, showSuccess, showError],
   );
 
   const handleExport = useCallback(async () => {
     const result = await exportGuestsAction(slug);
+    const csvData =
+      result.success &&
+      result.data &&
+      typeof result.data === "object" &&
+      "csvData" in result.data &&
+      typeof result.data.csvData === "string"
+        ? result.data.csvData
+        : null;
 
-    if (result.success && result.data && (result.data as any).csvData) {
-      downloadCSV(
-        (result.data as any).csvData as string,
-        `event-guests-${slug}.csv`,
-      );
+    if (csvData) {
+      downloadCSV(csvData, `event-guests-${slug}.csv`);
       showSuccess("Guest list exported successfully");
     } else {
       showError(result.error || "Failed to export guests");
     }
   }, [slug, showSuccess, showError]);
-
-  const handleGenerateQR = useCallback(
-    async (guest: Guest) => {
-      const result = await generateSingleQRAction(guest, slug);
-
-      if (result.success) {
-        showSuccess("QR code uploaded successfully!");
-      } else {
-        showError(result.error || "Failed to generate QR code");
-      }
-    },
-    [slug, showSuccess, showError],
-  );
-
-  const handleBulkGenerateQR = useCallback(
-    async (guests: Guest[]) => {
-      if (guests.length === 0) {
-        showError("No guests selected");
-        return;
-      }
-
-      const result = await generateBulkQRAction(guests, slug);
-
-      if (result.success) {
-        const count = result.count ?? 0;
-        showSuccess(
-          `Uploaded ${count} QR code${count > 1 ? "s" : ""} successfully!`,
-        );
-      } else {
-        showError(result.error || "Failed to generate QR codes");
-      }
-    },
-    [slug, showSuccess, showError],
-  );
 
   const handleBulkApprove = useCallback(
     async (guests: Guest[]) => {
@@ -142,8 +118,6 @@ export function useGuestActions(slug: string, onRefresh: () => void) {
     handleDeleteGuest,
     handleStatusChange,
     handleExport,
-    handleGenerateQR,
-    handleBulkGenerateQR,
     handleBulkApprove,
   };
 }

@@ -21,13 +21,13 @@ export function AdminNavbar({ activeTab }: AdminNavbarProps) {
       id: "dashboard" as const,
       label: "Dashboard",
       icon: BarChart3,
-      path: "/dashboard",
+      path: "/admin/dashboard",
     },
     {
       id: "events" as const,
       label: "Events",
       icon: Calendar,
-      path: "/dashboard/events",
+      path: "/admin/events",
     },
   ];
 

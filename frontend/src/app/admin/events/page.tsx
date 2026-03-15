@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { AdminNavbar } from "@/components/admin/admin-navbar";
+import { AdminBreadcrumbs } from "@/components/admin/admin-breadcrumbs";
 import { ActiveEvents } from "@/components/admin/active-events";
 import BokehBackground from "@/components/create-event/bokeh-background";
 import Squares from "@/components/create-event/squares-background";
@@ -59,6 +60,12 @@ export default function EventsPage() {
         <AdminNavbar activeTab="events" />
         <main className="flex-1 px-4 md:px-8 py-8 pt-28">
           <div className="max-w-7xl mx-auto">
+            <AdminBreadcrumbs
+              items={[
+                { label: "Dashboard", href: "/admin/dashboard" },
+                { label: "Events" },
+              ]}
+            />
             {loading ? (
               <div className="flex items-center justify-center py-20">
                 <div className="text-center">

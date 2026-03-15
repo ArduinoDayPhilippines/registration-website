@@ -1,6 +1,5 @@
-import React from 'react';
-import { ArrowUpRight } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { ArrowUpRight } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface EventManageCardProps {
   eventSlug: string;
@@ -10,7 +9,7 @@ export function EventManageCard({ eventSlug }: EventManageCardProps) {
   const router = useRouter();
 
   const handleManageClick = () => {
-    router.push(`/event/${eventSlug}/manage`);
+    router.push(`/admin/events/${eventSlug}/manage`);
   };
 
   return (

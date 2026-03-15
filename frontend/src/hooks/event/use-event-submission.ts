@@ -45,7 +45,7 @@ export function useEventSubmission() {
     try {
       const result = await createEventAction(formData);
       if (!result.success) throw new Error(result.error);
-      router.push(result.slug ? `/event/${result.slug}` : "/dashboard");
+      router.push(result.slug ? `/event/${result.slug}` : "/admin/dashboard");
     } catch (err) {
       console.error("Create event error:", err);
       setError(

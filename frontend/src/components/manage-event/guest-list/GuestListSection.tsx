@@ -19,6 +19,10 @@ interface GuestListSectionProps {
   slug: string;
   onRefresh: () => void;
   event: EventData;
+  onGuestStatusUpdated: (
+    guestId: string,
+    status: "registered" | "pending" | "not-going",
+  ) => void;
 }
 
 export function GuestListSection({
@@ -26,6 +30,7 @@ export function GuestListSection({
   slug,
   onRefresh,
   event,
+  onGuestStatusUpdated,
 }: GuestListSectionProps) {
   const [selectedGuest, setSelectedGuest] = useState<Guest | null>(null);
   const [showAnswersModal, setShowAnswersModal] = useState(false);
@@ -48,13 +53,10 @@ export function GuestListSection({
     handleDeleteGuest,
     handleStatusChange,
     handleExport,
-    handleGenerateQR,
-    handleBulkGenerateQR,
     handleBulkApprove,
   } = useGuestActions(slug, onRefresh);
 
   const selectedGuests = guests.filter(g => selectedGuestIds.has(g.registrant_id));
-  const selectedRegisteredGuests = selectedGuests.filter(g => g.is_registered);
   const selectedPendingGuests = selectedGuests.filter(g => !g.is_registered);
 
   const allSelected = filteredGuests.length > 0 && 
@@ -134,8 +136,6 @@ export function GuestListSection({
                   onToggleSelectMenu={toggleSelectMenu}
                   onSelectByStatus={(status) => handleSelectByStatus(filteredGuests, status)}
                   onDeselectAll={clearSelection}
-                  selectedCount={selectedRegisteredGuests.length}
-                  onBulkGenerateQR={() => handleBulkGenerateQR(selectedRegisteredGuests)}
                 />
                 <tbody>
                   {filteredGuests.map((guest) => (
@@ -145,12 +145,13 @@ export function GuestListSection({
                       isSelected={selectedGuestIds.has(guest.registrant_id)}
                       isPending={isPending}
                       onSelectGuest={handleSelectGuest}
-                      onStatusChange={handleStatusChange}
+                      onStatusChange={(guestId, status) =>
+                        handleStatusChange(guestId, status, onGuestStatusUpdated)
+                      }
                       onViewAnswers={(g) => {
                         setSelectedGuest(g);
                         setShowAnswersModal(true);
                       }}
-                      onGenerateQR={handleGenerateQR}
                       onDelete={handleDeleteGuest}
                     />
                   ))}

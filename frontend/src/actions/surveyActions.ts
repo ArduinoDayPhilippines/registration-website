@@ -38,7 +38,7 @@ export const saveEventSurveyAction = withActionErrorHandler(
     }
 
     await saveEventSurveySettings(validatedData.slug, validatedData.surveyData);
-    revalidatePath(`/event/${validatedData.slug}/manage`);
+    revalidatePath(`/admin/events/${validatedData.slug}/manage`);
     logger.info(
       `Successfully saved survey config for event: ${validatedData.slug}`,
     );
@@ -70,8 +70,11 @@ export const submitSurveyResponseAction = withActionErrorHandler(
       .eq("users_id", user.id)
       .single();
 
-    let userName = user.user_metadata?.full_name || user.user_metadata?.first_name || "Participant";
-    
+    let userName =
+      user.user_metadata?.full_name ||
+      user.user_metadata?.first_name ||
+      "Participant";
+
     // Prefer database record if available
     if (userProfile?.first_name && userProfile?.last_name) {
       userName = `${userProfile.first_name} ${userProfile.last_name}`;
@@ -79,9 +82,12 @@ export const submitSurveyResponseAction = withActionErrorHandler(
       userName = userProfile.first_name;
     }
 
-    const certificateBase64 = await generateCertificate(userName, validatedData.slug);
+    const certificateBase64 = await generateCertificate(
+      userName,
+      validatedData.slug,
+    );
 
-    revalidatePath(`/event/${validatedData.slug}/manage`);
+    revalidatePath(`/admin/events/${validatedData.slug}/manage`);
     logger.info(
       `Successfully submitted survey response for event: ${validatedData.slug} by user: ${user.id}`,
     );

@@ -20,6 +20,7 @@ import {
   saveRegistrationQuestions,
   createEvent,
 } from "@/services/eventService";
+import { getDashboardAnalytics } from "@/services/dashboardService";
 
 import { logger } from "@/utils/logger";
 import { canManageEvent } from "@/services/authService";
@@ -43,6 +44,12 @@ export const listEventsAction = withActionErrorHandler(async () => {
   return data;
 });
 
+export const getDashboardAnalyticsAction = withActionErrorHandler(async () => {
+  const data = await getDashboardAnalytics();
+  logger.info("Fetched dashboard analytics");
+  return data;
+});
+
 export async function updateEventDetailsAction(data: unknown) {
   try {
     // Validate input data
@@ -62,7 +69,7 @@ export async function updateEventDetailsAction(data: unknown) {
     await updateEventDetails(slug, details);
 
     // Revalidate Next.js cache
-    revalidatePath(`/event/${slug}/manage`);
+    revalidatePath(`/admin/events/${slug}/manage`);
     revalidatePath(`/event/${slug}`);
 
     logger.info("Successfully updated event details", { slug });
@@ -106,7 +113,7 @@ export async function updateEventSettingsAction(data: unknown) {
     );
 
     // Revalidate Next.js cache
-    revalidatePath(`/event/${validatedData.slug}/manage`);
+    revalidatePath(`/admin/events/${validatedData.slug}/manage`);
     revalidatePath(`/event/${validatedData.slug}`);
 
     logger.info("Successfully updated event settings", {
@@ -161,7 +168,7 @@ export async function addRegistrationQuestionAction(data: unknown) {
     );
 
     // Revalidate Next.js cache
-    revalidatePath(`/event/${validatedData.slug}/manage`);
+    revalidatePath(`/admin/events/${validatedData.slug}/manage`);
     revalidatePath(`/event/${validatedData.slug}/register`);
 
     logger.info("Successfully added registration question", {
@@ -215,7 +222,7 @@ export async function updateRegistrationQuestionAction(data: unknown) {
     );
 
     // Revalidate Next.js cache
-    revalidatePath(`/event/${validatedData.slug}/manage`);
+    revalidatePath(`/admin/events/${validatedData.slug}/manage`);
     revalidatePath(`/event/${validatedData.slug}/register`);
 
     logger.info("Successfully updated registration question", {
@@ -268,7 +275,7 @@ export async function removeRegistrationQuestionAction(data: unknown) {
     );
 
     // Revalidate Next.js cache
-    revalidatePath(`/event/${validatedData.slug}/manage`);
+    revalidatePath(`/admin/events/${validatedData.slug}/manage`);
     revalidatePath(`/event/${validatedData.slug}/register`);
 
     logger.info("Successfully removed registration question", {
@@ -300,19 +307,24 @@ export async function saveRegistrationQuestionsAction(
 ) {
   try {
     if (!(await canManageEvent(slug))) {
-      return { success: false, error: "You are not authorized to update this event" };
+      return {
+        success: false,
+        error: "You are not authorized to update this event",
+      };
     }
 
     await saveRegistrationQuestions(slug, questions);
 
-    revalidatePath(`/event/${slug}/manage`);
+    revalidatePath(`/admin/events/${slug}/manage`);
     revalidatePath(`/event/${slug}/register`);
 
     logger.info("Successfully saved registration questions", { slug });
     return { success: true };
   } catch (error: any) {
     const errorMessage =
-      error instanceof Error ? error.message : "Failed to save registration questions";
+      error instanceof Error
+        ? error.message
+        : "Failed to save registration questions";
     logger.error("Failed to save registration questions", error);
     return { success: false, error: errorMessage };
   }
@@ -346,8 +358,8 @@ export async function createEventAction(data: unknown) {
     // Call service layer to create the event
     const newSlug = await createEvent(validatedData, userId);
 
-    // Revalidate Next.js cache for dashboard
-    revalidatePath("/dashboard");
+    // Revalidate Next.js cache for admin dashboard
+    revalidatePath("/admin/dashboard");
     revalidatePath("/");
 
     logger.info("Successfully created new event", { slug: newSlug, userId });

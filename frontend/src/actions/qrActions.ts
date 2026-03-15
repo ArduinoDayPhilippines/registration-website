@@ -1,83 +1,53 @@
 "use server";
 
 import { canManageEvent } from "@/services/authService";
-import { uploadQRBufferToStorage } from "@/repositories/qrServerRepository";
 import { logger } from "@/utils/logger";
 import {
   withActionErrorHandler,
   UnauthorizedError,
 } from "@/lib/utils/actionError";
-import { getRegistrantById } from "@/repositories/registrantRepository";
-import { QRCodeData } from "@/services/qrService";
-
-export interface QRUploadResult {
-  success: boolean;
-  url?: string;
-  error?: string;
-}
+import {
+  checkInRegistrant,
+  getRegistrantByQrData,
+} from "@/repositories/registrantRepository";
+import { getEventIdAndApprovalBySlug } from "@/repositories/eventRepository";
+import { parseRegistrantQrData } from "@/services/qrService";
 
 export interface QRValidationResult {
   success: boolean;
   guestName?: string;
+  guestEmail?: string;
   error?: string;
 }
 
-export const uploadQRCodeAction = withActionErrorHandler(
-  async (blob: Blob, fileName: string, eventSlug: string) => {
-    const canManage = await canManageEvent(eventSlug);
-    if (!canManage) {
-      logger.warn("Unauthorized QR upload attempt", { eventSlug });
-      throw new UnauthorizedError("Unauthorized");
-    }
-
-    const arrayBuffer = await blob.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
-    const result = await uploadQRBufferToStorage(fileName, buffer);
-
-    if (result.success) {
-      logger.info("QR code uploaded successfully");
-      return result;
-    } else {
-      logger.error("QR upload failed", result.error);
-      throw new Error(result.error);
-    }
-  },
-);
-
 export const validateQRCodeAction = withActionErrorHandler(
-  async (
-    qrData: QRCodeData,
-    eventSlug: string,
-  ): Promise<QRValidationResult> => {
+  async (qrData: string, eventSlug: string): Promise<QRValidationResult> => {
     const canManage = await canManageEvent(eventSlug);
     if (!canManage) {
       logger.warn("Unauthorized QR validation attempt", { eventSlug });
       throw new UnauthorizedError("Unauthorized to validate tickets");
     }
 
-    console.log("Validating QR code:", {
-      qrDataEventSlug: qrData.event_slug,
-      currentEventSlug: eventSlug,
-      matches: qrData.event_slug === eventSlug,
-    });
-
-    if (!qrData.event_slug) {
+    const normalizedQrData = qrData.trim();
+    if (!normalizedQrData) {
       return {
         success: false,
-        error: "Invalid ticket - outdated QR code format. Please regenerate.",
+        error: "Invalid ticket - missing QR data.",
       };
     }
 
-    // Verify the QR code is for THIS specific event
-    if (qrData.event_slug !== eventSlug) {
+    const parsedPayload = parseRegistrantQrData(normalizedQrData);
+    if (parsedPayload?.event.slug && parsedPayload.event.slug !== eventSlug) {
       return {
         success: false,
-        error: `Invalid ticket - this is for event "${qrData.event_slug}", not "${eventSlug}"`,
+        error: "Invalid ticket - event mismatch",
       };
     }
 
-    const registrant = await getRegistrantById(qrData.registrant_id);
+    const [eventData, registrant] = await Promise.all([
+      getEventIdAndApprovalBySlug(eventSlug),
+      getRegistrantByQrData(normalizedQrData),
+    ]);
 
     if (!registrant) {
       return {
@@ -86,16 +56,34 @@ export const validateQRCodeAction = withActionErrorHandler(
       };
     }
 
-    if (registrant.event_id !== qrData.event_id) {
+    if (registrant.event_id !== eventData.event_id) {
       return {
         success: false,
         error: "Invalid ticket - event mismatch",
       };
     }
 
+    if (!registrant.is_registered || registrant.is_going === false) {
+      return {
+        success: false,
+        error: "Invalid ticket - registrant is not cleared for entry",
+      };
+    }
+
+    const guestName = [
+      registrant.users?.first_name,
+      registrant.users?.last_name,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .trim();
+
+    await checkInRegistrant(registrant.registrant_id);
+
     return {
       success: true,
-      guestName: qrData.name,
+      guestName: guestName || "Guest",
+      guestEmail: registrant.users?.email ?? undefined,
     };
   },
 );
