@@ -158,14 +158,14 @@ export function StepContinueWithEmail({
         <h2 className="text-xl sm:text-2xl font-bold text-[#f5f5f5] tracking-tight">
           {phase === "email" && "Continue with email"}
           {phase === "password" && "Enter your password"}
-          {phase === "register_required" && "Create an account"}
+          {phase === "register_required" && "Sign Up"}
         </h2>
       </div>
 
       <p className="text-[rgba(197,213,213,0.8)] mb-4 leading-relaxed text-[11px] sm:text-sm text-center">
         {phase === "email" && "Enter the email address you use for your account. We’ll check if you’re already registered."}
         {phase === "password" && "This email is already registered. Sign in with your password to continue."}
-        {phase === "register_required" && "No account was found with this email. Please create an account to register for this event."}
+        {phase === "register_required" && "No account was found with this email. Please sign up to register for this event."}
       </p>
 
       {error && (
@@ -247,7 +247,7 @@ export function StepContinueWithEmail({
               disabled={loading || !password.trim()}
               className="flex-1 min-w-0 py-3.5 rounded-xl bg-[rgba(35,60,60,0.7)] hover:bg-[rgba(35,60,60,0.8)] text-[#95b5b5] font-semibold text-sm transition-all duration-200"
             >
-              {loading ? "Signing in…" : "Sign in"}
+              {loading ? "Signing in…" : "Sign In"}
             </button>
           </div>
         </form>
@@ -256,7 +256,7 @@ export function StepContinueWithEmail({
       {phase === "register_required" && (
         <form id="create-account-form" onSubmit={handleCreateAccount} className="space-y-4">
           <p className="text-[rgba(197,213,213,0.9)] text-sm leading-relaxed">
-            No account was found. Fill in the form below to create one and continue.
+            No account was found. Fill in the form below to sign up and continue.
           </p>
           <div className="space-y-2">
             <label htmlFor="reg-first-name" className={labelClass}>First name</label>
@@ -350,7 +350,7 @@ export function StepContinueWithEmail({
               disabled={loading || !firstName.trim() || !lastName.trim() || !registerPassword || registerPassword !== confirmPassword}
               className="flex-1 min-w-0 py-3.5 rounded-xl bg-[rgba(35,60,60,0.6)] hover:bg-[rgba(35,60,60,0.7)] text-[#95b5b5] font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-1.5"
             >
-              {loading ? "Creating account…" : "Create account"}
+              {loading ? "Signing up…" : "Sign Up"}
             </button>
           </div>
         </form>

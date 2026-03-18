@@ -29,7 +29,7 @@ export default async function RegisterPage({
             />
           </div>
           <h1 className="text-[40px] sm:text-[48px] md:text-[56px] font-bold text-[#f5f5f5] tracking-tight leading-none">
-            Create Account
+            Sign Up
           </h1>
           <p className="text-[#5dd8d8] text-[11px] tracking-[0.3em] uppercase font-semibold">
             Arduino Day Philippines 2026
@@ -46,7 +46,7 @@ export default async function RegisterPage({
             href="/"
             className="text-[#6dd8d8] hover:text-[#8de5e5] underline-offset-4 hover:underline font-medium"
           >
-            Login
+            Sign In
           </Link>
         </p>
 

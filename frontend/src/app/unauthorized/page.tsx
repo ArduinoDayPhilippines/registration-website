@@ -10,7 +10,7 @@ export default function UnauthorizedPage() {
     <ErrorState
       title="Unauthorized"
       message="You do not have permission to access this page. Please ensure you are logged in with the correct account."
-      actionLabel="Go to Login"
+      actionLabel="Go to Sign In"
       onAction={() => router.push("/?login=true")}
     />
   );

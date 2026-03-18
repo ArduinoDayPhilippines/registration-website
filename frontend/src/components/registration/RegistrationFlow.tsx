@@ -11,6 +11,7 @@ import { INITIAL_DATA, RegistrationFormData } from './types';
 import { Question } from '@/types/event';
 import { createClient } from '@/lib/supabase/client';
 import { createRegistrantAction } from '@/actions/registrantActions';
+import { checkUserRegistrationAction } from '@/actions/registrantActions';
 import { uploadRegistrationFile } from '@/lib/storage/file-upload';
 
 export interface RegistrationFlowProps {
@@ -28,6 +29,9 @@ export function RegistrationFlow({
   const [isSuccess, setIsSuccess] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isCheckingExistingRegistration, setIsCheckingExistingRegistration] =
+    useState(false);
+  const [isAlreadyRegistered, setIsAlreadyRegistered] = useState(false);
 
   // Get logged-in user on mount and subscribe to auth changes (so already-logged-in users never see "Continue with email")
   useEffect(() => {
@@ -57,6 +61,33 @@ export function RegistrationFlow({
     const { data: { user } } = await supabase.auth.getUser();
     if (user) setUserId(user.id);
   };
+
+  useEffect(() => {
+    async function checkExistingRegistration() {
+      if (!userId || !eventSlug) {
+        setIsAlreadyRegistered(false);
+        setIsCheckingExistingRegistration(false);
+        return;
+      }
+
+      setIsCheckingExistingRegistration(true);
+      try {
+        const result = await checkUserRegistrationAction(eventSlug);
+        if (result.success && result.data) {
+          setIsAlreadyRegistered(result.data.isRegistered);
+        } else {
+          setIsAlreadyRegistered(false);
+        }
+      } catch (error) {
+        console.error("Failed to check existing registration:", error);
+        setIsAlreadyRegistered(false);
+      } finally {
+        setIsCheckingExistingRegistration(false);
+      }
+    }
+
+    void checkExistingRegistration();
+  }, [userId, eventSlug]);
 
   // Group questions into chunks of 3
   const questionSteps = useMemo(() => {
@@ -164,6 +195,49 @@ export function RegistrationFlow({
           eventSlug={eventSlug ?? ''} 
           onSuccess={handleEmailAuthSuccess} 
         />
+      </RegistrationLayout>
+    );
+  }
+
+  if (isCheckingExistingRegistration) {
+    return (
+      <RegistrationLayout
+        currentStep={0}
+        totalSteps={totalSteps}
+      >
+        <div className="flex items-center justify-center h-full">
+          <p className="text-[rgba(197,213,213,0.8)] text-sm">
+            Checking your registration...
+          </p>
+        </div>
+      </RegistrationLayout>
+    );
+  }
+
+  if (isAlreadyRegistered) {
+    return (
+      <RegistrationLayout
+        currentStep={0}
+        totalSteps={totalSteps}
+      >
+        <div className="flex flex-col items-center justify-center h-full text-center animate-in zoom-in-95 duration-500">
+          <h2 className="text-2xl sm:text-3xl font-bold text-[#f5f5f5] tracking-tight mb-2">
+            You are already registered
+          </h2>
+          <p className="text-[rgba(197,213,213,0.9)] max-w-sm mb-6 text-sm">
+            Your account already has a registration for this event.
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              router.refresh();
+              router.push(eventSlug ? `/event/${eventSlug}?refresh=${Date.now()}` : "/");
+            }}
+            className="px-6 py-3 bg-[rgba(35,60,60,0.6)] hover:bg-[rgba(35,60,60,0.7)] text-[#95b5b5] font-semibold rounded-xl transition-all duration-200 text-sm"
+          >
+            Go Back to Event Page
+          </button>
+        </div>
       </RegistrationLayout>
     );
   }

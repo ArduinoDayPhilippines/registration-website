@@ -79,7 +79,7 @@ export default function ResetPasswordForm() {
       return;
     }
 
-    setSuccess("Password updated successfully. Redirecting to login...");
+    setSuccess("Password updated successfully. Redirecting to sign in...");
     setTimeout(() => {
       router.replace("/");
     }, 1400);

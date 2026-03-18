@@ -5,10 +5,20 @@ import AdminLoginBackground from "@/components/admin/AdminLoginBackground";
 import UserLoginForm from "@/components/users/UserLoginForm";
 import { getUserRole } from "@/services/authService";
 
-type PageProps = { searchParams: Promise<{ registered?: string }> };
+type PageProps = {
+  searchParams: Promise<{ registered?: string; next?: string }>;
+};
 
 export default async function Home({ searchParams }: PageProps) {
+  const { registered, next } = await searchParams;
+  const safeNext =
+    next && next.startsWith("/") && !next.startsWith("//") ? next : null;
   const { role } = await getUserRole();
+
+  if (safeNext && role) {
+    redirect(safeNext);
+  }
+
   if (role === "admin") {
     redirect("/admin/dashboard");
   }
@@ -16,8 +26,6 @@ export default async function Home({ searchParams }: PageProps) {
   if (role === "user") {
     redirect("/my-events");
   }
-
-  const { registered } = await searchParams;
 
   return (
     <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-4">
@@ -38,7 +46,7 @@ export default async function Home({ searchParams }: PageProps) {
             />
           </div>
           <h1 className="text-[40px] sm:text-[48px] md:text-[56px] font-bold text-[#f5f5f5] tracking-tight leading-none">
-            Login
+            Sign In
           </h1>
           <p className="text-[#5dd8d8] text-[11px] tracking-[0.3em] uppercase font-semibold">
             Arduino Day Philippines 2026
@@ -55,7 +63,7 @@ export default async function Home({ searchParams }: PageProps) {
             href="/register"
             className="text-[#6dd8d8] hover:text-[#8de5e5] underline-offset-4 hover:underline font-medium"
           >
-            Create one
+            Sign Up
           </Link>
         </p>
 

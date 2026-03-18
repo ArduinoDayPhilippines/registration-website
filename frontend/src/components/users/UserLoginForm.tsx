@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useRef } from "react";
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { loginAction } from "@/actions/authActions";
 import { getUserRoleAction } from "@/actions/authActions";
@@ -20,6 +20,7 @@ export default function UserLoginForm({
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const redirectDone = useRef(false);
 
   const [state, formAction, isPending] = useActionState(loginAction, null);
@@ -32,7 +33,7 @@ export default function UserLoginForm({
     (async () => {
       const res = await getUserRoleAction();
       if (cancelled) return;
-      const data: any = res.data ?? {};
+      const data = (res.data ?? {}) as { role?: string | null; userId?: string | null };
 
       // Update global store
       const userRole =
@@ -47,13 +48,22 @@ export default function UserLoginForm({
         router.replace("/admin/dashboard");
         return;
       }
+      const rawNext = searchParams.get("next");
+      const nextPath =
+        rawNext && rawNext.startsWith("/") && !rawNext.startsWith("//")
+          ? rawNext
+          : null;
+      if (nextPath) {
+        router.replace(nextPath);
+        return;
+      }
       const lastSlug = getLastViewedEventSlug();
       router.replace(lastSlug ? `/event/${lastSlug}` : "/my-events");
     })();
     return () => {
       cancelled = true;
     };
-  }, [state?.success, router]);
+  }, [state?.success, router, searchParams]);
 
   return (
     <div
@@ -70,7 +80,7 @@ export default function UserLoginForm({
       {showRegisteredMessage && (
         <div className="mb-4 rounded-xl bg-emerald-500/10 border border-emerald-400/30 px-4 py-3 text-center">
           <p className="text-emerald-200 text-xs">
-            Account created. Login to continue.
+            Account created. Sign in to continue.
           </p>
         </div>
       )}
@@ -78,7 +88,7 @@ export default function UserLoginForm({
       {state?.success && (
         <div className="mb-4 rounded-xl bg-emerald-500/10 border border-emerald-400/30 px-4 py-3 text-center">
           <p className="text-emerald-200 text-xs">
-            Login successful. Please wait...
+            Sign in successful. Please wait...
           </p>
         </div>
       )}
@@ -201,7 +211,7 @@ export default function UserLoginForm({
           {isPending ? (
             <span className="flex items-center justify-center gap-2">
               <Loader2 className="w-4 h-4 animate-spin" />
-              Logging in...
+              Signing in...
             </span>
           ) : state?.success ? (
             <span className="flex items-center justify-center gap-2">
@@ -209,7 +219,7 @@ export default function UserLoginForm({
               Redirecting...
             </span>
           ) : (
-            "Login"
+            "Sign In"
           )}
         </button>
       </form>
