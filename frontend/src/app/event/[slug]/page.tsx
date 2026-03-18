@@ -71,6 +71,10 @@ export default function EventPage() {
   const [isCheckingRegistration, setIsCheckingRegistration] = useState(true);
 
   const isLoggedIn = !roleLoading && userId != null;
+  const registrationOpen = !!event && isRegistrationOpen({
+    registrationOpen: event.registrationOpen,
+    status: event.status,
+  });
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -326,10 +330,7 @@ export default function EventPage() {
               <RegistrationCardSkeleton />
             ) : (
               <EventRegistrationCard
-                registrationOpen={isRegistrationOpen({
-                  registrationOpen: event.registrationOpen,
-                  status: event.status,
-                })}
+                registrationOpen={registrationOpen}
                 requireApproval={event.requireApproval}
                 ticketPrice={event.ticketPrice}
                 capacity={event.capacity}
@@ -360,7 +361,15 @@ export default function EventPage() {
                     : "Guest"
                 }
                 forgotPasswordHref={`/forgot-password?next=${encodeURIComponent(`/event/${slug}/register`)}`}
-                onRsvpClick={() => router.push(`/event/${slug}/register`)}
+                onRsvpClick={() => {
+                  if (!registrationOpen && !isLoggedIn) {
+                    router.push(
+                      `/?next=${encodeURIComponent(`/event/${slug}`)}`,
+                    );
+                    return;
+                  }
+                  router.push(`/event/${slug}/register`);
+                }}
                 onNotGoingClick={async () => {
                   const result = await setIsGoingAction(slug, false);
                   if (result.success) {

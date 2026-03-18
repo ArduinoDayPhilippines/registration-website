@@ -342,10 +342,10 @@ export default function UserRegisterForm({ nextUrl }: UserRegisterFormProps) {
                 {isPending ? (
                   <span className="flex items-center justify-center gap-2">
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    Creating account...
+                    Signing up...
                   </span>
                 ) : (
-                  "Create account"
+                  "Sign Up"
                 )}
               </button>
             </div>

@@ -174,7 +174,7 @@ export function EventRegistrationCard({
 
       <p className="text-white/70 text-sm mb-5 leading-relaxed">
         {!registrationOpen && !isUserRegistered
-          ? "Registration for this event is closed."
+          ? "Registration is closed for new attendees. Sign in if you already registered."
           : isUserRegistered
           ? registrationApprovalStatus === "approved"
             ? "You're registered for this event."
@@ -345,7 +345,7 @@ export function EventRegistrationCard({
         <Button
           fullWidth
           onClick={isUserRegistered ? undefined : onRsvpClick}
-          disabled={isFull || isUserRegistered || !registrationOpen}
+          disabled={isFull || isUserRegistered}
           className={`text-sm font-bold tracking-wide ${
             isUserRegistered
               ? isApproved
@@ -354,8 +354,8 @@ export function EventRegistrationCard({
               : "shadow-[0_0_30px_rgba(0,128,128,0.4)] hover:shadow-[0_0_40px_rgba(0,128,128,0.6)]"
           } disabled:opacity-50 disabled:cursor-not-allowed`}
         >
-          {!registrationOpen
-            ? "REGISTRATION CLOSED"
+          {!registrationOpen && !isUserRegistered
+            ? "SIGN IN"
             : isFull
             ? "EVENT FULL"
             : isUserRegistered
