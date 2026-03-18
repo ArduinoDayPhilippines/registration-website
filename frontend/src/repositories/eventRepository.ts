@@ -31,7 +31,7 @@ export async function getEventIdAndApprovalBySlug(slug: string) {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("events")
-    .select("event_id, event_name, require_approval")
+    .select("event_id, event_name, require_approval, status, registration_open")
     .eq("slug", slug)
     .single();
 
@@ -79,16 +79,37 @@ export async function updateEventDetails(slug: string, details: any) {
   if (error) throw new Error(`Failed to update event details: ${error.message}`);
 }
 
-export async function updateEventSettings(slug: string, requireApproval: boolean) {
+export async function updateEventSettings(
+  slug: string,
+  requireApproval: boolean,
+  registrationOpen: boolean,
+) {
   const supabase = await createClient();
-  const { error } = await supabase
+
+  const { data: updatedEvent, error } = await supabase
     .from("events")
     .update({
       require_approval: requireApproval,
+      registration_open: registrationOpen,
       modified_at: new Date().toISOString(),
     })
-    .eq("slug", slug);
-  if (error) throw new Error(`Failed to update event settings: ${error.message}`);
+    .eq("slug", slug)
+    .select("event_id, slug, status, registration_open, require_approval")
+    .maybeSingle();
+
+  if (error) {
+    if (error.message.includes("registration_open")) {
+      throw new Error(
+        "Database is missing `events.registration_open`. Run the latest Supabase migration, then try again.",
+      );
+    }
+    throw new Error(`Failed to update event settings: ${error.message}`);
+  }
+  if (!updatedEvent) {
+    throw new Error(
+      "Failed to update event settings: no rows were updated. Check permissions and event ownership.",
+    );
+  }
 }
 
 export async function getEventQuestions(slug: string) {

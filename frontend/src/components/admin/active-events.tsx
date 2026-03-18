@@ -23,18 +23,14 @@ interface ActiveEventsProps {
 export const ActiveEvents: React.FC<ActiveEventsProps> = ({ events }) => {
   const router = useRouter();
   const [filterCapacity, setFilterCapacity] = useState<string>("all");
-  // Show all statuses by default so newly created "upcoming" events appear
+  // Show all statuses by default so newly created events appear
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("date");
 
   const filteredEvents = events
     .filter((event) => {
       // Status filter
-      // Treat "upcoming" events as active in this UI
-      if (
-        filterStatus === "active" &&
-        !["active", "upcoming"].includes(event.status)
-      )
+      if (filterStatus === "active" && event.status !== "active")
         return false;
       if (filterStatus === "completed" && event.status !== "completed")
         return false;
