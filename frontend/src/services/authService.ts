@@ -116,7 +116,7 @@ export async function requestPasswordReset(email: string, redirectTo: string) {
     });
   }
 
-  // Privacy-safe: Supabase handles recovery flow without revealing account existence.
+  // Uses Supabase public recovery flow (publishable key context).
   await sendPasswordResetEmail(email, redirectTo);
   logger.info("Forgot password: Supabase resetPasswordForEmail call completed", {
     email,
