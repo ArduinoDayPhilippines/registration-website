@@ -149,6 +149,21 @@ export function useGuestActions(slug: string, onRefresh: () => void) {
         ...allQuestionKeys,
       ];
 
+      const formatRegisteredAt = (value?: string | null) => {
+        if (!value) return "";
+        const parsed = new Date(value);
+        if (Number.isNaN(parsed.getTime())) return value;
+        return parsed.toLocaleString("en-PH", {
+          year: "numeric",
+          month: "short",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: true,
+        });
+      };
+
       const escapeCell = (value: unknown) =>
         `"${String(value ?? "").replace(/"/g, '""')}"`;
 
@@ -158,7 +173,7 @@ export function useGuestActions(slug: string, onRefresh: () => void) {
           guest.users?.email || "",
           getStatusLabel(guest),
           getGoingLabel(guest),
-          guest.created_at || "",
+          formatRegisteredAt(guest.created_at),
           guest.check_in ? "Yes" : "No",
           guest.terms_approval ? "Yes" : "No",
         ];

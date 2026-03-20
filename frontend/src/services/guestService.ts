@@ -34,13 +34,29 @@ export async function exportGuestsToCSV(slug: string): Promise<ExportGuestsResul
     const allQuestionKeys = [...orderedKeys, ...extraKeys];
 
     const headers = ["Name", "Email", "Status", "Registered At", "Checked In", "Terms Accepted", ...allQuestionKeys];
+
+    const formatRegisteredAt = (value?: string | null) => {
+      if (!value) return "";
+      const parsed = new Date(value);
+      if (Number.isNaN(parsed.getTime())) return value;
+      return parsed.toLocaleString("en-PH", {
+        year: "numeric",
+        month: "short",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: true,
+      });
+    };
+
     const rows = guests.map((guest) => {
       const user = guest.users;
       const baseRow = [
         `${user?.first_name || ''} ${user?.last_name || ''}`.trim(),
         user?.email || '',
         guest.is_registered ? "Registered" : "Pending",
-        guest.created_at || '',
+        formatRegisteredAt(guest.created_at),
         guest.check_in ? "Yes" : "No",
         guest.terms_approval ? "Yes" : "No",
       ];
