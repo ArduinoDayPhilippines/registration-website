@@ -6,6 +6,7 @@ import Squares from "@/components/create-event/squares-background";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { SurveyConfig } from "@/types/survey";
+import { SurveyAuthModal } from "@/components/survey/SurveyAuthModal";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -101,6 +102,7 @@ export default async function SurveyPage({ params }: PageProps) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0a1f14] via-[#0a1520] to-[#120c08] text-white relative overflow-x-hidden">
+      {!user && <SurveyAuthModal eventSlug={slug} />}
       <BokehBackground />
       <Squares direction="diagonal" speed={0.3} />
 

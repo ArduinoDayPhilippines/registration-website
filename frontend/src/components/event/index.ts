@@ -4,6 +4,7 @@ export { EventLocation } from './event-location';
 export { EventManageCard } from './event-manage-card';
 export { EventRegistrationCard } from './event-registration-card';
 export { EventShareCard } from './event-share-card';
+export { EventSurveyCard } from './event-survey-card';
 export { EventAbout } from './event-about';
 export { EventHost } from './event-host';
 export { RsvpModal } from './rsvp-modal';

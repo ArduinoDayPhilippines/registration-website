@@ -14,6 +14,7 @@ import { EventLocation } from "@/components/event/event-location";
 import { EventManageCard } from "@/components/event/event-manage-card";
 import { EventRegistrationCard } from "@/components/event/event-registration-card";
 import { EventShareCard } from "@/components/event/event-share-card";
+import { EventSurveyCard } from "@/components/event/event-survey-card";
 import { EventAbout } from "@/components/event/event-about";
 import { EventHost } from "@/components/event/event-host";
 import { LocationMapPreview } from "@/components/event/location-map-preview";
@@ -256,6 +257,9 @@ export default function EventPage() {
 
             {/* Share event - below picture */}
             <EventShareCard eventSlug={slug} eventTitle={event.title} />
+
+            {/* Answer the survey */}
+            <EventSurveyCard eventSlug={slug} />
 
             {/* Manage Event Card - only for admins or event organizer */}
             {canManage && <EventManageCard eventSlug={slug} />}
